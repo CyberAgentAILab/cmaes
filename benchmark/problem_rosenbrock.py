@@ -1,4 +1,4 @@
-rosenbrock_problem.pyfrom kurobako import problem
+from kurobako import problem
 from kurobako.problem import Problem
 
 from typing import List
