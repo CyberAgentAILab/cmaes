@@ -216,3 +216,6 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+        D2, B = np.linalg.eigh(self._C)
+        D = np.sqrt(D2)
+        self._B, self._D = B, D
