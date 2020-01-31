@@ -25,7 +25,7 @@ def main():
     if args.sampler == "pycma":
         sampler = CmaEsSampler()
     else:
-        sampler = CMASampler(ensure_constant_search_space=False)
+        sampler = CMASampler()
     study = optuna.create_study(sampler=sampler)
     study.optimize(objective, n_trials=args.trials, gc_after_trial=False)
 

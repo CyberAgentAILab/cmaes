@@ -10,7 +10,7 @@ def objective(trial: optuna.Trial):
 
 
 def main():
-    sampler = CMASampler(ensure_constant_search_space=True)
+    sampler = CMASampler()
     study = optuna.create_study(sampler=sampler)
     study.optimize(objective, n_trials=250, gc_after_trial=False)
 

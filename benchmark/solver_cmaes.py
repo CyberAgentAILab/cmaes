@@ -24,9 +24,7 @@ elif args.loglevel == "error":
 
 
 def create_study(seed):
-    sampler = CMASampler(
-        seed=seed, n_startup_trials=args.startup, ensure_constant_search_space=True,
-    )
+    sampler = CMASampler(seed=seed, n_startup_trials=args.startup)
     return optuna.create_study(sampler=sampler)
 
 
