@@ -129,6 +129,7 @@ class CMA:
 
     def _sample_solution(self) -> Tuple[np.ndarray, np.ndarray]:
         if self._B is None or self._D is None:
+            self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
             D = np.sqrt(D2)
             self._B, self._D = B, D
@@ -154,6 +155,7 @@ class CMA:
 
         # Sample new population of search_points, for k=1, ..., popsize
         if self._B is None or self._D is None:
+            self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)  # eigen decomposition for symmetric matrix.
             D = np.sqrt(D2)
         else:
@@ -216,6 +218,7 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+        self._C = (self._C + self._C.T) / 2
         D2, B = np.linalg.eigh(self._C)
         D = np.sqrt(D2)
         self._B, self._D = B, D
