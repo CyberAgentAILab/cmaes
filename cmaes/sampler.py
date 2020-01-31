@@ -94,22 +94,17 @@ class CMASampler(BaseSampler):
             if generation != optimizer.generation:
                 continue
 
-            z_attr = t.system_attrs.get("cma:z", None)
-            if z_attr is None:
-                continue
-
-            z = pickle.loads(z_attr)
-            solutions.append((z, t.value))
+            x = np.array([t.params[k] for k in ordered_keys])
+            solutions.append((x, t.value))
 
             if len(solutions) == optimizer.population_size:
                 optimizer.tell(solutions)
                 break
 
-        z, params = optimizer.ask()
+        params = optimizer.ask()
         study._storage.set_trial_system_attr(
             trial._trial_id, "cma:optimizer", pickle.dumps(optimizer)
         )
-        study._storage.set_trial_system_attr(trial._trial_id, "cma:z", pickle.dumps(z))
         study._storage.set_trial_system_attr(
             trial._trial_id, "cma:generation", optimizer.generation
         )

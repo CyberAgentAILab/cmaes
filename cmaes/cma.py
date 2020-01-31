@@ -120,14 +120,14 @@ class CMA:
     def generation(self) -> int:
         return self._g
 
-    def ask(self) -> Tuple[np.ndarray, np.ndarray]:
+    def ask(self) -> np.ndarray:
         for i in range(self._n_max_resampling):
-            z, x = self._sample_solution()
+            x = self._sample_solution()
             if self._is_feasible(x):
-                return z, x
+                return x
         raise Exception("failed to sample a solution in the feasible domain.")
 
-    def _sample_solution(self) -> Tuple[np.ndarray, np.ndarray]:
+    def _sample_solution(self) -> np.ndarray:
         if self._B is None or self._D is None:
             D2, B = np.linalg.eigh(self._C)
             D = np.sqrt(D2)
@@ -136,7 +136,7 @@ class CMA:
         z = self._rng.randn(self._n_dim)  # ~ N(0, I)
         y = self._B.dot(np.diag(self._D)).dot(z)  # ~ N(0, C)
         x = self._mean + self._sigma * y  # ~ N(m, σ^2 C)
-        return z, x
+        return x
 
     def _is_feasible(self, param: np.ndarray) -> bool:
         if self._bounds is None:
@@ -160,8 +160,8 @@ class CMA:
             B, D = self._B, self._D
         self._B, self._D = None, None
 
-        z_k = np.array([s[0] for s in solutions])  # ~ N(0, I)
-        y_k = B.dot(np.diag(D)).dot(z_k.T).T  # ~ N(0, C)
+        x_k = np.array([s[0] for s in solutions])  # ~ N(m, σ^2 C)
+        y_k = (x_k - self._mean) / self._sigma  # ~ N(0, C)
 
         # Selection and recombination
         y_w = np.sum(y_k[: self._mu].T * self._weights[: self._mu], axis=1)  # eq.41

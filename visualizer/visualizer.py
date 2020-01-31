@@ -150,11 +150,11 @@ def update(frame):
         optimizer.tell(solutions)
         solutions = []
 
-    z, x = optimizer.ask()
+    x = optimizer.ask()
     evaluation = objective(x[0], x[1])
 
     solution = (
-        z,
+        x,
         evaluation,
     )
     solutions.append(solution)
