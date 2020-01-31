@@ -1,3 +1,4 @@
+import copy
 import math
 import pickle
 import numpy as np
@@ -9,7 +10,6 @@ from typing import List
 from typing import Optional
 from optuna.distributions import BaseDistribution
 from optuna.samplers import BaseSampler
-from optuna.samplers import intersection_search_space
 from optuna.structs import FrozenTrial
 from optuna.structs import TrialState
 
@@ -28,7 +28,6 @@ class CMASampler(BaseSampler):
         independent_sampler: Optional[BaseSampler] = None,
         warn_independent_sampling: bool = True,
         seed: Optional[int] = None,
-        ensure_constant_search_space: bool = False,
     ):
         self._x0 = x0
         self._sigma0 = sigma0
@@ -39,8 +38,6 @@ class CMASampler(BaseSampler):
         self._warn_independent_sampling = warn_independent_sampling
         self._logger = optuna.logging.get_logger(__name__)
         self._cma_rng = np.random.RandomState(seed)
-        self._ensure_constant_search_space = ensure_constant_search_space
-        self._search_space: Optional[Dict[str, BaseDistribution]] = None
 
     def infer_relative_search_space(
         self, study: optuna.Study, trial: optuna.structs.FrozenTrial,
@@ -49,10 +46,9 @@ class CMASampler(BaseSampler):
         if trial.number < self._n_startup_trials:
             return {}
 
-        if self._ensure_constant_search_space and self._search_space is not None:
-            return self._search_space
-
-        for name, distribution in intersection_search_space(study).items():
+        for name, distribution in _fast_intersection_search_space(
+            study, trial._trial_id
+        ).items():
             if distribution.single():
                 # `cma` cannot handle distributions that contain just a single value, so we skip
                 # them. Note that the parameter values for such distributions are sampled in
@@ -72,8 +68,6 @@ class CMASampler(BaseSampler):
                 continue
             search_space[name] = distribution
 
-        if self._ensure_constant_search_space:
-            self._search_space = search_space
         return search_space
 
     def sample_relative(
@@ -257,3 +251,49 @@ def _get_search_space_bound(
                 "The distribution {} is not implemented.".format(dist)
             )
     return np.array(bounds)
+
+
+def _fast_intersection_search_space(
+    study: optuna.Study, trial_id: int
+) -> Dict[str, BaseDistribution]:
+    search_space: Optional[Dict[str, BaseDistribution]] = None
+
+    for trial in reversed(study.get_trials(deepcopy=False)):
+        if trial.state != optuna.structs.TrialState.COMPLETE:
+            continue
+
+        if search_space is None:
+            search_space = copy.deepcopy(trial.distributions)
+            continue
+
+        delete_list = []
+        for param_name, param_distribution in search_space.items():
+            if param_name not in trial.distributions:
+                delete_list.append(param_name)
+            elif trial.distributions[param_name] != param_distribution:
+                delete_list.append(param_name)
+
+        for param_name in delete_list:
+            del search_space[param_name]
+
+        cache: str = trial.system_attrs.get("cma:search_space", None)
+        if cache is None:
+            continue
+
+        delete_list = []
+        cached_search_space = pickle.loads(cache)
+        for param_name in search_space:
+            if param_name not in cached_search_space:
+                delete_list.append(param_name)
+            elif cached_search_space[param_name] != search_space[param_name]:
+                delete_list.append(param_name)
+
+        for param_name in delete_list:
+            del search_space[param_name]
+
+        break
+
+    study._storage.set_trial_system_attr(
+        trial_id, "cma:search_space", pickle.dumps(search_space or {})
+    )
+    return search_space or {}
