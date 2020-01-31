@@ -102,14 +102,18 @@ See [benchmark](./benchmark) for details.
 
 ### Execution Speed
 
-| trials/params | pycma's sampler | this library |
-| ------------- | --------------- | ------------ |
-|     100 / 10  |          6.000s |       2.386s |
-|     500 / 50  |      4m 52.008s |   2m 33.287s |
-|   1000 / 100  |     37m 41.617s |  19m 54.699s |
+| trials/params | pycma's sampler | this library | this library *1 |
+| ------------- | --------------- | ------------ | ---------------- |
+|     100 / 10  |          6.000s |       1.315s |           0.677s |
+|     500 / 50  |      4m 52.008s |   1m 33.092s |           1.750s |
+|   1000 / 100  |     37m 41.617s |  13m 35.447s |           5.563s |
+
+In the setting of "this library *1", I run a benchmark with `ensure_constant_search_space=True`.
+You can use this option when all trials suggests the same search space.
 
 [This script](./benchmark/speed_problem.py) was run on my laptop so the times should not be taken precisely.
-This library seems to be about 2-times faster than Optuna's pycma sampler (with Optuna v1.0.0 and pycma v2.7.0).
+And the times will be changed when running benchmark scripts with RDB storage.
+Even though, it is clear that this library is faster than Optuna's pycma sampler (with Optuna v1.0.0 and pycma v2.7.0).
 
 Links
 -----

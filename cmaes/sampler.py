@@ -28,6 +28,7 @@ class CMASampler(BaseSampler):
         independent_sampler: Optional[BaseSampler] = None,
         warn_independent_sampling: bool = True,
         seed: Optional[int] = None,
+        ensure_constant_search_space: bool = False,
     ):
         self._x0 = x0
         self._sigma0 = sigma0
@@ -38,11 +39,19 @@ class CMASampler(BaseSampler):
         self._warn_independent_sampling = warn_independent_sampling
         self._logger = optuna.logging.get_logger(__name__)
         self._cma_rng = np.random.RandomState(seed)
+        self._ensure_constant_search_space = ensure_constant_search_space
+        self._search_space: Optional[Dict[str, BaseDistribution]] = None
 
     def infer_relative_search_space(
         self, study: optuna.Study, trial: optuna.structs.FrozenTrial,
     ) -> Dict[str, BaseDistribution]:
         search_space = {}
+        if trial.number < self._n_startup_trials:
+            return {}
+
+        if self._ensure_constant_search_space and self._search_space is not None:
+            return self._search_space
+
         for name, distribution in intersection_search_space(study).items():
             if distribution.single():
                 # `cma` cannot handle distributions that contain just a single value, so we skip
@@ -62,6 +71,9 @@ class CMASampler(BaseSampler):
                 # Categorical distribution is unsupported.
                 continue
             search_space[name] = distribution
+
+        if self._ensure_constant_search_space:
+            self._search_space = search_space
         return search_space
 
     def sample_relative(
@@ -73,7 +85,11 @@ class CMASampler(BaseSampler):
         if len(search_space) == 0:
             return {}
 
-        completed_trials = [t for t in study.trials if t.state == TrialState.COMPLETE]
+        completed_trials = [
+            t
+            for t in study.get_trials(deepcopy=False)
+            if t.state == TrialState.COMPLETE
+        ]
         if len(completed_trials) < self._n_startup_trials:
             return {}
 
@@ -83,23 +99,18 @@ class CMASampler(BaseSampler):
         optimizer = self._restore_or_init_optimizer(
             completed_trials, search_space, ordered_keys
         )
-        solutions = []
-        for t in completed_trials:
-            # skip to tell a parameter sampled by random because
-            # it doesn't sample from multivariate gaussian distribution.
-            if t.number < self._n_startup_trials:
-                continue
 
-            generation = t.system_attrs.get("cma:generation", 0)
-            if generation != optimizer.generation:
-                continue
-
-            x = np.array([t.params[k] for k in ordered_keys])
-            solutions.append((x, t.value))
-
-            if len(solutions) == optimizer.population_size:
-                optimizer.tell(solutions)
-                break
+        solution_trials = [
+            t
+            for t in completed_trials
+            if optimizer.generation == t.system_attrs.get("cma:generation", 0)
+        ]
+        if len(solution_trials) >= optimizer.population_size:
+            solutions = []
+            for t in solution_trials[: optimizer.population_size]:
+                x = np.array([t.params[k] for k in ordered_keys])
+                solutions.append((x, t.value))
+            optimizer.tell(solutions)
 
         params = optimizer.ask()
         study._storage.set_trial_system_attr(
