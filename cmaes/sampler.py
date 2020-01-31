@@ -276,12 +276,12 @@ def _fast_intersection_search_space(
         for param_name in delete_list:
             del search_space[param_name]
 
-        cache: str = trial.system_attrs.get("cma:search_space", None)
+        cache: bytes = trial.system_attrs.get("cma:search_space", None)
         if cache is None:
             continue
 
         delete_list = []
-        cached_search_space = pickle.loads(cache)
+        cached_search_space: Dict[str, BaseDistribution] = pickle.loads(cache)
         for param_name in search_space:
             if param_name not in cached_search_space:
                 delete_list.append(param_name)
