@@ -288,8 +288,8 @@ def _dict_to_distribution(json_dict: Dict[str, Any]) -> BaseDistribution:
     raise ValueError("Unknown distribution class: {}".format(json_dict["name"]))
 
 
-def _distribution_to_dict(dist):
-    return {'name': dist.__class__.__name__, 'attributes': dist._asdict()}
+def _distribution_to_dict(dist: BaseDistribution) -> Dict[str, Any]:
+    return {"name": dist.__class__.__name__, "attributes": dist._asdict()}
 
 
 def _fast_intersection_search_space(
@@ -335,10 +335,13 @@ def _fast_intersection_search_space(
             del search_space[param_name]
         break
 
+    if search_space is None:
+        search_space = {}
+
     json_str = json.dumps(
-        {name: _distribution_to_dict(search_space[name]) for name in search_space or {}}
+        {name: _distribution_to_dict(search_space[name]) for name in search_space}
     )
     study._storage.set_trial_system_attr(
         trial_id, "cma:search_space", json_str,
     )
-    return search_space or {}
+    return search_space
