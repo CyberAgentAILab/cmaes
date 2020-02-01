@@ -7,3 +7,5 @@ __pycache__/
 *.pyc
 *.egg-info/
 benchmark/*.json
+*.sqlite3
+

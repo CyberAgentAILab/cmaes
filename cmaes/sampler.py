@@ -9,6 +9,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 from optuna.distributions import BaseDistribution
 from optuna.samplers import BaseSampler
 from optuna.structs import FrozenTrial
@@ -92,7 +93,7 @@ class CMASampler(BaseSampler):
         ordered_keys.sort()
 
         optimizer = self._restore_or_init_optimizer(
-            study, completed_trials, search_space, ordered_keys
+            completed_trials, search_space, ordered_keys
         )
 
         solution_trials = [
@@ -115,6 +116,7 @@ class CMASampler(BaseSampler):
                 trial._trial_id, "cma:optimizer", pickled_optimizer
             )
         else:
+            # RDB storage does not accept bytes object.
             study._storage.set_trial_system_attr(
                 trial._trial_id, "cma:optimizer", pickled_optimizer.hex()
             )
@@ -129,7 +131,6 @@ class CMASampler(BaseSampler):
 
     def _restore_or_init_optimizer(
         self,
-        study: optuna.Study,
         completed_trials: List[optuna.structs.FrozenTrial],
         search_space: Dict[str, BaseDistribution],
         ordered_keys: List[str],
@@ -137,12 +138,12 @@ class CMASampler(BaseSampler):
         # Restore a previous CMA object.
         for i in reversed(range(len(completed_trials))):
             trial = completed_trials[i]
-            cmaes: str = trial.system_attrs.get("cma:optimizer", None)
-            if cmaes is not None:
-                if isinstance(study._storage, optuna.storages.InMemoryStorage):
-                    return pickle.loads(cmaes)
+            serialized_optimizer: Union[str, bytes] = trial.system_attrs.get("cma:optimizer", None)
+            if serialized_optimizer is not None:
+                if isinstance(serialized_optimizer, bytes):
+                    return pickle.loads(serialized_optimizer)
                 else:
-                    return pickle.loads(bytes.fromhex(cmaes))
+                    return pickle.loads(bytes.fromhex(serialized_optimizer))
 
         # Init a CMA object.
         if self._x0 is None:
