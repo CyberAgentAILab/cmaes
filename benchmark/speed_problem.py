@@ -33,13 +33,15 @@ def main():
     else:
         sampler = CMASampler()
     study = optuna.create_study(sampler=sampler, storage=storage)
-    study.optimize(objective, n_trials=args.trials, gc_after_trial=False)
+    if args.profile:
+        profiler = cProfile.Profile()
+        profiler.runcall(
+            study.optimize, objective, n_trials=args.trials, gc_after_trial=False
+        )
+        profiler.dump_stats("profile.stats")
+    else:
+        study.optimize(objective, n_trials=args.trials, gc_after_trial=False)
 
 
 if __name__ == "__main__":
-    if args.profile:
-        profiler = cProfile.Profile()
-        profiler.runcall(main)
-        profiler.dump_stats("profile.stats")
-    else:
-        main()
+    main()

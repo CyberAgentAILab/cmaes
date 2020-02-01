@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -109,6 +111,14 @@ class CMA:
 
         self._g = 0
         self._rng = np.random.RandomState(seed)
+
+    def __getstate__(self) -> Dict[str, Any]:
+        return {attr: getattr(self, attr) for attr in self.__dict__ if attr != "_rng"}
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        self.__dict__.update(state)
+        # Set _rng for unpickled object.
+        setattr(self, "_rng", np.random.RandomState())
 
     @property
     def population_size(self) -> int:
