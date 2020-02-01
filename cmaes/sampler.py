@@ -301,6 +301,10 @@ def _dict_to_distribution(json_dict: Dict[str, Any]) -> BaseDistribution:
     raise ValueError("Unknown distribution class: {}".format(json_dict["name"]))
 
 
+def _distribution_to_dict(dist):
+    return {'name': dist.__class__.__name__, 'attributes': dist._asdict()}
+
+
 def _fast_intersection_search_space(
     study: optuna.Study, trial_id: int
 ) -> Dict[str, BaseDistribution]:
@@ -325,10 +329,7 @@ def _fast_intersection_search_space(
             del search_space[param_name]
 
         # Retrieve cache from trial_system_attrs.
-        if trial_id is None:
-            continue
-
-        json_str: str = trial.system_attrs.get("cma:intersection_search_space", None)
+        json_str: str = trial.system_attrs.get("cma:search_space", None)
         if json_str is None:
             continue
         json_dict = json.loads(json_str)
@@ -345,13 +346,12 @@ def _fast_intersection_search_space(
 
         for param_name in delete_list:
             del search_space[param_name]
-
-        json_str = json.dumps(
-            {name: search_space[name]._asdict() for name in search_space or {}}
-        )
-        study._storage.set_trial_system_attr(
-            trial_id, "intersection_search_space", json_str,
-        )
         break
 
+    json_str = json.dumps(
+        {name: _distribution_to_dict(search_space[name]) for name in search_space or {}}
+    )
+    study._storage.set_trial_system_attr(
+        trial_id, "cma:search_space", json_str,
+    )
     return search_space or {}

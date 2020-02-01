@@ -6,7 +6,7 @@ from optuna.integration.cma import CmaEsSampler
 from cmaes.sampler import CMASampler
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--storage", choices=["memory", "sqlite3"], default="memory")
+parser.add_argument("--storage", choices=["memory", "sqlite"], default="memory")
 parser.add_argument("--params", type=int, default=100)
 parser.add_argument("--trials", type=int, default=1000)
 parser.add_argument("--sampler", choices=["pycma", "cmaes"], default="cmaes")
@@ -24,7 +24,7 @@ def objective(trial: optuna.Trial):
 def main():
     logging.disable(level=logging.INFO)
     storage = None
-    if args.storage == "sqlite3":
+    if args.storage == "sqlite":
         storage = f"sqlite:///db-{args.sampler}-{args.trials}-{args.params}.sqlite3"
     if args.sampler == "pycma":
         sampler = CmaEsSampler()
