@@ -96,10 +96,11 @@ class CMASampler(BaseSampler):
             completed_trials, search_space, ordered_keys
         )
 
+        new_generation = False
         solution_trials = [
             t
             for t in completed_trials
-            if optimizer.generation == t.system_attrs.get("cma:generation", 0)
+            if optimizer.generation == t.system_attrs.get("cma:generation", -1)
         ]
         if len(solution_trials) >= optimizer.population_size:
             solutions = []
@@ -107,8 +108,23 @@ class CMASampler(BaseSampler):
                 x = np.array([t.params[k] for k in ordered_keys])
                 solutions.append((x, t.value))
             optimizer.tell(solutions)
+            new_generation = True
 
         params = optimizer.ask()
+
+        if new_generation:
+            # optimizer should save after calling ask() method.
+            # because it keeps random value generator.
+            pickled_optimizer = pickle.dumps(optimizer)
+            if isinstance(study._storage, optuna.storages.InMemoryStorage):
+                study._storage.set_trial_system_attr(
+                    trial._trial_id, "cma:optimizer", pickled_optimizer
+                )
+            else:
+                # RDB storage does not accept bytes object.
+                study._storage.set_trial_system_attr(
+                    trial._trial_id, "cma:optimizer", pickled_optimizer.hex()
+                )
 
         pickled_optimizer = pickle.dumps(optimizer)
         if isinstance(study._storage, optuna.storages.InMemoryStorage):
@@ -136,14 +152,16 @@ class CMASampler(BaseSampler):
         ordered_keys: List[str],
     ) -> CMA:
         # Restore a previous CMA object.
-        for i in reversed(range(len(completed_trials))):
-            trial = completed_trials[i]
-            serialized_optimizer: Union[str, bytes] = trial.system_attrs.get("cma:optimizer", None)
-            if serialized_optimizer is not None:
-                if isinstance(serialized_optimizer, bytes):
-                    return pickle.loads(serialized_optimizer)
-                else:
-                    return pickle.loads(bytes.fromhex(serialized_optimizer))
+        for trial in reversed(completed_trials):
+            serialized_optimizer: Union[str, bytes, None] = trial.system_attrs.get(
+                "cma:optimizer", None
+            )
+            if serialized_optimizer is None:
+                continue
+            if isinstance(serialized_optimizer, bytes):
+                return pickle.loads(serialized_optimizer)
+            else:
+                return pickle.loads(bytes.fromhex(serialized_optimizer))
 
         # Init a CMA object.
         if self._x0 is None:
