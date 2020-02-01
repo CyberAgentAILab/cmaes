@@ -15,10 +15,10 @@ class CMA:
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
     ):
-        assert sigma > 0, "sigma should be positive"
+        assert sigma > 0, "sigma must be non-zero positive value"
 
         n_dim = len(mean)
-        assert n_dim > 1, "The dimension of mean should be larger than 1"
+        assert n_dim > 1, "The dimension of mean must be larger than 1"
 
         popsize = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
         mu = popsize // 2
@@ -47,17 +47,15 @@ class CMA:
         assert c1 <= 1 - cmu, "invalid learning rate for the rank-one update"
         assert cmu <= 1 - c1, "invalid learning rate for the rank-μ update"
 
-        # (eq.50)
-        alpha_mu_minus = 1 + c1 / cmu
-        # (eq.51)
-        alpha_mu_eff_minus = 1 + (2 * mu_eff_minus) / (mu_eff + 2)
-        # (eq.52)
-        alpha_pos_def_minus = (1 - c1 - cmu) / (n_dim * cmu)
+        min_alpha = min(
+            1 + c1 / cmu,  # eq.50
+            1 + (2 * mu_eff_minus) / (mu_eff + 2),  # eq.51
+            (1 - c1 - cmu) / (n_dim * cmu),  # eq.52
+        )
 
         # (eq.53)
         positive_sum = np.sum(weights_prime[weights_prime > 0])
         negative_sum = np.sum(np.abs(weights_prime[weights_prime < 0]))
-        min_alpha = min(alpha_mu_minus, alpha_mu_eff_minus, alpha_pos_def_minus)
         weights = np.where(
             weights_prime >= 0,
             1 / positive_sum * weights_prime,
