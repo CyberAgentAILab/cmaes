@@ -9,6 +9,52 @@ from typing import Tuple
 
 
 class CMA:
+    """CMA-ES stochastic optimizer class with ask-and-tell interface.
+
+    Example:
+
+        .. code::
+
+           import numpy as np
+           from cmaes import CMA
+
+           def quadratic(x1, x2):
+               return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+           optimizer = CMA(mean=np.zeros(2), sigma=1.3)
+
+           for generation in range(50):
+               solutions = []
+               for _ in range(optimizer.population_size):
+                   # Ask a parameter
+                   x = optimizer.ask()
+                   value = quadratic(x[0], x[1])
+                   solutions.append((x, value))
+                   print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
+
+               # Tell evaluation values.
+               optimizer.tell(solutions)
+
+    Args:
+
+        mean:
+            Initial mean vector of multi-variate gaussian distributions.
+
+        sigma:
+            Initial standard deviation of covariance matrix.
+
+        bounds:
+            Lower and upper domain boundaries for each parameter (optional).
+
+        n_max_resampling:
+            A maximum number of resampling parameters (default: 100).
+            If all sampled parameters are infeasible, the last sampled one
+            will be clipped with lower and upper bounds.
+
+        seed:
+            A seed number (optional).
+    """
+
     def __init__(
         self,
         mean: np.ndarray,
@@ -35,11 +81,9 @@ class CMA:
         )
 
         # learning rate for the rank-one update
-        # (p.17): c1 = 2 / (dim ** 2)
         alpha_cov = 2
         c1 = alpha_cov / ((n_dim + 1.3) ** 2 + mu_eff)
         # learning rate for the rank-μ update
-        # (p.12) cmu = min(1, mu_eff / (dim ** 2))
         cmu = min(
             1 - c1,
             alpha_cov
@@ -134,13 +178,17 @@ class CMA:
 
     @property
     def population_size(self) -> int:
+        """A population size"""
         return self._popsize
 
     @property
     def generation(self) -> int:
+        """Generation number which is monotonically incremented
+        when multi-variate gaussian distribution is updated."""
         return self._g
 
     def ask(self) -> np.ndarray:
+        """Sample a parameter"""
         for i in range(self._n_max_resampling):
             x = self._sample_solution()
             if self._is_feasible(x):
@@ -178,6 +226,7 @@ class CMA:
         return param
 
     def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
+        """Tell evaluation values"""
         if len(solutions) != self._popsize:
             raise ValueError("Must tell popsize-length solutions.")
 
@@ -187,7 +236,7 @@ class CMA:
         # Sample new population of search_points, for k=1, ..., popsize
         if self._B is None or self._D is None:
             self._C = (self._C + self._C.T) / 2
-            D2, B = np.linalg.eigh(self._C)  # eigen decomposition for symmetric matrix.
+            D2, B = np.linalg.eigh(self._C)
             D = np.sqrt(D2)
         else:
             B, D = self._B, self._D

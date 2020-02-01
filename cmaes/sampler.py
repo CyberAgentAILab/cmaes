@@ -22,6 +22,46 @@ _MIN_SIGMA0 = 1e-10
 
 
 class CMASampler(BaseSampler):
+    """A Sampler using CMA-ES algorithm.
+
+    Note that this sampler does not support CategoricalDistribution. If your search space
+    contains categorical parameters, I recommend you to use TPESampler instead.
+    Furthermore, parallel execution of trials may affect the optimization performance of CMA-ES,
+    especially if the number of trials running in parallel exceeds the population size.
+
+    Args:
+
+        x0:
+            A dictionary of an initial parameter values for CMA-ES. By default, the mean of ``low``
+            and ``high`` for each distribution is used.
+
+        sigma0:
+            Initial standard deviation of CMA-ES. By default, ``sigma0`` is set to
+            ``min_range / 6``, where ``min_range`` denotes the minimum range of the distributions
+            in the search space. If distribution is categorical, ``min_range`` is
+            ``len(choices) - 1``.
+
+        seed:
+            A random seed for CMA-ES.
+
+        n_startup_trials:
+            The independent sampling is used instead of the CMA-ES algorithm until the given number
+            of trials finish in the same study.
+
+        independent_sampler:
+            A sampler instance that is used for independent sampling. The parameters not
+            contained in the relative search space are sampled by this sampler.
+
+            If ``None`` is specified, RandomSampler is used as the default.
+
+        warn_independent_sampling:
+            If this is ``True``, a warning message is emitted when
+            the value of a parameter is sampled by using an independent sampler.
+
+            Note that the parameters of the first trial in a study are always sampled
+            via an independent sampler, so no warning messages are emitted in this case.
+    """
+
     def __init__(
         self,
         x0: Optional[Dict[str, Any]] = None,
