@@ -96,7 +96,6 @@ class CMASampler(BaseSampler):
             completed_trials, search_space, ordered_keys
         )
 
-        new_generation = False
         solution_trials = [
             t
             for t in completed_trials
@@ -108,13 +107,6 @@ class CMASampler(BaseSampler):
                 x = np.array([t.params[k] for k in ordered_keys])
                 solutions.append((x, t.value))
             optimizer.tell(solutions)
-            new_generation = True
-
-        params = optimizer.ask()
-
-        if new_generation:
-            # optimizer should save after calling ask() method.
-            # because it keeps random value generator.
             pickled_optimizer = pickle.dumps(optimizer)
             if isinstance(study._storage, optuna.storages.InMemoryStorage):
                 study._storage.set_trial_system_attr(
@@ -126,16 +118,11 @@ class CMASampler(BaseSampler):
                     trial._trial_id, "cma:optimizer", pickled_optimizer.hex()
                 )
 
-        pickled_optimizer = pickle.dumps(optimizer)
-        if isinstance(study._storage, optuna.storages.InMemoryStorage):
-            study._storage.set_trial_system_attr(
-                trial._trial_id, "cma:optimizer", pickled_optimizer
-            )
-        else:
-            # RDB storage does not accept bytes object.
-            study._storage.set_trial_system_attr(
-                trial._trial_id, "cma:optimizer", pickled_optimizer.hex()
-            )
+        # Caution: optimizer should update its seed value
+        seed = self._cma_rng.randint(1, 2 ** 16) + trial.number
+        optimizer._rng = np.random.RandomState(seed)
+        params = optimizer.ask()
+
         study._storage.set_trial_system_attr(
             trial._trial_id, "cma:generation", optimizer.generation
         )

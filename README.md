@@ -102,11 +102,14 @@ See [benchmark](./benchmark) for details.
 
 ### Execution Speed
 
-| trials/params | pycma's sampler | this library | pycma's sampler (SQLite3) | this library (SQLite3) |
-| ------------- | --------------- | ------------ | ------------------------- | ---------------------- |
-|     100 / 10  |          6.000s |       0.706s |                   16.259s |                12.365s |
-|     500 / 50  |      4m 52.008s |       2.236s |                8m 34.557s |             3m 12.208s |
-|   1000 / 100  |     37m 41.617s |       7.116s |                        -  |                      - |
+| trials/params | storage | pycma's sampler | this library |
+| ------------- | ------- | --------------- | ------------ |
+|     100 / 10  |  memory |          6.000s |       0.706s |
+|     500 / 50  |  memory |      4m 52.008s |       2.697s |
+|   1000 / 100  |  memory |     37m 41.617s |       7.690s |
+|     100 / 10  |  sqlite |         16.259s |      12.964s |
+|     500 / 50  |  sqlite |      8m 34.557s |   2m 53.790s |
+|   1000 / 100  |  sqlite |              -  |            - |
 
 
 [This script](./benchmark/speed_problem.py) was run on my laptop so the times should not be taken precisely.

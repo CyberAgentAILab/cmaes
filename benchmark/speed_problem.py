@@ -1,4 +1,5 @@
 import argparse
+import cProfile
 import logging
 import optuna
 
@@ -6,6 +7,7 @@ from optuna.integration.cma import CmaEsSampler
 from cmaes.sampler import CMASampler
 
 parser = argparse.ArgumentParser()
+parser.add_argument("--profile", type=int, default=0)
 parser.add_argument("--storage", choices=["memory", "sqlite"], default="memory")
 parser.add_argument("--params", type=int, default=100)
 parser.add_argument("--trials", type=int, default=1000)
@@ -35,4 +37,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if args.profile:
+        profiler = cProfile.Profile()
+        profiler.runcall(main)
+        profiler.dump_stats("profile.stats")
+    else:
+        main()
