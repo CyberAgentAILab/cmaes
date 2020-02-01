@@ -109,7 +109,6 @@ See [benchmark](./benchmark) for details.
 |   1000 / 100  |  memory |     37m 41.617s |       7.690s |
 |     100 / 10  |  sqlite |         16.259s |      12.964s |
 |     500 / 50  |  sqlite |      8m 34.557s |   2m 53.790s |
-|   1000 / 100  |  sqlite |              -  |            - |
 
 
 [This script](./benchmark/speed_problem.py) was run on my laptop so the times should not be taken precisely.
