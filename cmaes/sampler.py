@@ -1,4 +1,5 @@
 import copy
+import json
 import math
 import pickle
 import numpy as np
@@ -8,6 +9,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 from typing import Optional
+from typing import Union
 from optuna.distributions import BaseDistribution
 from optuna.samplers import BaseSampler
 from optuna.structs import FrozenTrial
@@ -97,7 +99,7 @@ class CMASampler(BaseSampler):
         solution_trials = [
             t
             for t in completed_trials
-            if optimizer.generation == t.system_attrs.get("cma:generation", 0)
+            if optimizer.generation == t.system_attrs.get("cma:generation", -1)
         ]
         if len(solution_trials) >= optimizer.population_size:
             solutions = []
@@ -105,11 +107,22 @@ class CMASampler(BaseSampler):
                 x = np.array([t.params[k] for k in ordered_keys])
                 solutions.append((x, t.value))
             optimizer.tell(solutions)
+            pickled_optimizer = pickle.dumps(optimizer)
+            if isinstance(study._storage, optuna.storages.InMemoryStorage):
+                study._storage.set_trial_system_attr(
+                    trial._trial_id, "cma:optimizer", pickled_optimizer
+                )
+            else:
+                # RDB storage does not accept bytes object.
+                study._storage.set_trial_system_attr(
+                    trial._trial_id, "cma:optimizer", pickled_optimizer.hex()
+                )
 
+        # Caution: optimizer should update its seed value
+        seed = self._cma_rng.randint(1, 2 ** 16) + trial.number
+        optimizer._rng = np.random.RandomState(seed)
         params = optimizer.ask()
-        study._storage.set_trial_system_attr(
-            trial._trial_id, "cma:optimizer", pickle.dumps(optimizer)
-        )
+
         study._storage.set_trial_system_attr(
             trial._trial_id, "cma:generation", optimizer.generation
         )
@@ -126,11 +139,16 @@ class CMASampler(BaseSampler):
         ordered_keys: List[str],
     ) -> CMA:
         # Restore a previous CMA object.
-        for i in reversed(range(len(completed_trials))):
-            trial = completed_trials[i]
-            cmaes = trial.system_attrs.get("cma:optimizer", None)
-            if cmaes is not None:
-                return pickle.loads(cmaes)
+        for trial in reversed(completed_trials):
+            serialized_optimizer: Union[str, bytes, None] = trial.system_attrs.get(
+                "cma:optimizer", None
+            )
+            if serialized_optimizer is None:
+                continue
+            if isinstance(serialized_optimizer, bytes):
+                return pickle.loads(serialized_optimizer)
+            else:
+                return pickle.loads(bytes.fromhex(serialized_optimizer))
 
         # Init a CMA object.
         if self._x0 is None:
@@ -253,6 +271,27 @@ def _get_search_space_bound(
     return np.array(bounds)
 
 
+def _dict_to_distribution(json_dict: Dict[str, Any]) -> BaseDistribution:
+    if json_dict["name"] == optuna.distributions.CategoricalDistribution.__name__:
+        json_dict["attributes"]["choices"] = tuple(json_dict["attributes"]["choices"])
+
+    for cls in (
+        optuna.distributions.UniformDistribution,
+        optuna.distributions.LogUniformDistribution,
+        optuna.distributions.DiscreteUniformDistribution,
+        optuna.distributions.IntUniformDistribution,
+        optuna.distributions.CategoricalDistribution,
+    ):
+        if json_dict["name"] == cls.__name__:
+            return cls(**json_dict["attributes"])
+
+    raise ValueError("Unknown distribution class: {}".format(json_dict["name"]))
+
+
+def _distribution_to_dict(dist: BaseDistribution) -> Dict[str, Any]:
+    return {"name": dist.__class__.__name__, "attributes": dist._asdict()}
+
+
 def _fast_intersection_search_space(
     study: optuna.Study, trial_id: int
 ) -> Dict[str, BaseDistribution]:
@@ -276,12 +315,16 @@ def _fast_intersection_search_space(
         for param_name in delete_list:
             del search_space[param_name]
 
-        cache: bytes = trial.system_attrs.get("cma:search_space", None)
-        if cache is None:
+        # Retrieve cache from trial_system_attrs.
+        json_str: str = trial.system_attrs.get("cma:search_space", None)
+        if json_str is None:
             continue
+        json_dict = json.loads(json_str)
 
         delete_list = []
-        cached_search_space: Dict[str, BaseDistribution] = pickle.loads(cache)
+        cached_search_space = {
+            name: _dict_to_distribution(dic) for name, dic in json_dict.items()
+        }
         for param_name in search_space:
             if param_name not in cached_search_space:
                 delete_list.append(param_name)
@@ -290,10 +333,15 @@ def _fast_intersection_search_space(
 
         for param_name in delete_list:
             del search_space[param_name]
-
         break
 
-    study._storage.set_trial_system_attr(
-        trial_id, "cma:search_space", pickle.dumps(search_space or {})
+    if search_space is None:
+        search_space = {}
+
+    json_str = json.dumps(
+        {name: _distribution_to_dict(search_space[name]) for name in search_space}
     )
-    return search_space or {}
+    study._storage.set_trial_system_attr(
+        trial_id, "cma:search_space", json_str,
+    )
+    return search_space
