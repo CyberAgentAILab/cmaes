@@ -254,11 +254,9 @@ def _compress_symmetric(sym2d: np.ndarray) -> np.ndarray:
 
 def _decompress_symmetric(sym1d: np.ndarray) -> np.ndarray:
     n = int(np.sqrt(sym1d.size * 2))
-    if (n * (n + 1)) // 2 != sym1d.size:
-        return None
-    else:
-        R, C = np.triu_indices(n)
-        out = np.zeros((n, n), dtype=sym1d.dtype)
-        out[R, C] = sym1d
-        out[C, R] = sym1d
+    assert (n * (n + 1)) // 2 == sym1d.size
+    R, C = np.triu_indices(n)
+    out = np.zeros((n, n), dtype=sym1d.dtype)
+    out[R, C] = sym1d
+    out[C, R] = sym1d
     return out
