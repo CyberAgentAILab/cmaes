@@ -45,10 +45,12 @@ setup(
         "benchmark": ["kurobako", "cma", "optuna"],
         "visualization": ["matplotlib", "scipy"],
         "lint": ["mypy", "flake8", "black", "optuna"],
+        "test": ["optuna"],
         "release": ["wheel", "twine"],
     },
     tests_require=[],
     keywords="cma-es evolution-strategy optuna",
     license="MIT License",
     include_package_data=True,
+    test_suite="tests",
 )

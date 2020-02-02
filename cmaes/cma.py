@@ -113,9 +113,21 @@ class CMA:
         self._rng = np.random.RandomState(seed)
 
     def __getstate__(self) -> Dict[str, Any]:
-        return {attr: getattr(self, attr) for attr in self.__dict__ if attr != "_rng"}
+        attrs = {}
+        for name in self.__dict__:
+            # Remove _rng in pickle serialized object.
+            if name == "_rng":
+                continue
+            if name == "_C":
+                sym1d = _compress_symmetric(self._C)
+                attrs["_c_1d"] = sym1d
+                continue
+            attrs[name] = getattr(self, name)
+        return attrs
 
     def __setstate__(self, state: Dict[str, Any]) -> None:
+        state["_C"] = _decompress_symmetric(state["_c_1d"])
+        del state["_c_1d"]
         self.__dict__.update(state)
         # Set _rng for unpickled object.
         setattr(self, "_rng", np.random.RandomState())
@@ -226,3 +238,25 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+
+
+def _compress_symmetric(sym2d: np.ndarray) -> np.ndarray:
+    assert len(sym2d.shape) == 2 and sym2d.shape[0] == sym2d.shape[1]
+    n = sym2d.shape[0]
+    dim = (n * (n + 1)) // 2
+    sym1d = np.zeros(dim)
+    start = 0
+    for i in range(n):
+        sym1d[start : start + n - i] = sym2d[i][i:]  # noqa: E203
+        start += n - i
+    return sym1d
+
+
+def _decompress_symmetric(sym1d: np.ndarray) -> np.ndarray:
+    n = int(np.sqrt(sym1d.size * 2))
+    assert (n * (n + 1)) // 2 == sym1d.size
+    R, C = np.triu_indices(n)
+    out = np.zeros((n, n), dtype=sym1d.dtype)
+    out[R, C] = sym1d
+    out[C, R] = sym1d
+    return out
