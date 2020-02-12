@@ -145,7 +145,9 @@ class CMA:
             x = self._sample_solution()
             if self._is_feasible(x):
                 return x
-        raise Exception("failed to sample a solution in the feasible domain.")
+        x = self._sample_solution()
+        x = self._repair_infeasible_params(x)
+        return x
 
     def _sample_solution(self) -> np.ndarray:
         if self._B is None or self._D is None:
@@ -165,6 +167,15 @@ class CMA:
         return np.all(param >= self._bounds[:, 0]) and np.all(
             param <= self._bounds[:, 1]
         )
+
+    def _repair_infeasible_params(self, param: np.ndarray) -> np.ndarray:
+        if self._bounds is None:
+            return param
+
+        # clip with lower and upper bound.
+        param = np.where(param < self._bounds[:, 0], self._bounds[:, 0], param)
+        param = np.where(param > self._bounds[:, 1], self._bounds[:, 1], param)
+        return param
 
     def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
         if len(solutions) != self._popsize:
