@@ -238,6 +238,7 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+        self._C += 1e-16
 
 
 def _compress_symmetric(sym2d: np.ndarray) -> np.ndarray:
