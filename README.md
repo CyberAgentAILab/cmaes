@@ -102,14 +102,14 @@ See [benchmark](./benchmark) for details.
 
 ### Execution Speed
 
-| trials/params | storage |      pycma's sampler |         this library |
-| ------------- | ------- | -------------------- | -------------------- |
-|     100 /   5 |  memory |   4.976 (+/- 0.596)s |   0.197 (+/- 0.078)s |
-|     500 /   5 |  memory |  71.651 (+/- 3.847)s |   0.656 (+/- 0.044)s |
-|     500 /  50 |  memory | 291.002 (+/- 5.010)s |   1.981 (+/- 0.041)s |
-|     100 /   5 |  sqlite |  16.143 (+/- 3.487)s |  11.843 (+/- 1.390)s |
-|     500 /   5 |  sqlite | 129.436 (+/- 6.279)s |  43.735 (+/- 2.676)s |
-|     500 /  50 |  sqlite | 397.084 (+/- 6.618)s | 150.531 (+/- 1.113)s |
+| trials/params | storage |     pycma's sampler     |       this library      |
+| ------------- | ------- | ----------------------- | ----------------------- |
+|     100 /   5 |  memory |   4.976 sec (+/- 0.596) |   0.197 sec (+/- 0.078) |
+|     500 /   5 |  memory |  71.651 sec (+/- 3.847) |   0.656 sec (+/- 0.044) |
+|     500 /  50 |  memory | 291.002 sec (+/- 5.010) |   1.981 sec (+/- 0.041) |
+|     100 /   5 |  sqlite |  16.143 sec (+/- 3.487) |  11.843 sec (+/- 1.390) |
+|     500 /   5 |  sqlite | 129.436 sec (+/- 6.279) |  43.735 sec (+/- 2.676) |
+|     500 /  50 |  sqlite | 397.084 sec (+/- 6.618) | 150.531 sec (+/- 1.113) |
 
 [This script](./benchmark/speed_test.py) was run on my laptop with `--times 4`. So the times should not be taken precisely.
 Even though, it is clear that this library is extremely faster than Optuna's pycma sampler (with Optuna v1.0.0 and pycma v2.7.0).
