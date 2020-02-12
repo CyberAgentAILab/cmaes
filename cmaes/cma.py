@@ -238,6 +238,7 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+        # Avoid eigendecomposition error by arithmetic overflow
         self._C += 1e-16
 
 
