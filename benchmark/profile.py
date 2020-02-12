@@ -41,7 +41,7 @@ def main():
     profiler.dump_stats("profile.stats")
 
     stats = pstats.Stats("profile.stats")
-    stats.sort_stats('time').print_stats(5)
+    stats.sort_stats("time").print_stats(5)
 
 
 if __name__ == "__main__":
