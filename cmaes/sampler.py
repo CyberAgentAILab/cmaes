@@ -302,7 +302,15 @@ def _get_search_space_bound(
     bounds = []
     for param_name in keys:
         dist = search_space[param_name]
-        if isinstance(dist, optuna.distributions.UniformDistribution):
+        if isinstance(
+            dist,
+            (
+                optuna.distributions.UniformDistribution,
+                optuna.distributions.LogUniformDistribution,
+                optuna.distributions.DiscreteUniformDistribution,
+                optuna.distributions.IntUniformDistribution,
+            ),
+        ):
             bounds.append([dist.low, dist.high])
         else:
             raise NotImplementedError(
