@@ -102,8 +102,8 @@ class CMA:
         self._mean = mean
         self._C = np.eye(n_dim)
         self._sigma = sigma
-        self._D: Optional[np.ndarray] = None
-        self._B: Optional[np.ndarray] = None
+        self._D = None  # type: Optional[np.ndarray]
+        self._B = None  # type: Optional[np.ndarray]
 
         # bounds contains low and high of each parameter.
         self._bounds = bounds  # (n_dim, 2)-dim matrix

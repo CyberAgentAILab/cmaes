@@ -140,9 +140,9 @@ class CMASampler(BaseSampler):
     ) -> CMA:
         # Restore a previous CMA object.
         for trial in reversed(completed_trials):
-            serialized_optimizer: Union[str, bytes, None] = trial.system_attrs.get(
+            serialized_optimizer = trial.system_attrs.get(
                 "cma:optimizer", None
-            )
+            )  # type: Union[str, bytes, None]
             if serialized_optimizer is None:
                 continue
             if isinstance(serialized_optimizer, bytes):
@@ -295,7 +295,7 @@ def _distribution_to_dict(dist: BaseDistribution) -> Dict[str, Any]:
 def _fast_intersection_search_space(
     study: optuna.Study, trial_id: int
 ) -> Dict[str, BaseDistribution]:
-    search_space: Optional[Dict[str, BaseDistribution]] = None
+    search_space = None  # type: Optional[Dict[str, BaseDistribution]]
 
     for trial in reversed(study.get_trials(deepcopy=False)):
         if trial.state != optuna.structs.TrialState.COMPLETE:
@@ -316,7 +316,7 @@ def _fast_intersection_search_space(
             del search_space[param_name]
 
         # Retrieve cache from trial_system_attrs.
-        json_str: str = trial.system_attrs.get("cma:search_space", None)
+        json_str = trial.system_attrs.get("cma:search_space", None)  # type: str
         if json_str is None:
             continue
         json_dict = json.loads(json_str)

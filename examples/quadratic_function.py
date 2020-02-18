@@ -8,6 +8,8 @@ def quadratic(x1, x2):
 
 def main():
     cma_es = CMA(mean=np.zeros(2), sigma=1.3)
+    print(" g    f(x1,x2)     x1      x2  ")
+    print("===  ==========  ======  ======")
 
     for generation in range(50):
         solutions = []
@@ -15,7 +17,11 @@ def main():
             x = cma_es.ask()
             value = quadratic(x[0], x[1])
             solutions.append((x, value))
-            print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
+
+            msg = "{g:3d}  {value:10.5f}  {x1:6.2f}  {x2:6.2f}".format(
+                g=generation, value=value, x1=x[0], x2=x[1],
+            )
+            print(msg)
         cma_es.tell(solutions)
 
 
