@@ -15,7 +15,9 @@ def main():
             x = cma_es.ask()
             value = quadratic(x[0], x[1])
             solutions.append((x, value))
-            print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
+            print("#{g} {value} (x1={x1}, x2 = {x2})".format(
+                g=generation, value=value, x1=x[0], x2=x[1],
+            ))
         cma_es.tell(solutions)
 
 

@@ -316,7 +316,7 @@ def _fast_intersection_search_space(
             del search_space[param_name]
 
         # Retrieve cache from trial_system_attrs.
-        json_str= trial.system_attrs.get("cma:search_space", None)  # type: str
+        json_str = trial.system_attrs.get("cma:search_space", None)  # type: str
         if json_str is None:
             continue
         json_dict = json.loads(json_str)
