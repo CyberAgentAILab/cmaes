@@ -191,6 +191,7 @@ class CMA:
         return self._g
 
     def set_bounds(self, bounds: Optional[np.ndarray]) -> None:
+        """Update boundary constraints"""
         assert (
             bounds is None or (self._mean.size, 2) == bounds.shape
         ), "bounds should be (n_dim, 2)-dim matrix"
