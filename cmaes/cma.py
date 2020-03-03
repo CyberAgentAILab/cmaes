@@ -150,7 +150,10 @@ class CMA:
         self._B = None  # type: Optional[np.ndarray]
 
         # bounds contains low and high of each parameter.
-        self._bounds = bounds  # (n_dim, 2)-dim matrix
+        assert (
+            bounds is None or (mean.size, 2) == bounds.shape
+        ), "bounds should be (n_dim, 2)-dim matrix"
+        self._bounds = bounds
         self._n_max_resampling = n_max_resampling
 
         self._g = 0
@@ -186,6 +189,12 @@ class CMA:
         """Generation number which is monotonically incremented
         when multi-variate gaussian distribution is updated."""
         return self._g
+
+    def set_bounds(self, bounds: Optional[np.ndarray]) -> None:
+        assert (
+            bounds is None or (self._mean.size, 2) == bounds.shape
+        ), "bounds should be (n_dim, 2)-dim matrix"
+        self._bounds = bounds
 
     def ask(self) -> np.ndarray:
         """Sample a parameter"""
