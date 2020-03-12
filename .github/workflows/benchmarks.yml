@@ -19,6 +19,7 @@ jobs:
       - run: pip install -U 'pip<20'
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
+      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
 
       - name: Download kurobako CLI
         run: |
@@ -70,9 +71,10 @@ jobs:
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - run: pip install -U 'pip<20'
+      - run: pip install -U pip
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
+      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
 
       - name: Download kurobako CLI
         run: |
@@ -127,6 +129,7 @@ jobs:
       - run: pip install -U 'pip<20'
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
+      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
 
       - name: Download kurobako CLI
         run: |
