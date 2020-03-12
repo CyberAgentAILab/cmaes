@@ -85,8 +85,6 @@ class CMASampler(BaseSampler):
         self, study: optuna.Study, trial: optuna.structs.FrozenTrial,
     ) -> Dict[str, BaseDistribution]:
         search_space = {}
-        if trial.number < self._n_startup_trials:
-            return {}
 
         for name, distribution in _fast_intersection_search_space(
             study, trial._trial_id
@@ -110,16 +108,6 @@ class CMASampler(BaseSampler):
                 continue
             search_space[name] = distribution
 
-        if len(search_space) < 2:
-            self._logger.info(
-                "`CmaEsSampler` does not support optimization of 1-D search space. "
-                "`{}` is used instead of `CmaEsSampler`.".format(
-                    self._independent_sampler.__class__.__name__
-                )
-            )
-            self._warn_independent_sampling = False
-            return {}
-
         return search_space
 
     def sample_relative(
@@ -139,12 +127,30 @@ class CMASampler(BaseSampler):
         if len(completed_trials) < self._n_startup_trials:
             return {}
 
+        if len(search_space) == 1:
+            self._logger.info(
+                "`CMASampler` only supports two or more dimensional continuous "
+                "search space. `{}` is used instead of `CMASampler`.".format(
+                    self._independent_sampler.__class__.__name__)
+            )
+            self._warn_independent_sampling = False
+            return {}
+
         ordered_keys = [key for key in search_space]
         ordered_keys.sort()
 
         optimizer = self._restore_or_init_optimizer(
             completed_trials, search_space, ordered_keys
         )
+
+        if optimizer.dim != len(ordered_keys):
+            self._logger.info(
+                "`CMASampler` does not support dynamic search space. "
+                "`{}` is used instead of `CMASampler`.".format(
+                    self._independent_sampler.__class__.__name__)
+            )
+            self._warn_independent_sampling = False
+            return {}
 
         solution_trials = [
             t
@@ -355,10 +361,13 @@ def _fast_intersection_search_space(
 ) -> Dict[str, BaseDistribution]:
     search_space = None  # type: Optional[Dict[str, BaseDistribution]]
 
-    for trial in reversed(study.get_trials(deepcopy=False)):
-        if trial.state != optuna.structs.TrialState.COMPLETE:
-            continue
+    completed_trials = [t for t in study.get_trials(deepcopy=False)
+                        if t.state == optuna.structs.TrialState.COMPLETE]
 
+    if len(completed_trials) == 0:
+        return {}
+
+    for trial in reversed(completed_trials):
         if search_space is None:
             search_space = copy.deepcopy(trial.distributions)
             continue
