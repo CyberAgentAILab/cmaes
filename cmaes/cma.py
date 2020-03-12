@@ -180,6 +180,11 @@ class CMA:
         setattr(self, "_rng", np.random.RandomState())
 
     @property
+    def dim(self) -> int:
+        """A number of dimensions"""
+        return self._n_dim
+
+    @property
     def population_size(self) -> int:
         """A population size"""
         return self._popsize

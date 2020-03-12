@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import math
 import pickle
 import numpy as np
@@ -78,15 +79,13 @@ class CMASampler(BaseSampler):
         )
         self._n_startup_trials = n_startup_trials
         self._warn_independent_sampling = warn_independent_sampling
-        self._logger = optuna.logging.get_logger(__name__)
+        self._logger = logging.getLogger("optuna.cmaes")
         self._cma_rng = np.random.RandomState(seed)
 
     def infer_relative_search_space(
         self, study: optuna.Study, trial: optuna.structs.FrozenTrial,
     ) -> Dict[str, BaseDistribution]:
         search_space = {}
-        if trial.number < self._n_startup_trials:
-            return {}
 
         for name, distribution in _fast_intersection_search_space(
             study, trial._trial_id
@@ -110,16 +109,6 @@ class CMASampler(BaseSampler):
                 continue
             search_space[name] = distribution
 
-        if len(search_space) < 2:
-            self._logger.info(
-                "`CmaEsSampler` does not support optimization of 1-D search space. "
-                "`{}` is used instead of `CmaEsSampler`.".format(
-                    self._independent_sampler.__class__.__name__
-                )
-            )
-            self._warn_independent_sampling = False
-            return {}
-
         return search_space
 
     def sample_relative(
@@ -139,12 +128,32 @@ class CMASampler(BaseSampler):
         if len(completed_trials) < self._n_startup_trials:
             return {}
 
+        if len(search_space) == 1:
+            self._logger.info(
+                "`CMASampler` only supports two or more dimensional continuous "
+                "search space. `{}` is used instead of `CMASampler`.".format(
+                    self._independent_sampler.__class__.__name__
+                )
+            )
+            self._warn_independent_sampling = False
+            return {}
+
         ordered_keys = [key for key in search_space]
         ordered_keys.sort()
 
         optimizer = self._restore_or_init_optimizer(
             completed_trials, search_space, ordered_keys
         )
+
+        if optimizer.dim != len(ordered_keys):
+            self._logger.info(
+                "`CMASampler` does not support dynamic search space. "
+                "`{}` is used instead of `CMASampler`.".format(
+                    self._independent_sampler.__class__.__name__
+                )
+            )
+            self._warn_independent_sampling = False
+            return {}
 
         solution_trials = [
             t
@@ -394,7 +403,7 @@ def _fast_intersection_search_space(
         break
 
     if search_space is None:
-        search_space = {}
+        return {}
 
     json_str = json.dumps(
         {name: _distribution_to_dict(search_space[name]) for name in search_space}
