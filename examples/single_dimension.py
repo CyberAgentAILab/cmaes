@@ -12,5 +12,5 @@ def objective(trial):
 if __name__ == "__main__":
     optuna.logging.set_verbosity(optuna.logging.INFO)
     study = optuna.create_study(sampler=CMASampler())
-    study.optimize(objective, n_trials=40)
+    study.optimize(objective, n_trials=30)
     print("Best value: {} (params: {})\n".format(study.best_value, study.best_params))

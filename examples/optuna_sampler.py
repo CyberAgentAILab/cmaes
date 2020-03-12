@@ -13,7 +13,7 @@ def main():
     optuna.logging.set_verbosity(optuna.logging.INFO)
     sampler = CMASampler()
     study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=50, gc_after_trial=False)
+    study.optimize(objective, n_trials=250, gc_after_trial=False)
 
 
 if __name__ == "__main__":
