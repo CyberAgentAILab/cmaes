@@ -1,5 +1,6 @@
 import copy
 import json
+import logging
 import math
 import pickle
 import numpy as np
@@ -78,7 +79,7 @@ class CMASampler(BaseSampler):
         )
         self._n_startup_trials = n_startup_trials
         self._warn_independent_sampling = warn_independent_sampling
-        self._logger = optuna.logging.get_logger(__name__)
+        self._logger = logging.getLogger('optuna.cmaes')
         self._cma_rng = np.random.RandomState(seed)
 
     def infer_relative_search_space(
