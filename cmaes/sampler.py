@@ -79,7 +79,7 @@ class CMASampler(BaseSampler):
         )
         self._n_startup_trials = n_startup_trials
         self._warn_independent_sampling = warn_independent_sampling
-        self._logger = logging.getLogger('optuna.cmaes')
+        self._logger = logging.getLogger("optuna.cmaes")
         self._cma_rng = np.random.RandomState(seed)
 
     def infer_relative_search_space(
@@ -132,7 +132,8 @@ class CMASampler(BaseSampler):
             self._logger.info(
                 "`CMASampler` only supports two or more dimensional continuous "
                 "search space. `{}` is used instead of `CMASampler`.".format(
-                    self._independent_sampler.__class__.__name__)
+                    self._independent_sampler.__class__.__name__
+                )
             )
             self._warn_independent_sampling = False
             return {}
@@ -148,7 +149,8 @@ class CMASampler(BaseSampler):
             self._logger.info(
                 "`CMASampler` does not support dynamic search space. "
                 "`{}` is used instead of `CMASampler`.".format(
-                    self._independent_sampler.__class__.__name__)
+                    self._independent_sampler.__class__.__name__
+                )
             )
             self._warn_independent_sampling = False
             return {}
@@ -362,8 +364,11 @@ def _fast_intersection_search_space(
 ) -> Dict[str, BaseDistribution]:
     search_space = None  # type: Optional[Dict[str, BaseDistribution]]
 
-    completed_trials = [t for t in study.get_trials(deepcopy=False)
-                        if t.state == optuna.structs.TrialState.COMPLETE]
+    completed_trials = [
+        t
+        for t in study.get_trials(deepcopy=False)
+        if t.state == optuna.structs.TrialState.COMPLETE
+    ]
 
     if len(completed_trials) == 0:
         return {}
