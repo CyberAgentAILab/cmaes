@@ -51,7 +51,9 @@ class TestSampler(unittest.TestCase):
 
         # The distribution has only one candidate.
         study.optimize(lambda t: t.suggest_int("x", 1, 1), n_trials=1)
-        assert sampler.infer_relative_search_space(study, study.best_trial) == {}
+        next_trial_id = study._storage.create_new_trial(study._study_id)
+        next_trial = study._storage.get_trial(next_trial_id)
+        assert sampler.infer_relative_search_space(study, next_trial) == {}
 
     def test_sample_relative_1d(self):
         # type: () -> None

@@ -364,16 +364,10 @@ def _fast_intersection_search_space(
 ) -> Dict[str, BaseDistribution]:
     search_space = None  # type: Optional[Dict[str, BaseDistribution]]
 
-    completed_trials = [
-        t
-        for t in study.get_trials(deepcopy=False)
-        if t.state == optuna.structs.TrialState.COMPLETE
-    ]
+    for trial in reversed(study.get_trials(deepcopy=False)):
+        if trial.state != optuna.structs.TrialState.COMPLETE:
+            continue
 
-    if len(completed_trials) == 0:
-        return {}
-
-    for trial in reversed(completed_trials):
         if search_space is None:
             search_space = copy.deepcopy(trial.distributions)
             continue
@@ -409,7 +403,7 @@ def _fast_intersection_search_space(
         break
 
     if search_space is None:
-        search_space = {}
+        return {}
 
     json_str = json.dumps(
         {name: _distribution_to_dict(search_space[name]) for name in search_space}
