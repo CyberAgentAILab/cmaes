@@ -53,6 +53,7 @@ CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/solver_cmaes.
 
 $KUROBAKO studies \
   --solvers $RANDOM_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \
+  --concurrency 10 \
   --problems $PROBLEM \
   --seed 1 \
   --repeats 10 --budget 300 \
