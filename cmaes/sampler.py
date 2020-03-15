@@ -163,7 +163,9 @@ class CMASampler(BaseSampler):
         if len(solution_trials) >= optimizer.population_size:
             solutions = []
             for t in solution_trials[: optimizer.population_size]:
-                x = np.array([t.params[k] for k in ordered_keys])
+                x = np.array([
+                    _to_cma_param(search_space[k], t.params[k])
+                    for k in ordered_keys])
                 solutions.append((x, t.value))
             optimizer.tell(solutions)
             pickled_optimizer = pickle.dumps(optimizer)
@@ -186,7 +188,7 @@ class CMASampler(BaseSampler):
             trial._trial_id, "cma:generation", optimizer.generation
         )
         external_values = {
-            k: _to_external_repr(search_space, k, p)
+            k: _to_optuna_param(search_space[k], p)
             for k, p in zip(ordered_keys, params)
         }
         return external_values
@@ -260,19 +262,28 @@ class CMASampler(BaseSampler):
         )
 
 
-def _to_external_repr(
-    search_space: Dict[str, BaseDistribution], param_name: str, internal_repr: float,
+def _to_cma_param(
+        distribution: BaseDistribution, optuna_param: Any,
+) -> float:
+    if isinstance(distribution, optuna.distributions.LogUniformDistribution):
+        return math.log(optuna_param)
+    if isinstance(distribution, optuna.distributions.IntUniformDistribution):
+        return float(optuna_param)
+    return optuna_param
+
+
+def _to_optuna_param(
+    distribution: BaseDistribution, cma_param: float,
 ) -> Any:
-    dist = search_space[param_name]
-    if isinstance(dist, optuna.distributions.LogUniformDistribution):
-        return math.exp(internal_repr)
-    if isinstance(dist, optuna.distributions.DiscreteUniformDistribution):
-        v = np.round(internal_repr / dist.q) * dist.q + dist.low
+    if isinstance(distribution, optuna.distributions.LogUniformDistribution):
+        return math.exp(cma_param)
+    if isinstance(distribution, optuna.distributions.DiscreteUniformDistribution):
+        v = np.round(cma_param / distribution.q) * distribution.q + distribution.low
         # v may slightly exceed range due to round-off errors.
-        return float(min(max(v, dist.low), dist.high))
-    if isinstance(dist, optuna.distributions.IntUniformDistribution):
-        return int(np.round(internal_repr))
-    return internal_repr
+        return float(min(max(v, distribution.low), distribution.high))
+    if isinstance(distribution, optuna.distributions.IntUniformDistribution):
+        return int(np.round(cma_param))
+    return cma_param
 
 
 def _initialize_x0(search_space: Dict[str, BaseDistribution]) -> Dict[str, np.ndarray]:
