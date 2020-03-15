@@ -262,7 +262,7 @@ class CMASampler(BaseSampler):
         )
 
 
-def _to_cma_param(distribution: BaseDistribution, optuna_param: Any,) -> float:
+def _to_cma_param(distribution: BaseDistribution, optuna_param: Any) -> float:
     if isinstance(distribution, optuna.distributions.LogUniformDistribution):
         return math.log(optuna_param)
     if isinstance(distribution, optuna.distributions.IntUniformDistribution):
@@ -270,7 +270,7 @@ def _to_cma_param(distribution: BaseDistribution, optuna_param: Any,) -> float:
     return optuna_param
 
 
-def _to_optuna_param(distribution: BaseDistribution, cma_param: float,) -> Any:
+def _to_optuna_param(distribution: BaseDistribution, cma_param: float) -> Any:
     if isinstance(distribution, optuna.distributions.LogUniformDistribution):
         return math.exp(cma_param)
     if isinstance(distribution, optuna.distributions.DiscreteUniformDistribution):
