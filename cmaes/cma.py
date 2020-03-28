@@ -314,7 +314,7 @@ class CMA:
             + self._cmu * rank_mu
         )
         # Avoid eigendecomposition error by arithmetic overflow
-        self._C += 1e-16
+        self._C += np.diag(np.ones(self._n_dim) * 1e-16)
 
 
 def _compress_symmetric(sym2d: np.ndarray) -> np.ndarray:
