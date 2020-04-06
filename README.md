@@ -50,7 +50,7 @@ I recommend you to use this library via Optuna.
 ### Optuna's sampler interface
 
 [Optuna](https://github.com/optuna/optuna) [2] is an automatic hyperparameter optimization framework.
-A sampler based on this CMA-ES library is added from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
+A sampler based on this library is available from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
 Usage is like this:
 
 ```python
@@ -68,14 +68,13 @@ if __name__ == "__main__":
     study.optimize(objective, n_trials=250)
 ```
 
-See [optuna.samplers.CmaEsSampler](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for details.
+See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for more details.
 
 <details>
 
-<summary>For older versions</summary>
+<summary>For older versions (Optuna v1.2.0 or older)</summary>
 
-If you are using Optuna v1.2.0 or older, please use `cmaes.samlper.CMASampler`.
-It is basically the same with `optuna.sampler.CmaEsSampler`.
+If you are using older versions, please use `cmaes.samlper.CMASampler`.
 
 ```python
 import optuna
@@ -101,7 +100,7 @@ If your search space contains a categorical distribution, please use [TPESampler
 
 ### Low-level interface
 
-This library also provides "ask-and-tell" style low-level interface.
+This library also provides an "ask-and-tell" style interface.
 
 ```python
 import numpy as np
