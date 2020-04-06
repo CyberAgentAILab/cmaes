@@ -3,6 +3,8 @@ import json
 import logging
 import math
 import pickle
+from collections import OrderedDict
+
 import numpy as np
 import optuna
 
@@ -88,7 +90,7 @@ class CMASampler(BaseSampler):
         search_space = {}
 
         for name, distribution in _fast_intersection_search_space(
-            study, trial._trial_id
+            study, trial_id=trial._trial_id
         ).items():
             if distribution.single():
                 # `cma` cannot handle distributions that contain just a single value, so we skip
@@ -367,7 +369,7 @@ def _distribution_to_dict(dist: BaseDistribution) -> Dict[str, Any]:
 
 
 def _fast_intersection_search_space(
-    study: optuna.Study, trial_id: int
+    study: optuna.Study, ordered_dict: bool = False, trial_id: Optional[int] = None,
 ) -> Dict[str, BaseDistribution]:
     search_space = None  # type: Optional[Dict[str, BaseDistribution]]
 
@@ -390,7 +392,12 @@ def _fast_intersection_search_space(
             del search_space[param_name]
 
         # Retrieve cache from trial_system_attrs.
-        json_str = trial.system_attrs.get("cma:search_space", None)  # type: str
+        if trial_id is None:
+            continue
+
+        json_str = trial.system_attrs.get(
+            "intersection_search_space", None
+        )  # type: Optional[str]
         if json_str is None:
             continue
         json_dict = json.loads(json_str)
@@ -409,13 +416,15 @@ def _fast_intersection_search_space(
             del search_space[param_name]
         break
 
-    if search_space is None:
-        return {}
+    if trial_id is not None and search_space is not None:
+        json_str = json.dumps(
+            {name: _distribution_to_dict(search_space[name]) for name in search_space}
+        )
+        study._storage.set_trial_system_attr(
+            trial_id, "intersection_search_space", json_str,
+        )
 
-    json_str = json.dumps(
-        {name: _distribution_to_dict(search_space[name]) for name in search_space}
-    )
-    study._storage.set_trial_system_attr(
-        trial_id, "cma:search_space", json_str,
-    )
+    search_space = search_space or {}
+    if ordered_dict:
+        search_space = OrderedDict(sorted(search_space.items(), key=lambda x: x[0]))
     return search_space
