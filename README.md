@@ -50,12 +50,36 @@ I recommend you to use this library via Optuna.
 ### Optuna's sampler interface
 
 [Optuna](https://github.com/optuna/optuna) [2] is an automatic hyperparameter optimization framework.
-Optuna officially implements [a sampler based on pycma](https://optuna.readthedocs.io/en/latest/reference/integration.html#optuna.integration.CmaEsSampler).
-It achieves almost the same performance. But this library is faster and simple.
+A sampler based on this library is available from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
+Usage is like this:
+
+```python
+import optuna
+
+
+def objective(trial: optuna.Trial):
+    x1 = trial.suggest_uniform("x1", -4, 4)
+    x2 = trial.suggest_uniform("x2", -4, 4)
+    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+if __name__ == "__main__":
+    sampler = optuna.samplers.CmaEsSampler()
+    study = optuna.create_study(sampler=sampler)
+    study.optimize(objective, n_trials=250)
+```
+
+See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for more details.
+
+<details>
+
+<summary>For older versions (Optuna v1.2.0 or older)</summary>
+
+If you are using older versions, please use `cmaes.samlper.CMASampler`.
 
 ```python
 import optuna
 from cmaes.sampler import CMASampler
+
 
 def objective(trial: optuna.Trial):
     x1 = trial.suggest_uniform("x1", -4, 4)
@@ -68,12 +92,15 @@ if __name__ == "__main__":
     study.optimize(objective, n_trials=250)
 ```
 
+</details>
+
 Note that CMASampler doesn't support categorical distributions.
 Although pycma's sampler supports categorical distributions, it also has a problem (especially on high-cardinality categorical distribution).
 If your search space contains a categorical distribution, please use [TPESampler](https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.TPESampler).
 
-
 ### Low-level interface
+
+This library also provides an "ask-and-tell" style interface.
 
 ```python
 import numpy as np
@@ -97,6 +124,9 @@ if __name__ == "__main__":
 
 ## Benchmark results
 
+Optuna officially implements [a sampler based on pycma](https://optuna.readthedocs.io/en/latest/reference/integration.html#optuna.integration.CmaEsSampler).
+It achieves almost the same performance. But this library is faster and simple.
+
 ### Algorithm's efficiency
 
 | [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hemp Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
@@ -108,14 +138,14 @@ See [benchmark](./benchmark) for details.
 
 ### Execution Speed
 
-| trials/params | storage |     pycma's sampler     |       this library      |
-| ------------- | ------- | ----------------------- | ----------------------- |
-|     100 /   5 |  memory |   4.976 sec (+/- 0.596) |   0.197 sec (+/- 0.078) |
-|     500 /   5 |  memory |  71.651 sec (+/- 3.847) |   0.656 sec (+/- 0.044) |
-|     500 /  50 |  memory | 291.002 sec (+/- 5.010) |   1.981 sec (+/- 0.041) |
-|     100 /   5 |  sqlite |  16.143 sec (+/- 3.487) |  11.843 sec (+/- 1.390) |
-|     500 /   5 |  sqlite | 129.436 sec (+/- 6.279) |  43.735 sec (+/- 2.676) |
-|     500 /  50 |  sqlite | 397.084 sec (+/- 6.618) | 150.531 sec (+/- 1.113) |
+| trials/params | storage | pycma integration sampler |       this library      |
+| ------------- | ------- | ------------------------- | ----------------------- |
+|     100 /   5 |  memory |     4.976 sec (+/- 0.596) |   0.197 sec (+/- 0.078) |
+|     500 /   5 |  memory |    71.651 sec (+/- 3.847) |   0.656 sec (+/- 0.044) |
+|     500 /  50 |  memory |   291.002 sec (+/- 5.010) |   1.981 sec (+/- 0.041) |
+|     100 /   5 |  sqlite |    16.143 sec (+/- 3.487) |  11.843 sec (+/- 1.390) |
+|     500 /   5 |  sqlite |   129.436 sec (+/- 6.279) |  43.735 sec (+/- 2.676) |
+|     500 /  50 |  sqlite |   397.084 sec (+/- 6.618) | 150.531 sec (+/- 1.113) |
 
 [This script](./benchmark/speed_test.py) was run on my laptop with `--times 4`. So the times should not be taken precisely.
 Even though, it is clear that this library is extremely faster than Optuna's pycma sampler (with Optuna v1.0.0 and pycma v2.7.0).
