@@ -3,6 +3,7 @@ import json
 import logging
 import math
 import pickle
+import warnings
 from collections import OrderedDict
 
 import numpy as np
@@ -83,6 +84,13 @@ class CMASampler(BaseSampler):
         self._warn_independent_sampling = warn_independent_sampling
         self._logger = logging.getLogger("optuna.cmaes")
         self._cma_rng = np.random.RandomState(seed)
+
+        warnings.warn(
+            "CMASampler is added to Optuna from v1.3.0. "
+            "Please use `optuna.samplers.CmaEsSampler`.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
 
     def infer_relative_search_space(
         self, study: optuna.Study, trial: optuna.structs.FrozenTrial,
