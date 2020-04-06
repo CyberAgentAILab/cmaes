@@ -56,7 +56,6 @@ Usage is like this:
 ```python
 import optuna
 
-
 def objective(trial: optuna.Trial):
     x1 = trial.suggest_uniform("x1", -4, 4)
     x2 = trial.suggest_uniform("x2", -4, 4)
@@ -79,7 +78,6 @@ If you are using older versions, please use `cmaes.samlper.CMASampler`.
 ```python
 import optuna
 from cmaes.sampler import CMASampler
-
 
 def objective(trial: optuna.Trial):
     x1 = trial.suggest_uniform("x1", -4, 4)
