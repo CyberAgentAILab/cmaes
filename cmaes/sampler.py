@@ -280,7 +280,13 @@ def _to_optuna_param(distribution: BaseDistribution, cma_param: float) -> Any:
         # v may slightly exceed range due to round-off errors.
         return float(min(max(v, distribution.low), distribution.high))
     if isinstance(distribution, optuna.distributions.IntUniformDistribution):
-        return int(np.round(cma_param))
+        # "step" attribute is added from Optuna v1.3.0.
+        if getattr(distribution, "step", None) is None:
+            return int(np.round(cma_param))
+
+        r = np.round((cma_param - distribution.low) / distribution.step)
+        v = r * distribution.step + distribution.low
+        return int(v)
     return cma_param
 
 
