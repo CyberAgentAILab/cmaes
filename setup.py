@@ -30,7 +30,7 @@ setup(
     long_description=open(os.path.join(BASE_PATH, "README.md")).read(),
     long_description_content_type="text/markdown",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
@@ -38,7 +38,9 @@ setup(
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3 :: Only",
+        "Intended Audience :: Science/Research",
     ],
     packages=find_packages(exclude=["test*", "benchmark*", "examples"]),
     install_requires=["numpy"],
