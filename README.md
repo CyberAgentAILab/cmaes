@@ -36,6 +36,12 @@ Supported Python versions are 3.6 or later.
 $ pip install cmaes
 ```
 
+Or you can install via [conda-forge](https://anaconda.org/conda-forge/cmaes).
+
+```
+$ conda install -c conda-forge cmaes
+```
+
 ## Usage
 
 This library provides two interfaces that an Optuna's sampler interface and a low-level interface.
