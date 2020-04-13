@@ -5,7 +5,7 @@ from typing import List
 from typing import Optional
 
 
-class SixHempCamelEvaluator(problem.Evaluator):
+class SixHumpCamelEvaluator(problem.Evaluator):
     """
     See https://www.sfu.ca/~ssurjano/camel6.html
     """
@@ -27,16 +27,16 @@ class SixHempCamelEvaluator(problem.Evaluator):
         return self._current_step
 
 
-class SixHempCamelProblem(problem.Problem):
+class SixHumpCamelProblem(problem.Problem):
     def create_evaluator(
         self, params: List[Optional[float]]
     ) -> Optional[problem.Evaluator]:
-        return SixHempCamelEvaluator(params)
+        return SixHumpCamelEvaluator(params)
 
 
-class SixHempCamelProblemFactory(problem.ProblemFactory):
+class SixHumpCamelProblemFactory(problem.ProblemFactory):
     def create_problem(self, seed: int) -> Problem:
-        return SixHempCamelProblem()
+        return SixHumpCamelProblem()
 
     def specification(self) -> problem.ProblemSpec:
         params = [
@@ -44,12 +44,12 @@ class SixHempCamelProblemFactory(problem.ProblemFactory):
             problem.Var("x2", problem.ContinuousRange(-5, 10)),
         ]
         return problem.ProblemSpec(
-            name="Six-Hemp Camel Function",
+            name="Six-Hump Camel Function",
             params=params,
-            values=[problem.Var("Six-Hemp Camel")],
+            values=[problem.Var("Six-Hump Camel")],
         )
 
 
 if __name__ == "__main__":
-    runner = problem.ProblemRunner(SixHempCamelProblemFactory())
+    runner = problem.ProblemRunner(SixHumpCamelProblemFactory())
     runner.run()

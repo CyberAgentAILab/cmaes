@@ -17,7 +17,7 @@ Usage:
 
 Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
-    six-hemp-camel : https://www.sfu.ca/~ssurjano/camel6.html
+    six-hump-camel : https://www.sfu.ca/~ssurjano/camel6.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
 
 Options:

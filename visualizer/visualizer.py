@@ -1,7 +1,7 @@
 """
 Usage:
 
-  python3 visualizer/visualizer.py --function six-hemp-camel
+  python3 visualizer/visualizer.py --function six-hump-camel
 """
 import argparse
 import numpy as np
@@ -17,7 +17,7 @@ from cmaes.cma import CMA
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--function",
-    choices=["quadratic", "himmelblau", "rosenbrock", "six-hemp-camel"],
+    choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
     default="rosenbrock",
 )
 args = parser.parse_args()
@@ -63,7 +63,7 @@ def rosenbrock_contour(x1, x2):
     return np.log(rosenbrock(x1, x2) + 1)
 
 
-def six_hemp_camel(x1, x2):
+def six_hump_camel(x1, x2):
     return (
         (4 - 2.1 * (x1 ** 2) + (x1 ** 4) / 3) * (x1 ** 2)
         + x1 * x2
@@ -71,8 +71,8 @@ def six_hemp_camel(x1, x2):
     )
 
 
-def six_hemp_camel_contour(x1, x2):
-    return np.log(six_hemp_camel(x1, x2) + 1.0316)
+def six_hump_camel_contour(x1, x2):
+    return np.log(six_hump_camel(x1, x2) + 1.0316)
 
 
 if args.function == "quadratic":
@@ -109,11 +109,11 @@ elif args.function == "rosenbrock":
     # input domain
     x1_lower_bound, x1_upper_bound = -5, 10
     x2_lower_bound, x2_upper_bound = -5, 10
-elif args.function == "six-hemp-camel":
+elif args.function == "six-hump-camel":
     # https://www.sfu.ca/~ssurjano/camel6.html
-    fig.suptitle("CMA Evolution Strategy for Six-hemp camel function")
-    objective = six_hemp_camel
-    contour_function = six_hemp_camel_contour
+    fig.suptitle("CMA Evolution Strategy for Six-hump camel function")
+    objective = six_hump_camel
+    contour_function = six_hump_camel_contour
     global_minimums = [
         (0.0898, -0.7126),
         (-0.0898, 0.7126),

@@ -14,7 +14,7 @@ Usage:
 
 Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
-    six-hemp-camel : https://www.sfu.ca/~ssurjano/camel6.html
+    six-hump-camel : https://www.sfu.ca/~ssurjano/camel6.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
 
 Options:
@@ -33,8 +33,8 @@ case "$1" in
     rosenbrock)
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_rosenbrock.py)
         ;;
-    six-hemp-camel)
-        PROBLEM=$($KUROBAKO problem command python $DIR/problem_six_hemp_camel.py)
+    six-hump-camel)
+        PROBLEM=$($KUROBAKO problem command python $DIR/problem_six_hump_camel.py)
         ;;
     help|--help|-h)
         usage

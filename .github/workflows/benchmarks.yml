@@ -59,7 +59,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  benchmark-six-hemp-camel:
+  benchmark-six-hump-camel:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
 
@@ -89,18 +89,18 @@ jobs:
       - run: gcloud info
       - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
-      - name: Run benchmark of Six-Hemp Camel function
+      - name: Run benchmark of Six-Hump Camel function
         env:
           KUROBAKO: ./kurobako
         run: |
-          ./benchmark/runner.sh six-hemp-camel ./kurobako-report.json
+          ./benchmark/runner.sh six-hump-camel ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
       - name: Upload an image to google cloud storage
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/six-hemp-camel-${{ github.sha }}.png
+        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/six-hump-camel-${{ github.sha }}.png
 
       - name: Generate kurobako markdown report
         run: |
@@ -109,8 +109,8 @@ jobs:
         uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/six-hemp-camel-${{ github.sha }}.png
-          title: 'Benchmark of Six-Hemp Camel function'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/six-hump-camel-${{ github.sha }}.png
+          title: 'Benchmark of Six-Hump Camel function'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

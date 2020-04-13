@@ -2,7 +2,7 @@
 
 Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] implementation.
 
-![visualize-six-hemp-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
+![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
 <details>
 <summary>Himmelblau function.</summary>
@@ -152,9 +152,9 @@ It achieves almost the same performance. But this library is faster and simple.
 
 ### Algorithm's efficiency
 
-| [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hemp Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
+| [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hump Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
 | ------------------- | ----------------------- |
-| ![rosenbrock](https://user-images.githubusercontent.com/5564044/73486735-0cd5ca80-43e9-11ea-9e6e-35028edf4ee8.png) | ![six-hemp-camel](https://user-images.githubusercontent.com/5564044/73486738-0e9f8e00-43e9-11ea-8e65-d60fd5853b8d.png) |
+| ![rosenbrock](https://user-images.githubusercontent.com/5564044/73486735-0cd5ca80-43e9-11ea-9e6e-35028edf4ee8.png) | ![six-hump-camel](https://user-images.githubusercontent.com/5564044/73486738-0e9f8e00-43e9-11ea-8e65-d60fd5853b8d.png) |
 
 This implementation (green) stands comparison with [pycma](https://github.com/CMA-ES/pycma) (blue).
 See [benchmark](./benchmark) for details.
