@@ -1,8 +1,11 @@
 name: Run kurobako benchmark
 on:
   pull_request:
-    branch:
-    - 'master'
+    paths:
+    - '.github/workflows/benchmarks.yml'
+    - 'cmaes/**.py'
+    - 'benchmark/**.py'
+    - 'benchmark/runner.sh'
 jobs:
   benchmark-himmelblau:
     name: Run kurobako benchmark
