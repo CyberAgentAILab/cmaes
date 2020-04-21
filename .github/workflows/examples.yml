@@ -1,6 +1,11 @@
 name: Python application
 
-on: [push]
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/examples.yml'
+      - 'examples/**.py'
+      - 'cmaes/**.py'
 
 jobs:
   examples:

@@ -117,8 +117,7 @@ if __name__ == "__main__":
 
 </details>
 
-Note that CMASampler doesn't support categorical distributions.
-Although pycma's sampler supports categorical distributions, it also has a problem (especially on high-cardinality categorical distribution).
+Note that CmaEsSampler doesn't support categorical distributions.
 If your search space contains a categorical distribution, please use [TPESampler](https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.TPESampler).
 
 ### Low-level interface

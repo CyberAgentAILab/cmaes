@@ -34,14 +34,7 @@ $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 `kurobako plot curve` requires gnuplot. If you want to run on Docker container, please execute following:
 
 ```
-$ docker build -t cmaes ./benchmark
+$ docker pull sile/kurobako
 $ ./benchmark/himmelblau_runner.sh ./tmp/kurobako.json
-$ docker run -it --rm -v $PWD/tmp:/volume cmaes
+$ cat ./tmp/kurobako.json | docker run -v $PWD/tmp/images/:/images/ --rm -i sile/kurobako plot curve
 ```
-
-If you got something error, please investigate using:
-
-```
-$ docker run -it --rm -v $PWD/tmp:/volume --entrypoint sh cmaes
-```
-
