@@ -159,6 +159,9 @@ class CMA:
         self._g = 0
         self._rng = np.random.RandomState(seed)
 
+        # for avoid numerical errors
+        self._epsilon = 1e-8
+
     def __getstate__(self) -> Dict[str, Any]:
         attrs = {}
         for name in self.__dict__:
@@ -217,7 +220,11 @@ class CMA:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
             D = np.sqrt(D2)
+            D += self._epsilon
+            # for avoid numerical errors
             self._B, self._D = B, D
+            BD2 = np.dot(B, np.diag(D ** 2))
+            self._C = np.dot(BD2, B.T)
 
         z = self._rng.randn(self._n_dim)  # ~ N(0, I)
         y = self._B.dot(np.diag(self._D)).dot(z)  # ~ N(0, C)
@@ -291,7 +298,7 @@ class CMA:
         w_io = self._weights * np.where(
             self._weights >= 0,
             1,
-            self._n_dim / (np.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2),
+            self._n_dim / (np.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + self._epsilon),
         )
 
         delta_h_sigma = (1 - h_sigma) * self._cc * (2 - self._cc)  # (p.28)
@@ -313,8 +320,6 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
-        # Avoid eigendecomposition error by arithmetic overflow
-        self._C += 1e-16
 
 
 def _compress_symmetric(sym2d: np.ndarray) -> np.ndarray:
