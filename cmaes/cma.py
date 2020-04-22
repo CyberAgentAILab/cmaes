@@ -160,7 +160,7 @@ class CMA:
         self._rng = np.random.RandomState(seed)
 
         # for avoid numerical errors
-        self.epsilon = 1e-8
+        self._epsilon = 1e-8
 
     def __getstate__(self) -> Dict[str, Any]:
         attrs = {}
@@ -220,7 +220,7 @@ class CMA:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
             D = np.sqrt(D2)
-            D += self.epsilon
+            D += self._epsilon
             # for avoid numerical errors
             self._B, self._D = B, D
             BD2 = np.dot(B, np.diag(D ** 2))
@@ -298,7 +298,7 @@ class CMA:
         w_io = self._weights * np.where(
             self._weights >= 0,
             1,
-            self._n_dim / (np.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + self.epsilon),
+            self._n_dim / (np.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + self._epsilon),
         )
 
         delta_h_sigma = (1 - h_sigma) * self._cc * (2 - self._cc)  # (p.28)
