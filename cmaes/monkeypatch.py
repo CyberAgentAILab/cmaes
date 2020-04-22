@@ -1,3 +1,4 @@
+import warnings
 from typing import Tuple
 
 try:
@@ -16,9 +17,15 @@ def patch_fast_intersection_search_space() -> None:
     if optuna is None:
         return
 
-    # TODO(c-bata): Set the upper version constraint after merged to Optuna.
-    # https://github.com/optuna/optuna/pull/885
-    if get_optuna_version() < (1, 3):
+    # CMA-ES sampler is added at v1.3.0.
+    # https://github.com/optuna/optuna/pull/1142 is added at v1.4.0.
+    if get_optuna_version() != (1, 3):
+        warnings.warn(
+            "intersection_search_space will be faster than v1.4.0. "
+            "You don't need to apply this monkeypatch",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return
 
     from .sampler import _fast_intersection_search_space
