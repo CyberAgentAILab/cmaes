@@ -259,6 +259,7 @@ class CMA:
 
         x_k = np.array([s[0] for s in solutions])  # ~ N(m, σ^2 C)
         y_k = (x_k - self._mean) / self._sigma  # ~ N(0, C)
+        y_k += 1e-16  # Avoid zero deviation error at eq.46
 
         # Selection and recombination
         y_w = np.sum(y_k[: self._mu].T * self._weights[: self._mu], axis=1)  # eq.41
