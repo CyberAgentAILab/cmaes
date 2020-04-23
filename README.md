@@ -146,11 +146,6 @@ if __name__ == "__main__":
 
 ## Benchmark results
 
-Optuna officially implements [a sampler based on pycma](https://optuna.readthedocs.io/en/latest/reference/integration.html#optuna.integration.CmaEsSampler).
-It achieves almost the same performance. But this library is faster and simple.
-
-### Algorithm's efficiency
-
 | [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hump Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
 | ------------------- | ----------------------- |
 | ![rosenbrock](https://user-images.githubusercontent.com/5564044/73486735-0cd5ca80-43e9-11ea-9e6e-35028edf4ee8.png) | ![six-hump-camel](https://user-images.githubusercontent.com/5564044/73486738-0e9f8e00-43e9-11ea-8e65-d60fd5853b8d.png) |
@@ -158,22 +153,7 @@ It achieves almost the same performance. But this library is faster and simple.
 This implementation (green) stands comparison with [pycma](https://github.com/CMA-ES/pycma) (blue).
 See [benchmark](./benchmark) for details.
 
-### Execution Speed
-
-| trials/params | storage | pycma integration sampler |       this library      |
-| ------------- | ------- | ------------------------- | ----------------------- |
-|     100 /   5 |  memory |     4.976 sec (+/- 0.596) |   0.197 sec (+/- 0.078) |
-|     500 /   5 |  memory |    71.651 sec (+/- 3.847) |   0.656 sec (+/- 0.044) |
-|     500 /  50 |  memory |   291.002 sec (+/- 5.010) |   1.981 sec (+/- 0.041) |
-|     100 /   5 |  sqlite |    16.143 sec (+/- 3.487) |  11.843 sec (+/- 1.390) |
-|     500 /   5 |  sqlite |   129.436 sec (+/- 6.279) |  43.735 sec (+/- 2.676) |
-|     500 /  50 |  sqlite |   397.084 sec (+/- 6.618) | 150.531 sec (+/- 1.113) |
-
-[This script](./benchmark/speed_test.py) was run on my laptop with `--times 4`. So the times should not be taken precisely.
-Even though, it is clear that this library is extremely faster than Optuna's pycma sampler (with Optuna v1.0.0 and pycma v2.7.0).
-
-Links
------
+## Links
 
 **Other libraries:**
 
@@ -187,3 +167,4 @@ I respect all libraries involved in CMA-ES.
 
 * [1] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [2] [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
+
