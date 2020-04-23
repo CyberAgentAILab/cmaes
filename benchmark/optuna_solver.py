@@ -5,17 +5,19 @@ from kurobako import solver
 from kurobako.solver.optuna import OptunaSolverFactory
 
 parser = argparse.ArgumentParser()
-parser.add_argument('sampler', choices=['cmaes', 'pycma'])
-parser.add_argument('--loglevel', choices=['debug', 'info', 'warning', 'error'], default='warning')
+parser.add_argument("sampler", choices=["cmaes", "pycma"])
+parser.add_argument(
+    "--loglevel", choices=["debug", "info", "warning", "error"], default="warning"
+)
 args = parser.parse_args()
 
-if args.loglevel == 'debug':
+if args.loglevel == "debug":
     optuna.logging.set_verbosity(optuna.logging.DEBUG)
-elif args.loglevel == 'info':
+elif args.loglevel == "info":
     optuna.logging.set_verbosity(optuna.logging.INFO)
-elif args.loglevel == 'warning':
+elif args.loglevel == "warning":
     optuna.logging.set_verbosity(optuna.logging.WARNING)
-elif args.loglevel == 'error':
+elif args.loglevel == "error":
     optuna.logging.set_verbosity(optuna.logging.ERROR)
 
 
@@ -34,22 +36,18 @@ class PyCMASolverFactory(OptunaSolverFactory):
 
 
 def create_cmaes_study(seed):
-    sampler = optuna.samplers.CmaEsSampler(
-        seed=seed,
-        warn_independent_sampling=True,
-    )
+    sampler = optuna.samplers.CmaEsSampler(seed=seed, warn_independent_sampling=True,)
     return optuna.create_study(sampler=sampler)
 
 
 def create_pycma_study(seed):
     sampler = optuna.integration.CmaEsSampler(
-        seed=seed,
-        warn_independent_sampling=True,
+        seed=seed, warn_independent_sampling=True,
     )
     return optuna.create_study(sampler=sampler)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     if args.sampler == "cmaes":
         factory = CMASolverFactory(create_cmaes_study)
     elif args.sampler == "pycma":
