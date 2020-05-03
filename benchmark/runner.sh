@@ -48,8 +48,8 @@ case "$1" in
 esac
 
 RANDOM_SOLVER=$($KUROBAKO solver random)
-PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command python $DIR/solver_pycma.py)
-CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/solver_cmaes.py)
+CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/optuna_solver.py cmaes)
+PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command python $DIR/optuna_solver.py pycma)
 
 $KUROBAKO studies \
   --solvers $RANDOM_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \

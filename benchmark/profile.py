@@ -4,14 +4,10 @@ import logging
 import pstats
 import optuna
 
-from optuna.integration.cma import CmaEsSampler
-from cmaes.sampler import CMASampler
-
 parser = argparse.ArgumentParser()
 parser.add_argument("--storage", choices=["memory", "sqlite"], default="memory")
 parser.add_argument("--params", type=int, default=100)
 parser.add_argument("--trials", type=int, default=1000)
-parser.add_argument("--sampler", choices=["pycma", "cmaes"], default="cmaes")
 args = parser.parse_args()
 
 
@@ -27,11 +23,8 @@ def main():
     logging.disable(level=logging.INFO)
     storage = None
     if args.storage == "sqlite":
-        storage = f"sqlite:///db-{args.sampler}-{args.trials}-{args.params}.sqlite3"
-    if args.sampler == "pycma":
-        sampler = CmaEsSampler()
-    else:
-        sampler = CMASampler()
+        storage = f"sqlite:///db-{args.trials}-{args.params}.sqlite3"
+    sampler = optuna.samplers.CmaEsSampler()
     study = optuna.create_study(sampler=sampler, storage=storage)
 
     profiler = cProfile.Profile()

@@ -26,7 +26,7 @@ jobs:
 
       - name: Download kurobako CLI
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.4/kurobako-0.1.4.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -81,7 +81,7 @@ jobs:
 
       - name: Download kurobako CLI
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.4/kurobako-0.1.4.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -136,7 +136,7 @@ jobs:
 
       - name: Download kurobako CLI
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.4/kurobako-0.1.4.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
