@@ -219,7 +219,8 @@ class CMA:
         if self._B is None or self._D is None:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
-            D = np.sqrt(D2)
+            # To avoid taking a route to a negative number due to numerical error
+            D = np.sqrt(np.where(D2 < 0, 0, D2))
             D += self._epsilon
             # for avoid numerical errors
             self._B, self._D = B, D
@@ -259,7 +260,9 @@ class CMA:
         if self._B is None or self._D is None:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
-            D = np.sqrt(D2)
+            # To avoid taking a route to a negative number due to numerical error
+            D = np.sqrt(np.where(D2 < 0, 0, D2))
+            D += self._epsilon
         else:
             B, D = self._B, self._D
         self._B, self._D = None, None
@@ -278,9 +281,13 @@ class CMA:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
+        # To avoid overflow
+        _log_sigma = np.log(self._sigma + self._epsilon) + (self._c_sigma / self._d_sigma) * (
+                norm_p_sigma / self._chi_n - 1)
+        if _log_sigma > 10 ** 2.8:
+            self._sigma = np.exp(10 ** 2.8)
+        else:
+            self._sigma = np.exp(_log_sigma)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
