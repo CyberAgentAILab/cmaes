@@ -1,4 +1,5 @@
 import math
+import sys
 import numpy as np
 
 from typing import Any
@@ -284,10 +285,7 @@ class CMA:
         # To avoid overflow
         _log_sigma = np.log(self._sigma + self._epsilon) + (self._c_sigma / self._d_sigma) * (
                 norm_p_sigma / self._chi_n - 1)
-        if _log_sigma > 10 ** 2.8:
-            self._sigma = np.exp(10 ** 2.8)
-        else:
-            self._sigma = np.exp(_log_sigma)
+        self._sigma = min(np.exp(_log_sigma), sys.float_info.max)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
