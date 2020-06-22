@@ -283,7 +283,7 @@ class CMA:
         self._sigma *= np.exp(
             (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
         )
-        self._sigma = min(self._sigma, sys.float_info.max)
+        self._sigma = min(self._sigma, sys.float_info.max / 5)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
