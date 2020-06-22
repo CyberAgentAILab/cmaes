@@ -282,10 +282,10 @@ class CMA:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        # To avoid overflow
-        _log_sigma = np.log(self._sigma + self._epsilon) + (self._c_sigma / self._d_sigma) * (
-                norm_p_sigma / self._chi_n - 1)
-        self._sigma = min(np.exp(_log_sigma), sys.float_info.max)
+        self._sigma *= np.exp(
+            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
+        )
+        self._sigma = min(self._sigma, sys.float_info.max)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
