@@ -1,4 +1,5 @@
 import math
+import sys
 import numpy as np
 
 from typing import Any
@@ -219,8 +220,8 @@ class CMA:
         if self._B is None or self._D is None:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
-            D = np.sqrt(D2)
-            D += self._epsilon
+            # To avoid taking a route to a negative number due to numerical error
+            D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
             # for avoid numerical errors
             self._B, self._D = B, D
             BD2 = np.dot(B, np.diag(D ** 2))
@@ -259,7 +260,8 @@ class CMA:
         if self._B is None or self._D is None:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
-            D = np.sqrt(D2)
+            # To avoid taking a route to a negative number due to numerical error
+            D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
         else:
             B, D = self._B, self._D
         self._B, self._D = None, None
@@ -281,6 +283,7 @@ class CMA:
         self._sigma *= np.exp(
             (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
         )
+        self._sigma = min(self._sigma, sys.float_info.max / 5)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
