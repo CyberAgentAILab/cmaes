@@ -221,8 +221,7 @@ class CMA:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
             # To avoid taking a route to a negative number due to numerical error
-            D = np.sqrt(np.where(D2 < 0, 0, D2))
-            D += self._epsilon
+            D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
             # for avoid numerical errors
             self._B, self._D = B, D
             BD2 = np.dot(B, np.diag(D ** 2))
@@ -262,8 +261,7 @@ class CMA:
             self._C = (self._C + self._C.T) / 2
             D2, B = np.linalg.eigh(self._C)
             # To avoid taking a route to a negative number due to numerical error
-            D = np.sqrt(np.where(D2 < 0, 0, D2))
-            D += self._epsilon
+            D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
         else:
             B, D = self._B, self._D
         self._B, self._D = None, None
