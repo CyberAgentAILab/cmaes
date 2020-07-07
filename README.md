@@ -44,85 +44,7 @@ $ conda install -c conda-forge cmaes
 
 ## Usage
 
-This library provides two interfaces that an Optuna's sampler interface and a low-level interface.
-I recommend you to use this library via Optuna.
-
-### Optuna's sampler interface
-
-[Optuna](https://github.com/optuna/optuna) [2] is an automatic hyperparameter optimization framework.
-A sampler based on this library is available from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
-Usage is like this:
-
-```python
-import optuna
-
-def objective(trial: optuna.Trial):
-    x1 = trial.suggest_uniform("x1", -4, 4)
-    x2 = trial.suggest_uniform("x2", -4, 4)
-    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
-
-if __name__ == "__main__":
-    sampler = optuna.samplers.CmaEsSampler()
-    study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=250)
-```
-
-See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for more details.
-
-<details>
-
-<summary>Monkeypatch for faster CMA-ES sampler of Optuna v1.3.x.</summary>
-
-If you are using Optuna v1.3.x, you can make `optuna.samplers.CmaEsSampler` faster.
-
-```python
-import optuna
-from cmaes.monkeypatch import patch_fast_intersection_search_space
-
-patch_fast_intersection_search_space()
-
-def objective(trial: optuna.Trial):
-    x1 = trial.suggest_float("x1", -4, 4)
-    x2 = trial.suggest_float("x2", -4, 4)
-    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
-
-if __name__ == "__main__":
-    sampler = optuna.samplers.CmaEsSampler()
-    study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=250)
-```
-
-</details>
-
-<details>
-
-<summary>For older versions (Optuna v1.2.0 or older)</summary>
-
-If you are using older versions, please use `cmaes.samlper.CMASampler`.
-
-```python
-import optuna
-from cmaes.sampler import CMASampler
-
-def objective(trial: optuna.Trial):
-    x1 = trial.suggest_uniform("x1", -4, 4)
-    x2 = trial.suggest_uniform("x2", -4, 4)
-    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
-
-if __name__ == "__main__":
-    sampler = CMASampler()
-    study = optuna.create_study(sampler=sampler)
-    study.optimize(objective, n_trials=250)
-```
-
-</details>
-
-Note that CmaEsSampler doesn't support categorical distributions.
-If your search space contains a categorical distribution, please use [TPESampler](https://optuna.readthedocs.io/en/latest/reference/samplers.html#optuna.samplers.TPESampler).
-
-### Low-level interface
-
-This library also provides an "ask-and-tell" style interface.
+This library provides an "ask-and-tell" style interface.
 
 ```python
 import numpy as np
@@ -142,6 +64,25 @@ if __name__ == "__main__":
             solutions.append((x, value))
             print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
         cma_es.tell(solutions)
+```
+
+And you can use this library via Optuna.
+[Optuna](https://github.com/optuna/optuna) [2] is an automatic hyperparameter optimization framework.
+A sampler based on this library is available from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
+See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for more details.
+
+```python
+import optuna
+
+def objective(trial: optuna.Trial):
+    x1 = trial.suggest_uniform("x1", -4, 4)
+    x2 = trial.suggest_uniform("x2", -4, 4)
+    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+if __name__ == "__main__":
+    sampler = optuna.samplers.CmaEsSampler()
+    study = optuna.create_study(sampler=sampler)
+    study.optimize(objective, n_trials=250)
 ```
 
 ## Benchmark results
