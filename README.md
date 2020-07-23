@@ -102,7 +102,7 @@ if __name__ == "__main__":
     cma_opts = {"mean": np.zeros(2), "sigma": 1.3}
     optimizer = CMA(**cma_opts)
 
-    for generation in range(1000):
+    for generation in range(150):
         solutions = []
         for _ in range(optimizer.population_size):
             x = optimizer.ask()
