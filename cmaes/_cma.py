@@ -63,13 +63,17 @@ class CMA:
         bounds: Optional[np.ndarray] = None,
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
+        popsize: Optional[int] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
 
-        popsize = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
+        if popsize is None:
+            popsize = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
+        assert popsize > 0, "popsize must be non-zero positive value."
+
         mu = popsize // 2
 
         # (eq.49)
