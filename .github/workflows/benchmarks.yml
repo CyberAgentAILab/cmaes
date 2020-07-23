@@ -16,11 +16,11 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@master
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - run: pip install -U pip
+      - run: pip install -U pip setuptools
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
@@ -72,11 +72,11 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@master
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - run: pip install -U pip
+      - run: pip install -U pip setuptools
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
@@ -128,11 +128,11 @@ jobs:
       - name: Check out code into the Go module directory
         uses: actions/checkout@master
 
-      - uses: actions/setup-python@v1
+      - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
           architecture: 'x64'
-      - run: pip install -U pip
+      - run: pip install -U pip setuptools
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
