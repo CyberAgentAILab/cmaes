@@ -31,7 +31,7 @@ def main():
         if optimizer.should_terminate():
             popsize = optimizer.population_size * inc_popsize
             optimizer = CMA(population_size=popsize, **cma_opts)
-            print(f"Restart CMA-ES with popsize={popsize}")
+            print("Restart CMA-ES with popsize={}".format(popsize))
 
 
 if __name__ == "__main__":
