@@ -54,6 +54,9 @@ class CMA:
 
         seed:
             A seed number (optional).
+
+        popsize:
+            A population size (optional).
     """
 
     def __init__(
@@ -63,13 +66,17 @@ class CMA:
         bounds: Optional[np.ndarray] = None,
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
+        popsize: Optional[int] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
 
-        popsize = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
+        if popsize is None:
+            popsize = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
+        assert popsize > 0, "popsize must be non-zero positive value."
+
         mu = popsize // 2
 
         # (eq.49)
@@ -160,6 +167,15 @@ class CMA:
         self._g = 0
         self._rng = np.random.RandomState(seed)
 
+        # Termination criteria
+        self._tolx = 1e-11
+        self._tolxup = 1e4
+        self._tolfun = 1e-11
+        self._tolconditioncov = 1e14
+
+        self._funhist_term = 10 + math.ceil(30 * n_dim / popsize)
+        self._funhist_values = np.empty(self._funhist_term * 2)
+
         # for avoid numerical errors
         self._epsilon = 1e-8
 
@@ -216,19 +232,22 @@ class CMA:
         x = self._repair_infeasible_params(x)
         return x
 
-    def _sample_solution(self) -> np.ndarray:
-        if self._B is None or self._D is None:
-            self._C = (self._C + self._C.T) / 2
-            D2, B = np.linalg.eigh(self._C)
-            # To avoid taking a route to a negative number due to numerical error
-            D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
-            # for avoid numerical errors
-            self._B, self._D = B, D
-            BD2 = np.dot(B, np.diag(D ** 2))
-            self._C = np.dot(BD2, B.T)
+    def _eigen_decomposition(self) -> Tuple[np.ndarray, np.ndarray]:
+        if self._B is not None and self._D is not None:
+            return self._B, self._D
 
+        self._C = (self._C + self._C.T) / 2
+        D2, B = np.linalg.eigh(self._C)
+        D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
+        self._C = np.dot(np.dot(B, np.diag(D ** 2)), B.T)
+
+        self._B, self._D = B, D
+        return B, D
+
+    def _sample_solution(self) -> np.ndarray:
+        B, D = self._eigen_decomposition()
         z = self._rng.randn(self._n_dim)  # ~ N(0, I)
-        y = self._B.dot(np.diag(self._D)).dot(z)  # ~ N(0, C)
+        y = B.dot(np.diag(D)).dot(z)  # ~ N(0, C)
         x = self._mean + self._sigma * y  # ~ N(m, σ^2 C)
         return x
 
@@ -256,14 +275,14 @@ class CMA:
         self._g += 1
         solutions.sort(key=lambda s: s[1])
 
+        # Stores 'best' and 'worst' values of the
+        # last 'self._funhist_term' generations.
+        funhist_idx = 2 * (self.generation % self._funhist_term)
+        self._funhist_values[funhist_idx] = solutions[0][1]
+        self._funhist_values[funhist_idx + 1] = solutions[-1][1]
+
         # Sample new population of search_points, for k=1, ..., popsize
-        if self._B is None or self._D is None:
-            self._C = (self._C + self._C.T) / 2
-            D2, B = np.linalg.eigh(self._C)
-            # To avoid taking a route to a negative number due to numerical error
-            D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
-        else:
-            B, D = self._B, self._D
+        B, D = self._eigen_decomposition()
         self._B, self._D = None, None
 
         x_k = np.array([s[0] for s in solutions])  # ~ N(m, σ^2 C)
@@ -323,6 +342,35 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+
+    def should_terminate(self) -> bool:
+        B, D = self._eigen_decomposition()
+        dC = np.diag(self._C)
+
+        # objective function values
+        if (
+            self.generation > self._funhist_term
+            and np.max(self._funhist_values) - np.min(self._funhist_values)
+            < self._tolfun
+        ):
+            return True
+
+        # TolX
+        if np.all(self._sigma * dC < self._tolx) and np.all(
+            self._sigma * self._pc < self._tolx
+        ):
+            return True
+
+        # TolXUp for divergent behavior
+        if self._sigma * np.max(D) > self._tolxup:
+            return True
+
+        # Condition number of the covariance matrix.
+        condition_cov = np.max(D) / np.min(D)
+        if condition_cov > self._tolconditioncov:
+            return True
+
+        return False
 
 
 def _compress_symmetric(sym2d: np.ndarray) -> np.ndarray:

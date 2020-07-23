@@ -85,6 +85,39 @@ if __name__ == "__main__":
     study.optimize(objective, n_trials=250)
 ```
 
+<details>
+<summary>IPOP-CMA-ES: restart with increasing population size.</summary>
+
+You can easily implement IPOP-CMA-ES[3] by using ``should_terminate()`` method.
+
+```python
+import numpy as np
+from cmaes import CMA
+
+def quadratic(x1, x2):
+    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+if __name__ == "__main__":
+    cma_opts = {"mean": np.zeros(2), "sigma": 1.3}
+    optimizer = CMA(**cma_opts)
+
+    for generation in range(1000):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = quadratic(x[0], x[1])
+            solutions.append((x, value))
+            print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
+        optimizer.tell(solutions)
+
+        if optimizer.should_terminate():
+            popsize = optimizer.population_size * inc_popsize
+            optimizer = CMA(popsize=popsize, **cma_opts)
+            print(f"Restart CMA-ES with popsize={popsize}")
+```
+
+</details>
+
 ## Benchmark results
 
 | [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hump Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
@@ -108,4 +141,4 @@ I respect all libraries involved in CMA-ES.
 
 * [1] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [2] [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
-
+* [3] [Auger, A., Hansen, N.: A restart CMA evolution strategy with increasing population size. In: Proceedings of the 2005 IEEE Congress on Evolutionary Computation (CEC’2005), pp. 1769–1776 (2005a)](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
