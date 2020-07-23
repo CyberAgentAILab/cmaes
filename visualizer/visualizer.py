@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from pylab import rcParams
 
-from cmaes.cma import CMA
+from cmaes._cma import CMA
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
