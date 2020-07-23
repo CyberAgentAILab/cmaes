@@ -15,7 +15,7 @@ def main():
 
     print(" g    f(x1,x2)     x1      x2  ")
     print("===  ==========  ======  ======")
-    for generation in range(5000):
+    for generation in range(1000):
         solutions = []
         for _ in range(optimizer.population_size):
             x = optimizer.ask()
@@ -30,7 +30,7 @@ def main():
 
         if optimizer.should_terminate():
             popsize = optimizer.population_size * inc_popsize
-            optimizer = CMA(popsize=popsize, **cma_opts)
+            optimizer = CMA(population_size=popsize, **cma_opts)
             print(f"Restart CMA-ES with popsize={popsize}")
 
 

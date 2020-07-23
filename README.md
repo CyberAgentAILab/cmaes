@@ -86,9 +86,10 @@ if __name__ == "__main__":
 ```
 
 <details>
-<summary>IPOP-CMA-ES: restart with increasing population size.</summary>
+<summary>Example of IPOP-CMA-ES [3]</summary>
 
-You can easily implement IPOP-CMA-ES[3] by using ``should_terminate()`` method.
+You can easily implement IPOP-CMA-ES which restarts CMA-ES
+with increasing population size.
 
 ```python
 import numpy as np
@@ -112,7 +113,7 @@ if __name__ == "__main__":
 
         if optimizer.should_terminate():
             popsize = optimizer.population_size * inc_popsize
-            optimizer = CMA(popsize=popsize, **cma_opts)
+            optimizer = CMA(population_size=popsize, **cma_opts)
             print(f"Restart CMA-ES with popsize={popsize}")
 ```
 

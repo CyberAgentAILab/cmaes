@@ -55,7 +55,7 @@ class CMA:
         seed:
             A seed number (optional).
 
-        popsize:
+        population_size:
             A population size (optional).
     """
 
@@ -66,22 +66,22 @@ class CMA:
         bounds: Optional[np.ndarray] = None,
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
-        popsize: Optional[int] = None,
+        population_size: Optional[int] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
 
-        if popsize is None:
-            popsize = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
-        assert popsize > 0, "popsize must be non-zero positive value."
+        if population_size is None:
+            population_size = 4 + math.floor(3 * math.log(n_dim))  # (eq. 48)
+        assert population_size > 0, "popsize must be non-zero positive value."
 
-        mu = popsize // 2
+        mu = population_size // 2
 
         # (eq.49)
         weights_prime = np.array(
-            [math.log((popsize + 1) / 2) - math.log(i + 1) for i in range(popsize)]
+            [math.log((population_size + 1) / 2) - math.log(i + 1) for i in range(population_size)]
         )
         mu_eff = (np.sum(weights_prime[:mu]) ** 2) / np.sum(weights_prime[:mu] ** 2)
         mu_eff_minus = (np.sum(weights_prime[mu:]) ** 2) / np.sum(
@@ -129,7 +129,7 @@ class CMA:
         assert cc <= 1, "invalid learning rate for cumulation for the rank-one update"
 
         self._n_dim = n_dim
-        self._popsize = popsize
+        self._popsize = population_size
         self._mu = mu
         self._mu_eff = mu_eff
 
@@ -173,7 +173,7 @@ class CMA:
         self._tolfun = 1e-11
         self._tolconditioncov = 1e14
 
-        self._funhist_term = 10 + math.ceil(30 * n_dim / popsize)
+        self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
         self._funhist_values = np.empty(self._funhist_term * 2)
 
         # for avoid numerical errors
