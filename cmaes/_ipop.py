@@ -72,6 +72,7 @@ class IPopCMA:
 
         # termination criterion: tolerance in x-changes [1e-17, ~1e-3]
         self._tolx = 1e-11
+        self._tolxup = 1e4
 
         # termination criterion: tolerance in function value [1e-17, ~1e-3]
         # pycma's default is 1e-11 though paper recommends 1e-12.
@@ -151,6 +152,11 @@ class IPopCMA:
 
         # TolX:
         if np.all(sigma * dC < self._tolx) and np.all(sigma * pc < self._tolx):
+            return True
+
+        # TolXUp: This usually indicates a far too small initial sigma,
+        # or divergent behavior.
+        if sigma * np.max(D) > self._tolxup:
             return True
 
         # Stop if the condition number of the covariance matrix exceeds 10^14.
