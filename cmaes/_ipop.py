@@ -138,8 +138,6 @@ class IPopCMA:
         self._cma._B, self._cma._D = B, D
 
         # aliases
-        dim = self._cma.dim
-        mean = self._cma._mean
         sigma = self._cma._sigma
         pc = self._cma._pc
 
@@ -153,17 +151,6 @@ class IPopCMA:
 
         # TolX:
         if np.all(sigma * dC < self._tolx) and np.all(sigma * pc < self._tolx):
-            return True
-
-        # Check axis and coordinates one by one on each generation.
-        i = self.generation % self._cma.dim
-
-        # No effect axis
-        if np.sum(mean - (0.1 * sigma * D[i] * B[:, i])) == dim:
-            return True
-
-        # No effect coordinates
-        if any(np.nonzero(mean == mean + (0.2 * sigma * np.sqrt(dC)))[0]):
             return True
 
         # Stop if the condition number of the covariance matrix exceeds 10^14.
