@@ -111,7 +111,7 @@ if __name__ == "__main__":
             print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
         optimizer.tell(solutions)
 
-        if optimizer.should_terminate():
+        if optimizer.should_stop():
             # popsize multiplied by 2 (or 3) before each restart.
             popsize = optimizer.population_size * 2
             optimizer = CMA(population_size=popsize, **cma_opts)

@@ -24,7 +24,7 @@ def main():
             print(msg)
         optimizer.tell(solutions)
 
-        if optimizer.should_terminate():
+        if optimizer.should_stop():
             break
 
 

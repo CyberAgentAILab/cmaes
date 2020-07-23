@@ -28,7 +28,7 @@ def main():
             print(msg)
         optimizer.tell(solutions)
 
-        if optimizer.should_terminate():
+        if optimizer.should_stop():
             popsize = optimizer.population_size * inc_popsize
             optimizer = CMA(population_size=popsize, **cma_opts)
             print("Restart CMA-ES with popsize={}".format(popsize))

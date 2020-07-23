@@ -171,9 +171,9 @@ class CMA:
         self._rng = np.random.RandomState(seed)
 
         # Termination criteria
-        self._tolx = 1e-11
+        self._tolx = 1e-12 * sigma
         self._tolxup = 1e4
-        self._tolfun = 1e-11
+        self._tolfun = 1e-12
         self._tolconditioncov = 1e14
 
         self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
@@ -346,11 +346,11 @@ class CMA:
             + self._cmu * rank_mu
         )
 
-    def should_terminate(self) -> bool:
+    def should_stop(self) -> bool:
         B, D = self._eigen_decomposition()
         dC = np.diag(self._C)
 
-        # objective function values
+        # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
             and np.max(self._funhist_values) - np.min(self._funhist_values)
@@ -358,17 +358,18 @@ class CMA:
         ):
             return True
 
-        # TolX
+        # Stop if the std of the normal distribution is smaller than tolx
+        # in all coordinates and pc is smaller than tolx in all components.
         if np.all(self._sigma * dC < self._tolx) and np.all(
             self._sigma * self._pc < self._tolx
         ):
             return True
 
-        # TolXUp for divergent behavior
+        # Stop if detecting divergent behavior.
         if self._sigma * np.max(D) > self._tolxup:
             return True
 
-        # Condition number of the covariance matrix.
+        # Stop if the condition number of the covariance matrix exceeds 1e14.
         condition_cov = np.max(D) / np.min(D)
         if condition_cov > self._tolconditioncov:
             return True
