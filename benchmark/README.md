@@ -19,6 +19,7 @@ Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
     six-hump-camel : https://www.sfu.ca/~ssurjano/camel6.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
+    ackley         : Ackley function in https://github.com/sigopt/evalset
 
 Options:
     --help, -h         print this
