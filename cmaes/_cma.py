@@ -81,7 +81,10 @@ class CMA:
 
         # (eq.49)
         weights_prime = np.array(
-            [math.log((population_size + 1) / 2) - math.log(i + 1) for i in range(population_size)]
+            [
+                math.log((population_size + 1) / 2) - math.log(i + 1)
+                for i in range(population_size)
+            ]
         )
         mu_eff = (np.sum(weights_prime[:mu]) ** 2) / np.sum(weights_prime[:mu] ** 2)
         mu_eff_minus = (np.sum(weights_prime[mu:]) ** 2) / np.sum(
