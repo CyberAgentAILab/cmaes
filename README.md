@@ -54,20 +54,20 @@ def quadratic(x1, x2):
     return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
 
 if __name__ == "__main__":
-    cma_es = CMA(mean=np.zeros(2), sigma=1.3)
+    optimizer = CMA(mean=np.zeros(2), sigma=1.3)
 
     for generation in range(50):
         solutions = []
-        for _ in range(cma_es.population_size):
-            x = cma_es.ask()
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
             value = quadratic(x[0], x[1])
             solutions.append((x, value))
             print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
-        cma_es.tell(solutions)
+        optimizer.tell(solutions)
 ```
 
-And you can use this library via Optuna.
-[Optuna](https://github.com/optuna/optuna) [2] is an automatic hyperparameter optimization framework.
+And you can use this library via [Optuna](https://github.com/optuna/optuna) [2].
+Optuna is an automatic hyperparameter optimization framework.
 A sampler based on this library is available from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
 See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for more details.
 

@@ -7,14 +7,14 @@ def quadratic(x1, x2):
 
 
 def main():
-    cma_es = CMA(mean=np.zeros(2), sigma=1.3)
+    optimizer = CMA(mean=np.zeros(2), sigma=1.3)
     print(" g    f(x1,x2)     x1      x2  ")
     print("===  ==========  ======  ======")
 
     for generation in range(50):
         solutions = []
-        for _ in range(cma_es.population_size):
-            x = cma_es.ask()
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
             value = quadratic(x[0], x[1])
             solutions.append((x, value))
 
@@ -22,7 +22,7 @@ def main():
                 g=generation, value=value, x1=x[0], x2=x[1],
             )
             print(msg)
-        cma_es.tell(solutions)
+        optimizer.tell(solutions)
 
 
 if __name__ == "__main__":
