@@ -1,6 +1,6 @@
 import numpy as np
 from unittest import TestCase
-from cmaes.cma import _decompress_symmetric, _compress_symmetric
+from cmaes._cma import _decompress_symmetric, _compress_symmetric
 
 
 class TestCompressSymmetric(TestCase):
