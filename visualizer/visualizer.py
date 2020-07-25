@@ -16,16 +16,15 @@ from cmaes._cma import CMA
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--function",
-    choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
-    default="rosenbrock",
+    "--function", choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
+)
+parser.add_argument(
+    "--seed", type=int, default=0,
+)
+parser.add_argument(
+    "--ipop", action="store_true",
 )
 args = parser.parse_args()
-
-optimizer = CMA(
-    mean=np.zeros(2), sigma=8 / 6, bounds=np.array([[-4, 4], [-4, 4]]), seed=1,
-)
-solutions = []
 
 rcParams["figure.figsize"] = 10, 5
 fig, (ax1, ax2) = plt.subplots(1, 2)
@@ -76,7 +75,7 @@ def six_hump_camel_contour(x1, x2):
 
 
 if args.function == "quadratic":
-    fig.suptitle("CMA Evolution Strategy for quadratic function")
+    title = "Quadratic function"
     objective = quadratic
     contour_function = quadratic_contour
     global_minimums = [
@@ -86,7 +85,7 @@ if args.function == "quadratic":
     x1_lower_bound, x1_upper_bound = -4, 4
     x2_lower_bound, x2_upper_bound = -4, 4
 elif args.function == "himmelblau":
-    fig.suptitle("CMA Evolution Strategy for Himmelblau function")
+    title = "Himmelblau function"
     objective = himmelbleu
     contour_function = himmelbleu_contour
     global_minimums = [
@@ -100,7 +99,7 @@ elif args.function == "himmelblau":
     x2_lower_bound, x2_upper_bound = -4, 4
 elif args.function == "rosenbrock":
     # https://www.sfu.ca/~ssurjano/rosen.html
-    fig.suptitle("CMA Evolution Strategy for Rosenbrock function")
+    title = "Rosenbrock function"
     objective = rosenbrock
     contour_function = rosenbrock_contour
     global_minimums = [
@@ -111,7 +110,7 @@ elif args.function == "rosenbrock":
     x2_lower_bound, x2_upper_bound = -5, 10
 elif args.function == "six-hump-camel":
     # https://www.sfu.ca/~ssurjano/camel6.html
-    fig.suptitle("CMA Evolution Strategy for Six-hump camel function")
+    title = "Six-hump camel function"
     objective = six_hump_camel
     contour_function = six_hump_camel_contour
     global_minimums = [
@@ -123,6 +122,13 @@ elif args.function == "six-hump-camel":
     x2_lower_bound, x2_upper_bound = -2, 2
 else:
     raise ValueError("invalid function type")
+
+
+bounds = np.array([[x1_lower_bound, x1_upper_bound], [x2_lower_bound, x2_upper_bound]])
+sigma = (x1_upper_bound - x2_lower_bound) / 5
+optimizer = CMA(mean=np.zeros(2), sigma=sigma, bounds=bounds, seed=args.seed)
+solutions = []
+rng = np.random.RandomState(args.seed)
 
 
 def init():
@@ -145,10 +151,23 @@ def init():
 
 
 def update(frame):
-    global solutions
+    global solutions, optimizer
     if len(solutions) == optimizer.population_size:
         optimizer.tell(solutions)
         solutions = []
+
+        if args.ipop and optimizer.should_stop():
+            popsize = optimizer.population_size * 2
+            lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
+            mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
+            optimizer = CMA(
+                mean=mean,
+                sigma=sigma,
+                bounds=bounds,
+                seed=args.seed,
+                population_size=popsize,
+            )
+            print(f"Restart CMA-ES with popsize={popsize} at i={frame}")
 
     x = optimizer.ask()
     evaluation = objective(x[0], x[1])
@@ -159,23 +178,28 @@ def update(frame):
     )
     solutions.append(solution)
 
+    # Update title
+    fig.suptitle(f"{title} trial={frame}")
+
     # Plot sample points
     ax1.plot(x[0], x[1], "o", c="r", label="2d", alpha=0.5)
 
     # Plot multivariate gaussian distribution of CMA-ES
-    mu = optimizer._mean
-    sigma = optimizer._C
     x, y = np.mgrid[
         x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01
     ]
-    rv = stats.multivariate_normal(mu, sigma)
+    rv = stats.multivariate_normal(optimizer._mean, optimizer._C)
     pos = np.dstack((x, y))
     ax2.contourf(x, y, rv.pdf(pos))
 
+    if frame % 50 == 0:
+        print(f"Processing frame {frame}")
+
 
 def main():
+    frames = 1000 if args.ipop else 150
     ani = animation.FuncAnimation(
-        fig, update, frames=150, init_func=init, blit=False, interval=50
+        fig, update, frames=frames, init_func=init, blit=False, interval=50
     )
     ani.save(f"./tmp/{args.function}.mp4")
 

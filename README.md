@@ -85,6 +85,50 @@ if __name__ == "__main__":
     study.optimize(objective, n_trials=250)
 ```
 
+<details>
+<summary>Example of IPOP-CMA-ES [3]</summary>
+
+You can easily implement IPOP-CMA-ES which restarts CMA-ES
+with increasing population size.
+
+```python
+import math
+import numpy as np
+from cmaes import CMA
+
+
+def ackley(x1, x2):
+    # https://www.sfu.ca/~ssurjano/ackley.html
+    return (
+        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1 ** 2 + x2 ** 2)))
+        - math.exp(0.5 * (math.cos(2 * math.pi * x1) + math.cos(2 * math.pi * x2)))
+        + math.e + 20
+    )
+
+
+if __name__ == "__main__":
+    bounds = np.array([[-32.768, 32.768], [-32.768, 32.768]])
+    sigma = (np.max(bounds) - np.min(bounds)) / 5  # 1/5 of the domain width
+    optimizer = CMA(mean=np.random.randn(2), sigma=sigma)
+
+    for generation in range(200):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = ackley(x[0], x[1])
+            solutions.append((x, value))
+            print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            # popsize multiplied by 2 (or 3) before each restart.
+            popsize = optimizer.population_size * 2
+            optimizer = CMA(mean=np.random.randn(2), sigma=sigma, population_size=popsize)
+            print(f"Restart CMA-ES with popsize={popsize}")
+```
+
+</details>
+
 ## Benchmark results
 
 | [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hump Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
@@ -108,4 +152,4 @@ I respect all libraries involved in CMA-ES.
 
 * [1] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [2] [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
-
+* [3] [Auger, A., Hansen, N.: A restart CMA evolution strategy with increasing population size. In: Proceedings of the 2005 IEEE Congress on Evolutionary Computation (CEC’2005), pp. 1769–1776 (2005a)](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
