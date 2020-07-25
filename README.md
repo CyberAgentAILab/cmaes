@@ -92,21 +92,30 @@ You can easily implement IPOP-CMA-ES which restarts CMA-ES
 with increasing population size.
 
 ```python
+import math
 import numpy as np
 from cmaes import CMA
 
-def quadratic(x1, x2):
-    return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
+
+def ackley(x1, x2):
+    # https://www.sfu.ca/~ssurjano/ackley.html
+    return (
+        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1 ** 2 + x2 ** 2)))
+        - math.exp(0.5 * (math.cos(2 * math.pi * x1) + math.cos(2 * math.pi * x2)))
+        + math.e + 20
+    )
+
 
 if __name__ == "__main__":
-    cma_opts = {"mean": np.zeros(2), "sigma": 1.3}
-    optimizer = CMA(**cma_opts)
+    bounds = np.array([[-32.768, 32.768], [-32.768, 32.768]])
+    sigma = (np.max(bounds) - np.min(bounds)) / 5  # 1/5 of the domain width
+    optimizer = CMA(mean=np.random.randn(2), sigma=sigma)
 
-    for generation in range(150):
+    for generation in range(200):
         solutions = []
         for _ in range(optimizer.population_size):
             x = optimizer.ask()
-            value = quadratic(x[0], x[1])
+            value = ackley(x[0], x[1])
             solutions.append((x, value))
             print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
         optimizer.tell(solutions)
@@ -114,7 +123,7 @@ if __name__ == "__main__":
         if optimizer.should_stop():
             # popsize multiplied by 2 (or 3) before each restart.
             popsize = optimizer.population_size * 2
-            optimizer = CMA(population_size=popsize, **cma_opts)
+            optimizer = CMA(mean=np.random.randn(2), sigma=sigma, population_size=popsize)
             print(f"Restart CMA-ES with popsize={popsize}")
 ```
 
