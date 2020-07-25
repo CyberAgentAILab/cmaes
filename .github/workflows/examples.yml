@@ -22,8 +22,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies with Optuna ${{ matrix.optuna-version }}
         run: |
-          python -m pip install --upgrade pip
-          pip install --progress-bar off .
+          pip install -U pip setuptools
           pip install --progress-bar off ${{ matrix.optuna-version }}
+          pip install --progress-bar off -U .
       - run: python examples/quadratic_function.py
       - run: python examples/optuna_sampler.py
