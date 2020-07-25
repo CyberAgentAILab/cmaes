@@ -369,6 +369,18 @@ class CMA:
         if self._sigma * np.max(D) > self._tolxup:
             return True
 
+        # No effect coordinates: stop if adding 0.2-standard deviations
+        # in any single coordinate does not change m.
+        if np.any(self._mean == self._mean + (0.2 * self._sigma * np.sqrt(dC))):
+            return True
+
+        # No effect axis: stop if adding 0.1-standard deviation vector in
+        # any principal axis direction of C does not change m. "pycma" check
+        # axis one by one at each generation.
+        i = self.generation % self.dim
+        if np.all(self._mean == self._mean + (0.1 * self._sigma * D[i] * B[:, i])):
+            return True
+
         # Stop if the condition number of the covariance matrix exceeds 1e14.
         condition_cov = np.max(D) / np.min(D)
         if condition_cov > self._tolconditioncov:
