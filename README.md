@@ -5,13 +5,6 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
 <details>
-<summary>Himmelblau function.</summary>
-
-![visualize-himmelblau](https://user-images.githubusercontent.com/5564044/73486618-dac46880-43e8-11ea-8a2e-69d745f008b5.gif)
-
-</details>
-
-<details>
 <summary>Rosenbrock function.</summary>
 
 ![visualize-rosenbrock](https://user-images.githubusercontent.com/5564044/73486620-dac46880-43e8-11ea-9295-ec0bfa774655.gif)
@@ -19,9 +12,9 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 </details>
 
 <details>
-<summary>Quadratic function.</summary>
+<summary>Himmelblau function with IPOP-CMA-ES.</summary>
 
-![visualize-quadratic](https://user-images.githubusercontent.com/5564044/73486619-dac46880-43e8-11ea-859d-5f8358ac8be9.gif)
+![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88465209-1e151500-cefc-11ea-824d-57f70000638b.gif)
 
 </details>
 
@@ -96,7 +89,6 @@ import math
 import numpy as np
 from cmaes import CMA
 
-
 def ackley(x1, x2):
     # https://www.sfu.ca/~ssurjano/ackley.html
     return (
@@ -105,11 +97,13 @@ def ackley(x1, x2):
         + math.e + 20
     )
 
-
 if __name__ == "__main__":
     bounds = np.array([[-32.768, 32.768], [-32.768, 32.768]])
+    lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
+
+    mean = lower_bounds + (np.random.rand(2) * (upper_bounds - lower_bounds))
     sigma = (np.max(bounds) - np.min(bounds)) / 5  # 1/5 of the domain width
-    optimizer = CMA(mean=np.random.randn(2), sigma=sigma)
+    optimizer = CMA(mean=mean, sigma=sigma, bounds=bounds, seed=0)
 
     for generation in range(200):
         solutions = []
@@ -123,7 +117,8 @@ if __name__ == "__main__":
         if optimizer.should_stop():
             # popsize multiplied by 2 (or 3) before each restart.
             popsize = optimizer.population_size * 2
-            optimizer = CMA(mean=np.random.randn(2), sigma=sigma, population_size=popsize)
+            mean = lower_bounds + (np.random.rand(2) * (upper_bounds - lower_bounds))
+            optimizer = CMA(mean=mean, sigma=sigma, population_size=popsize)
             print(f"Restart CMA-ES with popsize={popsize}")
 ```
 
