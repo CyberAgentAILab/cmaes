@@ -7,11 +7,15 @@ def quadratic(x1, x2):
 
 
 def main():
-    optimizer = CMA(mean=np.zeros(2), sigma=1.3)
+    cma_opts = {"mean": np.zeros(2), "sigma": 1.3}
+    optimizer = CMA(**cma_opts)
+
+    # Multiplier for increasing population size before each restart.
+    inc_popsize = 2
+
     print(" g    f(x1,x2)     x1      x2  ")
     print("===  ==========  ======  ======")
-
-    while True:
+    for generation in range(150):
         solutions = []
         for _ in range(optimizer.population_size):
             x = optimizer.ask()
@@ -19,13 +23,15 @@ def main():
             solutions.append((x, value))
 
             msg = "{g:3d}  {value:10.5f}  {x1:6.2f}  {x2:6.2f}".format(
-                g=optimizer.generation, value=value, x1=x[0], x2=x[1],
+                g=generation, value=value, x1=x[0], x2=x[1],
             )
             print(msg)
         optimizer.tell(solutions)
 
         if optimizer.should_terminate():
-            break
+            popsize = optimizer.population_size * inc_popsize
+            optimizer = CMA(population_size=popsize, **cma_opts)
+            print("Restart CMA-ES with popsize={}".format(popsize))
 
 
 if __name__ == "__main__":
