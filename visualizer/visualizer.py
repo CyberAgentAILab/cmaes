@@ -16,9 +16,10 @@ from cmaes._cma import CMA
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--function",
-    choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
-    default="rosenbrock",
+    "--function", choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
+)
+parser.add_argument(
+    "--ipop", action="store_true",
 )
 args = parser.parse_args()
 
@@ -145,10 +146,21 @@ def init():
 
 
 def update(frame):
-    global solutions
+    global solutions, optimizer
     if len(solutions) == optimizer.population_size:
         optimizer.tell(solutions)
         solutions = []
+
+        if args.ipop and optimizer.should_stop():
+            popsize = optimizer.population_size * 2
+            optimizer = CMA(
+                mean=np.zeros(2),
+                sigma=8 / 6,
+                bounds=np.array([[-4, 4], [-4, 4]]),
+                seed=1,
+                population_size=popsize,
+            )
+            print(f"Restart CMA-ES with popsize={popsize} at i={frame}")
 
     x = optimizer.ask()
     evaluation = objective(x[0], x[1])
@@ -174,8 +186,9 @@ def update(frame):
 
 
 def main():
+    frames = 1000 if args.ipop else 150
     ani = animation.FuncAnimation(
-        fig, update, frames=150, init_func=init, blit=False, interval=50
+        fig, update, frames=frames, init_func=init, blit=False, interval=50
     )
     ani.save(f"./tmp/{args.function}.mp4")
 
