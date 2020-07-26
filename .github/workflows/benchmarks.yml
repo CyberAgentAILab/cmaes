@@ -71,3 +71,12 @@ jobs:
         with:
           name: kurobako-report
           path: six-hump-camel.png
+      - run: echo ${GITHUB_RUN_NUMBER}
+      - name: Comment to pull request about GitHub artifacts
+        if: ${{ env.GITHUB_RUN_NUMBER == 1 && env.HAS_SECRET != 1 }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          URL: ${{ github.event.pull_request.comments_url }}
+        run: |
+          curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" \
+            -d "{\"body\": \"Benchmark results are uploaded to GitHub artifacts which is stored for 90 days.\"}" ${URL}
