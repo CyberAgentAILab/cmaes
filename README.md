@@ -12,9 +12,16 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 </details>
 
 <details>
-<summary>Himmelblau function with IPOP-CMA-ES.</summary>
+<summary>IPOP-CMA-ES on Himmelblau function.</summary>
 
-![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88465209-1e151500-cefc-11ea-824d-57f70000638b.gif)
+![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88472274-f9e12480-cf4b-11ea-8aff-2a859eb51a15.gif)
+
+</details>
+
+<details>
+<summary>BIPOP-CMA-ES on Himmelblau function.</summary>
+
+![visualize-bipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88471815-55111800-cf48-11ea-8933-5a4b48c49eba.gif)
 
 </details>
 
