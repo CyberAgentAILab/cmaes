@@ -7,71 +7,12 @@ on:
     - 'benchmark/*.py'
     - 'benchmark/runner.sh'
 jobs:
-  benchmark-himmelblau:
-    name: Run kurobako benchmark
-    runs-on: ubuntu-latest
-    if: github.repository == 'CyberAgent/cmaes'
-
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@master
-
-      - uses: actions/setup-python@v2
-        with:
-          python-version: '3.8'
-          architecture: 'x64'
-      - run: pip install -U pip setuptools
-      - run: python setup.py develop
-      - run: pip install --progress-bar off -e '.[benchmark]'
-      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
-
-      - name: Download kurobako CLI
-        run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
-          chmod +x kurobako
-          ./kurobako -h
-
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          version: '289.0.0'
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-      - run: gcloud info
-      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Run benchmark of himmelblau function
-        env:
-          KUROBAKO: ./kurobako
-        run: |
-          ./benchmark/runner.sh himmelblau ./kurobako-report.json
-      - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v1
-        id: kurobako-plot
-        with:
-          report-json-path: './kurobako-report.json'
-      - name: Upload an image to google cloud storage
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/himmelblau-${{ github.sha }}.png
-
-      - name: Generate kurobako markdown report
-        run: |
-          cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
-      - name: Comment to a pull request
-        uses: c-bata/github-actions-kurobako@v2
-        with:
-          report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/himmelblau-${{ github.sha }}.png
-          title: 'Benchmark of Himmelblau function'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   benchmark-six-hump-camel:
     name: Run kurobako benchmark
     runs-on: ubuntu-latest
-    if: github.repository == 'CyberAgent/cmaes'
 
     steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@master
-
+      - uses: actions/checkout@master
       - uses: actions/setup-python@v2
         with:
           python-version: '3.8'
@@ -80,37 +21,43 @@ jobs:
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
-
       - name: Download kurobako CLI
         run: |
           curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
-
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          version: '275.0.0'
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-      - run: gcloud info
-      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
 
       - name: Run benchmark of Six-Hump Camel function
         env:
           KUROBAKO: ./kurobako
-        run: |
-          ./benchmark/runner.sh six-hump-camel ./kurobako-report.json
+        run: ./benchmark/runner.sh six-hump-camel ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
-      - name: Upload an image to google cloud storage
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/six-hump-camel-${{ github.sha }}.png
-
       - name: Generate kurobako markdown report
-        run: |
-          cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+        run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+
+      - name: Set HAS_SECRET flag
+        shell: bash
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: if [ ! $GCP_PROJECT_ID="" ] and [ ! $GCP_SA_KEY = ""]; then echo "::set-env name=HAS_SECRET::1"; fi
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        if: ${{ env.HAS_SECRET == 1 }}
+        with:
+          version: '275.0.0'
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+      - run: gcloud info
+        if: ${{ env.HAS_SECRET == 1 }}
+      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        if: ${{ env.HAS_SECRET == 1 }}
+      - run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/six-hump-camel-${{ github.sha }}.png
+        if: ${{ env.HAS_SECRET == 1 }}
       - name: Comment to a pull request
+        if: ${{ env.HAS_SECRET == 1 }}
         uses: c-bata/github-actions-kurobako@v2
         with:
           report-md-path: './kurobako-report.md'
@@ -119,58 +66,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  benchmark-rosenbrock:
-    name: Run kurobako benchmark
-    runs-on: ubuntu-latest
-    if: github.repository == 'CyberAgent/cmaes'
-
-    steps:
-      - name: Check out code into the Go module directory
-        uses: actions/checkout@master
-
-      - uses: actions/setup-python@v2
+      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} six-hump-camel.png
+      - uses: actions/upload-artifact@v2
         with:
-          python-version: '3.8'
-          architecture: 'x64'
-      - run: pip install -U pip setuptools
-      - run: python setup.py develop
-      - run: pip install --progress-bar off -e '.[benchmark]'
-      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
-
-      - name: Download kurobako CLI
-        run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
-          chmod +x kurobako
-          ./kurobako -h
-
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
-        with:
-          version: '275.0.0'
-          service_account_key: ${{ secrets.GCP_SA_KEY }}
-      - run: gcloud info
-      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-
-      - name: Run benchmark of Rosenbrock function
-        env:
-          KUROBAKO: ./kurobako
-        run: |
-          ./benchmark/runner.sh rosenbrock ./kurobako-report.json
-      - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v1
-        id: kurobako-plot
-        with:
-          report-json-path: './kurobako-report.json'
-      - name: Upload an image to google cloud storage
-        run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rosenbrock-${{ github.sha }}.png
-
-      - name: Generate kurobako markdown report
-        run: |
-          cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
-      - name: Comment to a pull request
-        uses: c-bata/github-actions-kurobako@v2
-        with:
-          report-md-path: './kurobako-report.md'
-          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/rosenbrock-${{ github.sha }}.png
-          title: 'Benchmark of Rosenbrock function'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: kurobako-report
+          path: six-hump-camel.png
