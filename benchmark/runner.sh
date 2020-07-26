@@ -7,6 +7,7 @@ DIR=$(cd $(dirname $0); pwd)
 REPEATS=${REPEATS:-5}
 BUDGET=${BUDGET:-300}
 SEED=${BUDGET:-1}
+DIM=${DIM:-2}
 
 usage() {
     cat <<EOF
@@ -42,10 +43,11 @@ case "$1" in
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_six_hump_camel.py)
         ;;
     ackley)
-        PROBLEM=$($KUROBAKO problem sigopt --dim 10 ackley)
+        PROBLEM=$($KUROBAKO problem sigopt --dim $DIM ackley)
         ;;
     rastrigin)
-        PROBLEM=$($KUROBAKO problem sigopt --dim 8 rastrigin)
+        # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
+        PROBLEM=$($KUROBAKO problem command python $DIR/problem_rastrigin.py $DIM)
         ;;
     help|--help|-h)
         usage
@@ -63,8 +65,16 @@ CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/optuna_solver
 IPOP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-cmaes' command python $DIR/optuna_solver.py ipop-cmaes)
 PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command python $DIR/optuna_solver.py pycma)
 
-$KUROBAKO studies \
-  --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \
-  --problems $PROBLEM \
-  --seed $SEED --repeats $REPEATS --budget $BUDGET \
-  | $KUROBAKO run --parallelism 4 > $2
+if [ $BUDGET -le 500 ]; then
+  $KUROBAKO studies \
+    --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \
+    --problems $PROBLEM \
+    --seed $SEED --repeats $REPEATS --budget $BUDGET \
+    | $KUROBAKO run --parallelism 4 > $2
+else
+  $KUROBAKO studies \
+    --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $CMAES_SOLVER \
+    --problems $PROBLEM \
+    --seed $SEED --repeats $REPEATS --budget $BUDGET \
+    | $KUROBAKO run --parallelism 6 > $2
+fi

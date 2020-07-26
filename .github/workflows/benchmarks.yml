@@ -108,8 +108,9 @@ jobs:
       - name: Run benchmark of Rastrigin function
         env:
           KUROBAKO: ./kurobako
-          REPEATS: 20
-          BUDGET: 1000
+          DIM: 2
+          REPEATS: 10
+          BUDGET: 2500
         run: ./benchmark/runner.sh rastrigin ./kurobako-report.json
       - name: Plot kurobako result
         uses: c-bata/github-actions-kurobako/plot@v1
