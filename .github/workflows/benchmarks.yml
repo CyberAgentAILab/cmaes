@@ -43,7 +43,12 @@ jobs:
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-        run: if [ ! $GCP_PROJECT_ID="" ] && [ ! $GCP_SA_KEY="" ]; then echo '::set-env name=HAS_SECRET::1'; fi
+        run: |
+          if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
+              echo '::set-env name=HAS_SECRET::1'
+          else
+              echo '::set-env name=HAS_SECRET::0'
+          fi
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         if: ${{ env.HAS_SECRET == 1 }}
         with:
@@ -66,7 +71,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: cp ${{ steps.kurobako-plot.outputs.image-path }} six-hump-camel.png
+      - run: mv ./kurobako-report.md ./kurobako-report-six-hump-camel.md
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
           path: six-hump-camel.png
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-six-hump-camel.md
