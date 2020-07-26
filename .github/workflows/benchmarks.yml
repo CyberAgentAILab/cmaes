@@ -74,6 +74,7 @@ jobs:
 
       - run: cp ${{ steps.kurobako-plot.outputs.image-path }} six-hump-camel.png
       - run: mv ./kurobako-report.md ./kurobako-report-six-hump-camel.md
+      - run: mv ./kurobako-report.json ./kurobako-report-six-hump-camel.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
@@ -82,6 +83,10 @@ jobs:
         with:
           name: kurobako-report
           path: kurobako-report-six-hump-camel.md
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-six-hump-camel.json
 
   benchmark-rastrigin:
     name: Run kurobako benchmark
@@ -153,6 +158,7 @@ jobs:
 
       - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rastrigin.png
       - run: mv ./kurobako-report.md ./kurobako-report-rastrigin.md
+      - run: mv ./kurobako-report.json ./kurobako-report-rastrigin.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
@@ -161,3 +167,7 @@ jobs:
         with:
           name: kurobako-report
           path: kurobako-report-rastrigin.md
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-rastrigin.json
