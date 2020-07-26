@@ -21,6 +21,8 @@ jobs:
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
+      - run: pip install --progress-bar off -U git+https://github.com/c-bata/optuna.git@ipop-cma-es
+      - run: pip install packaging
       - name: Download kurobako CLI
         run: |
           curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
@@ -72,6 +74,7 @@ jobs:
 
       - run: cp ${{ steps.kurobako-plot.outputs.image-path }} six-hump-camel.png
       - run: mv ./kurobako-report.md ./kurobako-report-six-hump-camel.md
+      - run: mv ./kurobako-report.json ./kurobako-report-six-hump-camel.json
       - uses: actions/upload-artifact@v2
         with:
           name: kurobako-report
@@ -80,3 +83,91 @@ jobs:
         with:
           name: kurobako-report
           path: kurobako-report-six-hump-camel.md
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-six-hump-camel.json
+
+  benchmark-rastrigin:
+    name: Run kurobako benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: 'x64'
+      - run: pip install -U pip setuptools
+      - run: python setup.py develop
+      - run: pip install --progress-bar off -e '.[benchmark]'
+      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
+      - run: pip install --progress-bar off -U git+https://github.com/c-bata/optuna.git@ipop-cma-es
+      - run: pip install packaging
+      - name: Download kurobako CLI
+        run: |
+          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
+          chmod +x kurobako
+          ./kurobako -h
+
+      - name: Run benchmark of Rastrigin function
+        env:
+          KUROBAKO: ./kurobako
+          DIM: 2
+          REPEATS: 10
+          BUDGET: 2500
+        run: ./benchmark/runner.sh rastrigin ./kurobako-report.json
+      - name: Plot kurobako result
+        uses: c-bata/github-actions-kurobako/plot@v1
+        id: kurobako-plot
+        with:
+          report-json-path: './kurobako-report.json'
+      - name: Generate kurobako markdown report
+        run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+
+      - name: Set HAS_SECRET flag
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
+              echo '::set-env name=HAS_SECRET::1'
+          else
+              echo '::set-env name=HAS_SECRET::0'
+          fi
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        if: ${{ env.HAS_SECRET == 1 }}
+        with:
+          version: '275.0.0'
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+      - run: gcloud info
+        if: ${{ env.HAS_SECRET == 1 }}
+      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        if: ${{ env.HAS_SECRET == 1 }}
+      - run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
+        if: ${{ env.HAS_SECRET == 1 }}
+      - name: Comment to a pull request
+        if: ${{ env.HAS_SECRET == 1 }}
+        uses: c-bata/github-actions-kurobako@v2
+        with:
+          report-md-path: './kurobako-report.md'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/rastrigin-${{ github.sha }}.png
+          title: 'Benchmark of Rastrigin function'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: cp ${{ steps.kurobako-plot.outputs.image-path }} rastrigin.png
+      - run: mv ./kurobako-report.md ./kurobako-report-rastrigin.md
+      - run: mv ./kurobako-report.json ./kurobako-report-rastrigin.json
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: rastrigin.png
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-rastrigin.md
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-rastrigin.json
