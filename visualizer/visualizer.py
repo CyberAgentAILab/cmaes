@@ -1,9 +1,25 @@
 """
 Usage:
+  visualizer.py OPTIONS
 
-  python3 visualizer/visualizer.py --function six-hump-camel
+Optional arguments:
+  -h, --help            show this help message and exit
+  --function {quadratic,himmelblau,rosenbrock,six-hump-camel}
+  --seed SEED
+  --frames FRAMES
+  --interval INTERVAL
+  --pop-per-frame POP_PER_FRAME
+  --restart-strategy {ipop,bipop}
+
+Example:
+  python3 visualizer.py --function six-hump-camel --pop-per-frame 2
+
+  python3 visualizer/visualizer.py --function himmelblau \
+    --restart-strategy ipop --frames 500 --interval 10 --pop-per-frame 6
 """
 import argparse
+import math
+
 import numpy as np
 from scipy import stats
 
@@ -19,10 +35,19 @@ parser.add_argument(
     "--function", choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
 )
 parser.add_argument(
-    "--seed", type=int, default=0,
+    "--seed", type=int, default=1,
 )
 parser.add_argument(
-    "--ipop", action="store_true",
+    "--frames", type=int, default=100,
+)
+parser.add_argument(
+    "--interval", type=int, default=20,
+)
+parser.add_argument(
+    "--pop-per-frame", type=int, default=1,
+)
+parser.add_argument(
+    "--restart-strategy", choices=["ipop", "bipop"], default="",
 )
 args = parser.parse_args()
 
@@ -74,8 +99,9 @@ def six_hump_camel_contour(x1, x2):
     return np.log(six_hump_camel(x1, x2) + 1.0316)
 
 
+function_name = ""
 if args.function == "quadratic":
-    title = "Quadratic function"
+    function_name = "Quadratic function"
     objective = quadratic
     contour_function = quadratic_contour
     global_minimums = [
@@ -85,7 +111,7 @@ if args.function == "quadratic":
     x1_lower_bound, x1_upper_bound = -4, 4
     x2_lower_bound, x2_upper_bound = -4, 4
 elif args.function == "himmelblau":
-    title = "Himmelblau function"
+    function_name = "Himmelblau function"
     objective = himmelbleu
     contour_function = himmelbleu_contour
     global_minimums = [
@@ -99,7 +125,7 @@ elif args.function == "himmelblau":
     x2_lower_bound, x2_upper_bound = -4, 4
 elif args.function == "rosenbrock":
     # https://www.sfu.ca/~ssurjano/rosen.html
-    title = "Rosenbrock function"
+    function_name = "Rosenbrock function"
     objective = rosenbrock
     contour_function = rosenbrock_contour
     global_minimums = [
@@ -110,7 +136,7 @@ elif args.function == "rosenbrock":
     x2_lower_bound, x2_upper_bound = -5, 10
 elif args.function == "six-hump-camel":
     # https://www.sfu.ca/~ssurjano/camel6.html
-    title = "Six-hump camel function"
+    function_name = "Six-hump camel function"
     objective = six_hump_camel
     contour_function = six_hump_camel_contour
     global_minimums = [
@@ -124,11 +150,20 @@ else:
     raise ValueError("invalid function type")
 
 
+seed = args.seed
 bounds = np.array([[x1_lower_bound, x1_upper_bound], [x2_lower_bound, x2_upper_bound]])
 sigma = (x1_upper_bound - x2_lower_bound) / 5
-optimizer = CMA(mean=np.zeros(2), sigma=sigma, bounds=bounds, seed=args.seed)
+optimizer = CMA(mean=np.zeros(2), sigma=sigma, bounds=bounds, seed=seed)
 solutions = []
-rng = np.random.RandomState(args.seed)
+trial_number = 0
+rng = np.random.RandomState(seed)
+
+# Variables for IPOP and BIPOP
+inc_popsize = 2
+n_restarts = 0  # A small restart doesn't count in the n_restarts
+small_n_eval, large_n_eval = 0, 0
+popsize0 = optimizer.population_size
+poptype = "small"
 
 
 def init():
@@ -150,39 +185,81 @@ def init():
     ax1.contour(x1, x2, contour_function(x1, x2), 30, cmap=bw)
 
 
+def get_next_popsize():
+    global optimizer, n_restarts, poptype, small_n_eval, large_n_eval
+    if args.restart_strategy == "ipop":
+        n_restarts += 1
+        popsize = optimizer.population_size * inc_popsize
+        print(f"Restart CMA-ES with popsize={popsize} at trial={trial_number}")
+        return popsize
+    elif args.restart_strategy == "bipop":
+        n_eval = optimizer.population_size * optimizer.generation
+        if poptype == "small":
+            small_n_eval += n_eval
+        else:  # poptype == "large"
+            large_n_eval += n_eval
+
+        if small_n_eval < large_n_eval:
+            poptype = "small"
+            popsize_multiplier = inc_popsize ** n_restarts
+            popsize = math.floor(popsize0 * popsize_multiplier ** (rng.uniform() ** 2))
+        else:
+            poptype = "large"
+            n_restarts += 1
+            popsize = popsize0 * (inc_popsize ** n_restarts)
+        print(
+            f"Restart CMA-ES with popsize={popsize} ({poptype}) at trial={trial_number}"
+        )
+        return
+    raise Exception("must not reach here")
+
+
 def update(frame):
-    global solutions, optimizer
+    global solutions, optimizer, trial_number
     if len(solutions) == optimizer.population_size:
         optimizer.tell(solutions)
         solutions = []
 
-        if args.ipop and optimizer.should_stop():
-            popsize = optimizer.population_size * 2
+        if optimizer.should_stop():
+            popsize = get_next_popsize()
             lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
             mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
             optimizer = CMA(
                 mean=mean,
                 sigma=sigma,
                 bounds=bounds,
-                seed=args.seed,
+                seed=seed,
                 population_size=popsize,
             )
-            print(f"Restart CMA-ES with popsize={popsize} at i={frame}")
 
-    x = optimizer.ask()
-    evaluation = objective(x[0], x[1])
+    n_sample = min(optimizer.population_size - len(solutions), args.pop_per_frame)
+    for i in range(n_sample):
+        x = optimizer.ask()
+        evaluation = objective(x[0], x[1])
 
-    solution = (
-        x,
-        evaluation,
-    )
-    solutions.append(solution)
+        # Plot sample points
+        ax1.plot(x[0], x[1], "o", c="r", label="2d", alpha=0.5)
+
+        solution = (
+            x,
+            evaluation,
+        )
+        solutions.append(solution)
+    trial_number += n_sample
 
     # Update title
-    fig.suptitle(f"{title} trial={frame}")
-
-    # Plot sample points
-    ax1.plot(x[0], x[1], "o", c="r", label="2d", alpha=0.5)
+    if args.restart_strategy == "ipop":
+        fig.suptitle(
+            f"IPOP-CMA-ES {function_name} trial={trial_number} "
+            f"popsize={optimizer.population_size}"
+        )
+    elif args.restart_strategy == "bipop":
+        fig.suptitle(
+            f"BIPOP-CMA-ES {function_name} trial={trial_number} "
+            f"popsize={optimizer.population_size} ({poptype})"
+        )
+    else:
+        fig.suptitle(f"CMA-ES {function_name} trial={trial_number}")
 
     # Plot multivariate gaussian distribution of CMA-ES
     x, y = np.mgrid[
@@ -197,9 +274,13 @@ def update(frame):
 
 
 def main():
-    frames = 1000 if args.ipop else 150
     ani = animation.FuncAnimation(
-        fig, update, frames=frames, init_func=init, blit=False, interval=50
+        fig,
+        update,
+        frames=args.frames,
+        init_func=init,
+        blit=False,
+        interval=args.interval,
     )
     ani.save(f"./tmp/{args.function}.mp4")
 

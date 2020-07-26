@@ -27,4 +27,5 @@ jobs:
           pip install --progress-bar off -U .
       - run: python examples/quadratic_function.py
       - run: python examples/ipop_cmaes.py
+      - run: python examples/bipop_cmaes.py
       - run: python examples/optuna_sampler.py
