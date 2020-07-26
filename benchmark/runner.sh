@@ -4,6 +4,9 @@ set -e
 
 KUROBAKO=${KUROBAKO:-kurobako}
 DIR=$(cd $(dirname $0); pwd)
+REPEATS=${REPEATS:-5}
+BUDGET=${BUDGET:-300}
+SEED=${BUDGET:-1}
 
 usage() {
     cat <<EOF
@@ -16,6 +19,8 @@ Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
     six-hump-camel : https://www.sfu.ca/~ssurjano/camel6.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
+    ackley         : https://www.sfu.ca/~ssurjano/ackley.html
+    rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
 
 Options:
     --help, -h         print this
@@ -36,6 +41,12 @@ case "$1" in
     six-hump-camel)
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_six_hump_camel.py)
         ;;
+    ackley)
+        PROBLEM=$($KUROBAKO problem sigopt --dim 10 ackley)
+        ;;
+    rastrigin)
+        PROBLEM=$($KUROBAKO problem sigopt --dim 8 rastrigin)
+        ;;
     help|--help|-h)
         usage
         exit 0
@@ -49,11 +60,11 @@ esac
 
 RANDOM_SOLVER=$($KUROBAKO solver random)
 CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/optuna_solver.py cmaes)
+IPOP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-cmaes' command python $DIR/optuna_solver.py ipop-cmaes)
 PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command python $DIR/optuna_solver.py pycma)
 
 $KUROBAKO studies \
-  --solvers $RANDOM_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \
+  --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \
   --problems $PROBLEM \
-  --seed 1 \
-  --repeats 10 --budget 300 \
-  | $KUROBAKO run --parallelism 5 > $2
+  --seed $SEED --repeats $REPEATS --budget $BUDGET \
+  | $KUROBAKO run --parallelism 4 > $2

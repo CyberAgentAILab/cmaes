@@ -19,6 +19,8 @@ Problem:
     rosenbrock     : https://www.sfu.ca/~ssurjano/rosen.html
     six-hump-camel : https://www.sfu.ca/~ssurjano/camel6.html
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
+    ackley         : https://www.sfu.ca/~ssurjano/ackley.html
+    rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
 
 Options:
     --help, -h         print this
@@ -35,6 +37,6 @@ $ cat ./tmp/kurobako.json | kurobako plot curve --errorbar -o ./tmp
 
 ```
 $ docker pull sile/kurobako
-$ ./benchmark/himmelblau_runner.sh ./tmp/kurobako.json
+$ ./benchmark/runner.sh rosenbrock ./tmp/kurobako.json
 $ cat ./tmp/kurobako.json | docker run -v $PWD/tmp/images/:/images/ --rm -i sile/kurobako plot curve
 ```
