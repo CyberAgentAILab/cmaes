@@ -1,6 +1,6 @@
 """
 Usage:
-  visualizer.py [-h] [--function {quadratic,himmelblau,rosenbrock,six-hump-camel}] [--seed SEED] [--frames FRAMES] [--interval INTERVAL] [--pop-per-frame POP_PER_FRAME] [--restart-strategy {ipop,bipop}]
+  visualizer.py OPTIONS
 
 Optional arguments:
   -h, --help            show this help message and exit
@@ -13,7 +13,9 @@ Optional arguments:
 
 Example:
   python3 visualizer.py --function six-hump-camel --pop-per-frame 2
-  python visualizer/visualizer.py --function himmelblau --restart-strategy ipop --frames 500 --interval 10 --pop-per-frame 6
+
+  python3 visualizer/visualizer.py --function himmelblau \
+    --restart-strategy ipop --frames 500 --interval 10 --pop-per-frame 6
 """
 import argparse
 import math
