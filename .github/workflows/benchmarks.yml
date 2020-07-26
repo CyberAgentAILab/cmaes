@@ -40,11 +40,10 @@ jobs:
         run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
       - name: Set HAS_SECRET flag
-        shell: bash
         env:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
-        run: if [ ! $GCP_PROJECT_ID="" ] and [ ! $GCP_SA_KEY = ""]; then echo "::set-env name=HAS_SECRET::1"; fi
+        run: if [ ! $GCP_PROJECT_ID="" ] && [ ! $GCP_SA_KEY="" ]; then echo '::set-env name=HAS_SECRET::1'; fi
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         if: ${{ env.HAS_SECRET == 1 }}
         with:
