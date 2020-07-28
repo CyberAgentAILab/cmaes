@@ -225,8 +225,7 @@ See [benchmark](./benchmark) for details.
 I respect all libraries involved in CMA-ES.
 
 * [pycma](https://github.com/CMA-ES/pycma) : Most famous CMA-ES implementation by Nikolaus Hansen.
-* [libcmaes](https://github.com/beniz/libcmaes): Multithreaded C++11 library with Python bindings.
-* [cma-es](https://github.com/srom/cma-es) : A Tensorflow v2 implementation.
+* [pymoo](https://github.com/msu-coinlab/pymoo) : Multi-objective optimization in Python.
 
 **References:**
 
