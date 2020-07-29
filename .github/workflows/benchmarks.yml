@@ -28,11 +28,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./kurobako
-          key: kurobako-0-1-10
+          key: kurobako-0-2-0
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -116,11 +116,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./kurobako
-          key: kurobako-0-1-10
+          key: kurobako-0-2-0
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.1.11/kurobako-0.1.11.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
