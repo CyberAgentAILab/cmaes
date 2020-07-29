@@ -12,14 +12,14 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 </details>
 
 <details>
-<summary>IPOP-CMA-ES on Himmelblau function.</summary>
+<summary>IPOP-CMA-ES [2] on Himmelblau function.</summary>
 
 ![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88472274-f9e12480-cf4b-11ea-8aff-2a859eb51a15.gif)
 
 </details>
 
 <details>
-<summary>BIPOP-CMA-ES on Himmelblau function.</summary>
+<summary>BIPOP-CMA-ES [3] on Himmelblau function.</summary>
 
 ![visualize-bipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88471815-55111800-cf48-11ea-8933-5a4b48c49eba.gif)
 
@@ -66,10 +66,9 @@ if __name__ == "__main__":
         optimizer.tell(solutions)
 ```
 
-And you can use this library via [Optuna](https://github.com/optuna/optuna) [2].
-Optuna is an automatic hyperparameter optimization framework.
-A sampler based on this library is available from [Optuna v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0).
-See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) for more details.
+And you can use this library via [Optuna](https://github.com/optuna/optuna) [4], an automatic hyperparameter optimization framework.
+Optuna's built-in CMA-ES sampler which uses this library under the hood is available from [v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0) and stabled at [v2.0.0](https://github.com/optuna/optuna/releases/tag/v2.2.0).
+See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers.html#optuna.samplers.CmaEsSampler) or [v2.0 release blog](https://medium.com/optuna/optuna-v2-3165e3f1fc2) for more details.
 
 ```python
 import optuna
@@ -86,7 +85,7 @@ if __name__ == "__main__":
 ```
 
 <details>
-<summary>Example of IPOP-CMA-ES [3]</summary>
+<summary>Example of IPOP-CMA-ES</summary>
 
 You can easily implement IPOP-CMA-ES which restarts CMA-ES
 with increasing population size.
@@ -132,7 +131,7 @@ if __name__ == "__main__":
 </details>
 
 <details>
-<summary>Example of BIPOP-CMA-ES [4]</summary>
+<summary>Example of BIPOP-CMA-ES</summary>
 
 Here is an example of BIPOP-CMA-ES which applies two interlaced restart strategies,
 one with an increasing population size and one with varying small population sizes.
@@ -230,6 +229,6 @@ I respect all libraries involved in CMA-ES.
 **References:**
 
 * [1] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
-* [2] [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
-* [3] [Auger, A., Hansen, N.: A restart CMA evolution strategy with increasing population size. In: Proceedings of the 2005 IEEE Congress on Evolutionary Computation (CEC’2005), pp. 1769–1776 (2005a)](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
-* [4] [Hansen N. Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed. In the workshop Proceedings of the Genetic and Evolutionary Computation Conference, GECCO, pages 2389–2395. ACM, 2009.](https://hal.inria.fr/inria-00382093/document)
+* [2] [Auger, A., Hansen, N.: A restart CMA evolution strategy with increasing population size. In: Proceedings of the 2005 IEEE Congress on Evolutionary Computation (CEC’2005), pp. 1769–1776 (2005a)](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
+* [3] [Hansen N. Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed. In the workshop Proceedings of the Genetic and Evolutionary Computation Conference, GECCO, pages 2389–2395. ACM, 2009.](https://hal.inria.fr/inria-00382093/document)
+* [4] [Takuya Akiba, Shotaro Sano, Toshihiko Yanase, Takeru Ohta, Masanori Koyama. 2019. Optuna: A Next-generation Hyperparameter Optimization Framework. In The 25th ACM SIGKDD Conference on Knowledge Discovery and Data Mining (KDD ’19), August 4–8, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
