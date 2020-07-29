@@ -24,11 +24,11 @@ jobs:
       - run: pip install --progress-bar off -U git+https://github.com/c-bata/optuna.git@ipop-cma-es
       - run: pip install packaging
       - name: Cache kurobako CLI
-          id: cache-kurobako
-          uses: actions/cache@v2
-          with:
-            path: ./kurobako
-            key: kurobako-0-1-10
+        id: cache-kurobako
+        uses: actions/cache@v2
+        with:
+          path: ./kurobako
+          key: kurobako-0-1-10
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
@@ -112,11 +112,11 @@ jobs:
       - run: pip install --progress-bar off -U git+https://github.com/c-bata/optuna.git@ipop-cma-es
       - run: pip install packaging
       - name: Cache kurobako CLI
-          id: cache-kurobako
-          uses: actions/cache@v2
-          with:
-            path: ./kurobako
-            key: kurobako-0-1-10
+        id: cache-kurobako
+        uses: actions/cache@v2
+        with:
+          path: ./kurobako
+          key: kurobako-0-1-10
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
