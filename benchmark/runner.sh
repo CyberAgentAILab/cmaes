@@ -6,7 +6,7 @@ KUROBAKO=${KUROBAKO:-kurobako}
 DIR=$(cd $(dirname $0); pwd)
 REPEATS=${REPEATS:-5}
 BUDGET=${BUDGET:-300}
-SEED=${BUDGET:-1}
+SEED=${SEED:-1}
 DIM=${DIM:-2}
 
 usage() {
