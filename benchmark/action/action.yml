@@ -1,0 +1,86 @@
+name: 'Kurobako Benchmark'
+description: 'Run kurobako benchmark'
+inputs:
+  problem:
+    description: 'problem name'
+    requried: true
+    default: 'six-hump-camel'
+runs:
+  using: "composite"
+  steps:
+  - name: Cache kurobako CLI
+    id: cache-kurobako
+    uses: actions/cache@v2
+    with:
+      path: ./kurobako
+      key: kurobako-0-2-0
+  - name: Download kurobako CLI
+    if: steps.cache-kurobako.outputs.cache-hit != 'true'
+    run: |
+      curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
+      chmod +x kurobako
+      ./kurobako -h
+
+  - name: Run benchmark of ${{ inputs.problem }} function
+    env:
+      KUROBAKO: ./kurobako
+    run: ./benchmark/runner.sh ${{ inputs.problem }} ./kurobako-report.json
+  - name: Plot kurobako result
+    uses: c-bata/github-actions-kurobako/plot@v1
+    id: kurobako-plot
+    with:
+      report-json-path: './kurobako-report.json'
+  - name: Generate kurobako markdown report
+    run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+
+  - name: Set HAS_SECRET flag
+    env:
+      GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+    run: |
+      if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
+          echo '::set-env name=HAS_SECRET::1'
+      else
+          echo '::set-env name=HAS_SECRET::0'
+      fi
+  - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+    if: ${{ env.HAS_SECRET == 1 }}
+    with:
+      version: '275.0.0'
+      service_account_key: ${{ secrets.GCP_SA_KEY }}
+  - run: gcloud info
+    if: ${{ env.HAS_SECRET == 1 }}
+  - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+    if: ${{ env.HAS_SECRET == 1 }}
+  - run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/${{ inputs.problem }}-${{ github.sha }}.png
+    if: ${{ env.HAS_SECRET == 1 }}
+  - name: Comment to a pull request
+    if: ${{ env.HAS_SECRET == 1 }}
+    uses: c-bata/github-actions-kurobako@v2
+    with:
+      report-md-path: './kurobako-report.md'
+      public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/${{ inputs.problem }}-${{ github.sha }}.png
+      title: Benchmark of ${{ inputs.problem }} function
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  - run: mv ./kurobako-report.json ./kurobako-report-${{ inputs.problem}} .json
+  - uses: actions/upload-artifact@v2
+    with:
+      name: kurobako-report
+      path: kurobako-report-${{ inputs.problem }}.json
+
+  - run: mv ${{ steps.kurobako-plot.outputs.image-path }} ${{ inputs.problem }}.png
+    if: ${{ env.HAS_SECRET == 0 }}
+  - run: mv ./kurobako-report.md ./kurobako-report-${{ inputs.problem }}.md
+    if: ${{ env.HAS_SECRET == 0 }}
+  - uses: actions/upload-artifact@v2
+    if: ${{ env.HAS_SECRET == 0 }}
+    with:
+      name: kurobako-report
+      path: ${{ inputs.problem }}.png
+  - uses: actions/upload-artifact@v2
+    if: ${{ env.HAS_SECRET == 0 }}
+    with:
+      name: kurobako-report
+      path: kurobako-report-${{ inputs.problem }}.md
