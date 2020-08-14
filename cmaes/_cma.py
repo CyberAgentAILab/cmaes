@@ -245,6 +245,7 @@ class CMA:
         self._C = np.dot(np.dot(B, np.diag(D ** 2)), B.T)
 
         self._B, self._D = B, D
+        self._B **= 0.5
         return B, D
 
     def _sample_solution(self) -> np.ndarray:
