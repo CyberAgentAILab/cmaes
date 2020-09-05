@@ -21,8 +21,7 @@ jobs:
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
-      - run: pip install --progress-bar off -U git+https://github.com/c-bata/optuna.git@ipop-cma-es
-      - run: pip install packaging
+      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
         id: cache-kurobako
         uses: actions/cache@v2
@@ -114,8 +113,7 @@ jobs:
       - run: python setup.py develop
       - run: pip install --progress-bar off -e '.[benchmark]'
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
-      - run: pip install --progress-bar off -U git+https://github.com/c-bata/optuna.git@ipop-cma-es
-      - run: pip install packaging
+      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
         id: cache-kurobako
         uses: actions/cache@v2
