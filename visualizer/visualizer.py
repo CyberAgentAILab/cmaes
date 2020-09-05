@@ -32,22 +32,33 @@ from cmaes._cma import CMA
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--function", choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
+    "--function",
+    choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
 )
 parser.add_argument(
-    "--seed", type=int, default=1,
+    "--seed",
+    type=int,
+    default=1,
 )
 parser.add_argument(
-    "--frames", type=int, default=100,
+    "--frames",
+    type=int,
+    default=100,
 )
 parser.add_argument(
-    "--interval", type=int, default=20,
+    "--interval",
+    type=int,
+    default=20,
 )
 parser.add_argument(
-    "--pop-per-frame", type=int, default=1,
+    "--pop-per-frame",
+    type=int,
+    default=1,
 )
 parser.add_argument(
-    "--restart-strategy", choices=["ipop", "bipop"], default="",
+    "--restart-strategy",
+    choices=["ipop", "bipop"],
+    default="",
 )
 args = parser.parse_args()
 

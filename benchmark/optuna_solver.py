@@ -38,7 +38,8 @@ def create_ipop_cmaes_study(seed):
 
 def create_pycma_study(seed):
     sampler = optuna.integration.PyCmaSampler(
-        seed=seed, warn_independent_sampling=True,
+        seed=seed,
+        warn_independent_sampling=True,
     )
     return optuna.create_study(sampler=sampler)
 
