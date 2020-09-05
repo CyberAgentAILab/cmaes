@@ -45,7 +45,7 @@ jobs:
         with:
           report-json-path: './kurobako-report.json'
           error-bar: 'true'
-          ymin: '0'
+          ymin: '-1.05'
       - name: Generate kurobako markdown report
         run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
