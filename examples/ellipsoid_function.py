@@ -21,12 +21,10 @@ def main():
         for _ in range(optimizer.population_size):
             x = optimizer.ask()
             value = ellipsoid(x)
-            evals +=1
+            evals += 1
             solutions.append((x, value))
             if evals % 3000 == 0:
-                print(
-                    f"{evals:5d}  {value:10.5f}"
-                )
+                print(f"{evals:5d}  {value:10.5f}")
         optimizer.tell(solutions)
 
         if optimizer.should_stop():
