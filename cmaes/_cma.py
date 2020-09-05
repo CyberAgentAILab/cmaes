@@ -296,7 +296,7 @@ class CMA:
         self._mean += self._cm * self._sigma * y_w
 
         # Step-size control
-        C_2 = B.dot(np.diag(1 / D)).dot(B)  # C^(-1/2) = B D^(-1) B^T
+        C_2 = B.dot(np.diag(1 / D)).dot(B.T)  # C^(-1/2) = B D^(-1) B^T
         self._p_sigma = (1 - self._c_sigma) * self._p_sigma + math.sqrt(
             self._c_sigma * (2 - self._c_sigma) * self._mu_eff
         ) * C_2.dot(y_w)
