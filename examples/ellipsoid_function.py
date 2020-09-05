@@ -24,7 +24,7 @@ def main():
             evals += 1
             solutions.append((x, value))
             if evals % 3000 == 0:
-                print(f"{evals:5d}  {value:10.5f}")
+                print("{:5d}  {:10.5f}".format(evals, value))
         optimizer.tell(solutions)
 
         if optimizer.should_stop():

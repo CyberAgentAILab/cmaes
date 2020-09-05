@@ -19,7 +19,10 @@ def main():
             solutions.append((x, value))
 
             msg = "{g:3d}  {value:10.5f}  {x1:6.2f}  {x2:6.2f}".format(
-                g=optimizer.generation, value=value, x1=x[0], x2=x[1],
+                g=optimizer.generation,
+                value=value,
+                x1=x[0],
+                x2=x[1],
             )
             print(msg)
         optimizer.tell(solutions)
