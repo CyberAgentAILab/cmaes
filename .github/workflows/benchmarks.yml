@@ -40,7 +40,7 @@ jobs:
           KUROBAKO: ./kurobako
         run: ./benchmark/runner.sh six-hump-camel ./kurobako-report.json
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v4
+        uses: c-bata/github-actions-kurobako/plot@master
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
@@ -137,7 +137,7 @@ jobs:
           BUDGET: 2500
         run: ./benchmark/runner.sh rastrigin ./kurobako-report.json
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v4
+        uses: c-bata/github-actions-kurobako/plot@master
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
