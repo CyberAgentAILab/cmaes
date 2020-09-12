@@ -135,7 +135,7 @@ class SepCMA:
         self._mean = mean
         self._sigma = sigma
         self._D: Optional[np.ndarray] = None
-        self._C: Optional[np.ndarray] = np.ones(n_dim)
+        self._C: np.ndarray = np.ones(n_dim)
 
         # bounds contains low and high of each parameter.
         assert (
@@ -192,12 +192,11 @@ class SepCMA:
         x = self._repair_infeasible_params(x)
         return x
 
-    def _eigen_decomposition(self) -> Tuple[np.ndarray, np.ndarray]:
+    def _eigen_decomposition(self) -> np.ndarray:
         if self._D is not None:
             return self._D
-        D = np.sqrt(np.where(self._C < 0, self._epsilon, self._C))
-        self._D = D
-        return D
+        self._D = np.sqrt(np.where(self._C < 0, self._epsilon, self._C))
+        return self._D
 
     def _sample_solution(self) -> np.ndarray:
         D = self._eigen_decomposition()
