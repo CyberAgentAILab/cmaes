@@ -81,10 +81,7 @@ class SepCMA:
 
         # (eq.49)
         weights_prime = np.array(
-            [
-                math.log((population_size + 1) / 2) - math.log(i + 1)
-                for i in range(population_size)
-            ]
+            [math.log(mu + 1) - math.log(i + 1) for i in range(mu)]
         )
         weights = weights_prime / sum(weights_prime)
         mu_eff = 1 / sum(weights ** 2)
