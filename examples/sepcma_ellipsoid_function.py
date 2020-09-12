@@ -23,7 +23,7 @@ def main():
             value = ellipsoid(x)
             evals += 1
             solutions.append((x, value))
-            if evals % 1 == 0:
+            if evals % 3000 == 0:
                 print(f"{evals:5d}  {value:10.5f}")
         optimizer.tell(solutions)
 
