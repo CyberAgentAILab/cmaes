@@ -1,4 +1,7 @@
 import optuna
+from cmaes import SepCMA
+
+optuna.samplers._cmaes.CMA = SepCMA  # monkey patch
 
 
 def objective(trial: optuna.Trial):

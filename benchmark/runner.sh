@@ -62,18 +62,19 @@ esac
 
 RANDOM_SOLVER=$($KUROBAKO solver random)
 CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/optuna_solver.py cmaes)
+SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'sep-cmaes' command python $DIR/optuna_solver.py sep-cmaes)
 IPOP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-cmaes' command python $DIR/optuna_solver.py ipop-cmaes)
 PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command python $DIR/optuna_solver.py pycma)
 
 if [ $BUDGET -le 500 ]; then
   $KUROBAKO studies \
-    --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $PYCMA_SOLVER $CMAES_SOLVER \
+    --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $PYCMA_SOLVER $CMAES_SOLVER $SEP_CMAES_SOLVER \
     --problems $PROBLEM \
     --seed $SEED --repeats $REPEATS --budget $BUDGET \
     | $KUROBAKO run --parallelism 4 > $2
 else
   $KUROBAKO studies \
-    --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $CMAES_SOLVER \
+    --solvers $RANDOM_SOLVER $IPOP_CMAES_SOLVER $CMAES_SOLVER $SEP_CMAES_SOLVER \
     --problems $PROBLEM \
     --seed $SEED --repeats $REPEATS --budget $BUDGET \
     | $KUROBAKO run --parallelism 6 > $2

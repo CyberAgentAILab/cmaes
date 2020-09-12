@@ -2,6 +2,8 @@ import math
 import sys
 import numpy as np
 
+from typing import Any
+from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
@@ -174,6 +176,20 @@ class SepCMA:
         """Generation number which is monotonically incremented
         when multi-variate gaussian distribution is updated."""
         return self._g
+
+    def __getstate__(self) -> Dict[str, Any]:
+        attrs = {}
+        for name in self.__dict__:
+            # Remove _rng in pickle serialized object.
+            if name == "_rng":
+                continue
+            attrs[name] = getattr(self, name)
+        return attrs
+
+    def __setstate__(self, state: Dict[str, Any]) -> None:
+        self.__dict__.update(state)
+        # Set _rng for unpickled object.
+        setattr(self, "_rng", np.random.RandomState())
 
     def set_bounds(self, bounds: Optional[np.ndarray]) -> None:
         """Update boundary constraints"""
