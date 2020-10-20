@@ -6,7 +6,9 @@ from kurobako import solver
 from kurobako.solver.optuna import OptunaSolverFactory
 
 parser = argparse.ArgumentParser()
-parser.add_argument("sampler", choices=["cmaes", "sep-cmaes", "ipop-cmaes", "pycma"])
+parser.add_argument(
+    "sampler", choices=["cmaes", "sep-cmaes", "ipop-cmaes", "ipop-sep-cmaes", "pycma"]
+)
 parser.add_argument(
     "--loglevel", choices=["debug", "info", "warning", "error"], default="warning"
 )
@@ -43,6 +45,17 @@ def create_ipop_cmaes_study(seed):
     return optuna.create_study(sampler=sampler)
 
 
+def create_ipop_sep_cmaes_study(seed):
+    optuna.samplers._cmaes.CMA = SepCMA  # monkey patch
+    sampler = optuna.samplers.CmaEsSampler(
+        seed=seed,
+        warn_independent_sampling=True,
+        restart_strategy="ipop",
+        inc_popsize=2,
+    )
+    return optuna.create_study(sampler=sampler)
+
+
 def create_pycma_study(seed):
     sampler = optuna.integration.PyCmaSampler(
         seed=seed,
@@ -58,6 +71,8 @@ if __name__ == "__main__":
         factory = OptunaSolverFactory(create_sep_cmaes_study)
     elif args.sampler == "ipop-cmaes":
         factory = OptunaSolverFactory(create_ipop_cmaes_study)
+    elif args.sampler == "ipop-sep-cmaes":
+        factory = OptunaSolverFactory(create_ipop_sep_cmaes_study)
     elif args.sampler == "pycma":
         factory = OptunaSolverFactory(create_pycma_study)
     else:
