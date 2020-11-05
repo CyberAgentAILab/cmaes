@@ -53,9 +53,9 @@ jobs:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
-              echo '::set-env name=HAS_SECRET::1'
+              echo "HAS_SECRET=1" >> $GITHUB_ENV
           else
-              echo '::set-env name=HAS_SECRET::0'
+              echo "HAS_SECRET=0" >> $GITHUB_ENV
           fi
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         if: ${{ env.HAS_SECRET == 1 }}
@@ -148,9 +148,9 @@ jobs:
           GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
         run: |
           if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
-              echo '::set-env name=HAS_SECRET::1'
+              echo "HAS_SECRET=1" >> $GITHUB_ENV
           else
-              echo '::set-env name=HAS_SECRET::0'
+              echo "HAS_SECRET=0" >> $GITHUB_ENV
           fi
       - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
         if: ${{ env.HAS_SECRET == 1 }}
