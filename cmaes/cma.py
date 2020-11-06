@@ -1,6 +1,8 @@
 import warnings
 
-from ._cma import CMA  # NOQA
+from ._cma import CMA
+
+__all__ = ["CMA"]
 
 warnings.warn(
     "This module is deprecated. Please import CMA class from the "
