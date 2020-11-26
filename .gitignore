@@ -6,6 +6,7 @@ __pycache__/
 *.pyc
 .eggs/
 *.egg-info/
+.tox/
 
 tmp/
 benchmark/*.json
