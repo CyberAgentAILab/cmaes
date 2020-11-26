@@ -1,5 +1,4 @@
 import math
-import sys
 import numpy as np
 
 from typing import Any
@@ -7,6 +6,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+
+
+_EPS = 1e-8
+_FLT_MAX = 1e32
 
 
 class SepCMA:
@@ -155,9 +158,6 @@ class SepCMA:
         self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
         self._funhist_values = np.empty(self._funhist_term * 2)
 
-        # for avoid numerical errors
-        self._epsilon = 1e-8
-
     @property
     def dim(self) -> int:
         """A number of dimensions"""
@@ -208,7 +208,7 @@ class SepCMA:
     def _eigen_decomposition(self) -> np.ndarray:
         if self._D is not None:
             return self._D
-        self._D = np.sqrt(np.where(self._C < 0, self._epsilon, self._C))
+        self._D = np.sqrt(np.where(self._C < 0, _EPS, self._C))
         return self._D
 
     def _sample_solution(self) -> np.ndarray:
@@ -268,7 +268,7 @@ class SepCMA:
         self._sigma *= np.exp(
             (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
         )
-        self._sigma = min(self._sigma, sys.float_info.max / 5)
+        self._sigma = min(self._sigma, _FLT_MAX)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(

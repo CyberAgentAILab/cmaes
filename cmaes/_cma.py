@@ -1,5 +1,4 @@
 import math
-import sys
 import numpy as np
 
 from typing import Any
@@ -7,6 +6,10 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+
+
+_EPS = 1e-8
+_FLT_MAX = 1e32
 
 
 class CMA:
@@ -179,9 +182,6 @@ class CMA:
         self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
         self._funhist_values = np.empty(self._funhist_term * 2)
 
-        # for avoid numerical errors
-        self._epsilon = 1e-8
-
     def __getstate__(self) -> Dict[str, Any]:
         attrs = {}
         for name in self.__dict__:
@@ -241,7 +241,7 @@ class CMA:
 
         self._C = (self._C + self._C.T) / 2
         D2, B = np.linalg.eigh(self._C)
-        D = np.sqrt(np.where(D2 < 0, self._epsilon, D2))
+        D = np.sqrt(np.where(D2 < 0, _EPS, D2))
         self._C = np.dot(np.dot(B, np.diag(D ** 2)), B.T)
 
         self._B, self._D = B, D
@@ -305,7 +305,7 @@ class CMA:
         self._sigma *= np.exp(
             (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
         )
-        self._sigma = min(self._sigma, sys.float_info.max / 5)
+        self._sigma = min(self._sigma, _FLT_MAX)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
@@ -323,7 +323,7 @@ class CMA:
         w_io = self._weights * np.where(
             self._weights >= 0,
             1,
-            self._n_dim / (np.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + self._epsilon),
+            self._n_dim / (np.linalg.norm(C_2.dot(y_k.T), axis=0) ** 2 + _EPS),
         )
 
         delta_h_sigma = (1 - h_sigma) * self._cc * (2 - self._cc)  # (p.28)
