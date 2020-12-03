@@ -16,7 +16,13 @@ def get_sigma_and_mean(
     gamma_n = int(len(solutions) * ratio_high_rank_gamma)
     dim = len(solutions[0])
 
-    top_gamma_solutions = np.empty(shape=(gamma_n, dim,), dtype=np.float)
+    top_gamma_solutions = np.empty(
+        shape=(
+            gamma_n,
+            dim,
+        ),
+        dtype=np.float,
+    )
     for i in range(gamma_n):
         top_gamma_solutions[i] = solutions[i]
 
@@ -25,11 +31,17 @@ def get_sigma_and_mean(
     for i in range(gamma_n):
         cov_term += np.dot(
             top_gamma_solutions[i, :].reshape(dim, 1),
-            top_gamma_solutions[i, :].reshape(dim, 1).T
+            top_gamma_solutions[i, :].reshape(dim, 1).T,
         )
 
     second_term = cov_term / gamma_n
-    mean_term = np.zeros(shape=(dim, 1,), dtype=np.float)
+    mean_term = np.zeros(
+        shape=(
+            dim,
+            1,
+        ),
+        dtype=np.float,
+    )
     for i in range(gamma_n):
         mean_term += top_gamma_solutions[i, :].reshape(dim, 1)
     mean_term /= gamma_n
