@@ -60,6 +60,9 @@ class CMA:
 
         population_size:
             A population size (optional).
+
+        cov:
+            A covariance matrix (optional).
     """
 
     def __init__(
@@ -70,6 +73,7 @@ class CMA:
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
         population_size: Optional[int] = None,
+        cov: Optional[np.ndarray] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
@@ -158,7 +162,13 @@ class CMA:
         self._pc = np.zeros(n_dim)
 
         self._mean = mean
-        self._C = np.eye(n_dim)
+
+        if cov is None:
+            self._C = np.eye(n_dim)
+        else:
+            assert cov.shape == (n_dim, n_dim), "Invalid shape of covariance matrix"
+            self._C = cov
+
         self._sigma = sigma
         self._D: Optional[np.ndarray] = None
         self._B: Optional[np.ndarray] = None
