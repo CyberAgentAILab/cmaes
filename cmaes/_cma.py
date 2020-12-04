@@ -9,7 +9,7 @@ from typing import Tuple
 
 
 _EPS = 1e-8
-_FLT_MAX = 1e32
+_SIGMA_MAX = 1e32
 
 
 class CMA:
@@ -305,7 +305,7 @@ class CMA:
         self._sigma *= np.exp(
             (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
         )
-        self._sigma = min(self._sigma, _FLT_MAX)
+        self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
         h_sigma_cond_left = norm_p_sigma / math.sqrt(
