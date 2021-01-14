@@ -15,7 +15,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.x'
           architecture: 'x64'
       - run: pip install -U pip setuptools
       - run: python setup.py develop
@@ -27,11 +27,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./kurobako
-          key: kurobako-0-2-0
+          key: kurobako-0-2-8
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.8/kurobako-0.2.8.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -107,7 +107,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: actions/setup-python@v2
         with:
-          python-version: '3.8'
+          python-version: '3.x'
           architecture: 'x64'
       - run: pip install -U pip setuptools
       - run: python setup.py develop
@@ -119,11 +119,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./kurobako
-          key: kurobako-0-2-0
+          key: kurobako-0-2-8
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.2.0/kurobako-0.2.0.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.8/kurobako-0.2.8.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
