@@ -1,5 +1,8 @@
 # CMA-ES
 
+![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)
+![PyPI - Downloads](https://img.shields.io/pypi/dw/cmaes)
+
 Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] implementation.
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
