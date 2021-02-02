@@ -4,18 +4,40 @@ import numpy as np
 from typing import Tuple, List
 
 
-def get_sigma_and_mean(
-    solutions: List[Tuple[np.ndarray, float]],
-    ratio_high_rank_gamma: float = 0.1,
-    normal_prior_alpha: float = 0.1,
+def get_starting_point(
+    source_solutions: List[Tuple[np.ndarray, float]],
+    gamma: float = 0.1,
+    alpha: float = 0.1,
 ) -> Tuple[np.ndarray, float, np.ndarray]:
-    if len(solutions) == 0:
+    """Estimate a promising distribution of the source task, then
+    returns a starting point (mean vector and the covariance matrix
+    of the multivariate gaussian distribution in the CMA-ES).
+
+    Args:
+        source_solutions:
+            List of solutions (parameter, value) on a source task.
+
+        gamma:
+            top-gamma solutions are selected from a set of solutions
+            on a source task. (default: 0.1).
+
+        alpha:
+            prior parameter for the initial covariance matrix (default: 0.1).
+
+    Returns:
+        The tuple of mean vector, sigma, and covariance matrix.
+    """
+    # Paper: https://arxiv.org/abs/2012.06932
+    assert 0 < gamma <= 1, "gamma should be in (0, 1]"
+
+    if len(source_solutions) == 0:
         raise ValueError("solutions should contain one or more items.")
 
-    solutions = sorted(solutions, key=lambda t: t[1])
-    gamma_n = int(len(solutions) * ratio_high_rank_gamma)
-    dim = len(solutions[0])
-
+    # Select top-gamma solutions
+    source_solutions = sorted(source_solutions, key=lambda t: t[1])
+    gamma_n = math.floor(len(source_solutions) * gamma)
+    assert gamma_n >= 1, "One or more solutions must be selected from a source task"
+    dim = len(source_solutions[0])
     top_gamma_solutions = np.empty(
         shape=(
             gamma_n,
@@ -24,9 +46,10 @@ def get_sigma_and_mean(
         dtype=np.float,
     )
     for i in range(gamma_n):
-        top_gamma_solutions[i] = solutions[i]
+        top_gamma_solutions[i] = source_solutions[i]
 
-    first_term = normal_prior_alpha ** 2 * np.eye(dim)
+    # Estimation of a Promising Distribution of a Source Task.
+    first_term = alpha ** 2 * np.eye(dim)
     cov_term = np.zeros(shape=(dim, dim), dtype=np.float)
     for i in range(gamma_n):
         cov_term += np.dot(
