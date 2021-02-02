@@ -46,7 +46,7 @@ def get_starting_point(
         dtype=np.float,
     )
     for i in range(gamma_n):
-        top_gamma_solutions[i] = source_solutions[i]
+        top_gamma_solutions[i] = source_solutions[i][0]
 
     # Estimation of a Promising Distribution of a Source Task.
     first_term = alpha ** 2 * np.eye(dim)
@@ -72,7 +72,8 @@ def get_starting_point(
     third_term = np.dot(mean_term, mean_term.T)
     mu = mean_term
     mean = mu[:, 0]
-    det_sigma = np.linalg.det(first_term + second_term - third_term)
+    Sigma = first_term + second_term - third_term
+    det_sigma = np.linalg.det(Sigma)
     sigma = math.pow(det_sigma, 1.0 / 2.0 / dim)
-    cov = sigma / math.pow(det_sigma, 1.0 / dim)
+    cov = Sigma / math.pow(det_sigma, 1.0 / dim)
     return mean, sigma, cov
