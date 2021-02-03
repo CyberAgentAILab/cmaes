@@ -1,45 +1,53 @@
 name: Publish distributions to TestPyPI and PyPI
 
 on:
-  release:
-    types:
-      - published
+  push:
+    tags:
+    - v*.*.*
 
 jobs:
   build-n-publish:
     name: Build and publish Python distributions to TestPyPI and PyPI
     runs-on: ubuntu-latest
-    if: github.repository == 'CyberAgent/cmaes'
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip setuptools
-          pip install --progress-bar off .[release]
-      - name: Build distribution packages
-        run: python setup.py sdist bdist_wheel
-      - name: Verify the distributions
-        run: twine check dist/*
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip setuptools
+        pip install --progress-bar off .[release]
+    - name: Build distribution packages
+      run: python setup.py sdist bdist_wheel
+    - name: Verify the distributions
+      run: twine check dist/*
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: distribution
-          path: dist/
+    - uses: actions/upload-artifact@v2
+      with:
+        name: distribution
+        path: dist/
 
-      - name: Publish distribution to Test PyPI
-        uses: pypa/gh-action-pypi-publish@v1.4.1
-        with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_PASSWORD }}
-          repository_url: https://test.pypi.org/legacy/
+    - name: Publish distribution to Test PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.1
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_PASSWORD }}
+        repository_url: https://test.pypi.org/legacy/
 
-      - name: Publish distribution to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.4.1
-        with:
-          user: __token__
-          password: ${{ secrets.PYPI_PASSWORD }}
+    - name: Publish distribution to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.4.1
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_PASSWORD }}
+
+    - name: Create GitHub release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        wget https://github.com/tcnksm/ghr/releases/download/v0.13.0/ghr_v0.13.0_linux_amd64.tar.gz
+        tar -xzf ghr_v*_linux_amd64.tar.gz
+        export TAGNAME=$(jq --raw-output .ref "$GITHUB_EVENT_PATH" | sed -e "s/refs\/tags\///")
+        ./ghr_v0.13.0_linux_amd64/ghr -n ${TAGNAME} -b ${TAGNAME} -draft ${TAGNAME} dist/
