@@ -4,7 +4,7 @@ import numpy as np
 from typing import Tuple, List
 
 
-def get_starting_point(
+def get_warm_start_mgd(
     source_solutions: List[Tuple[np.ndarray, float]],
     gamma: float = 0.1,
     alpha: float = 0.1,

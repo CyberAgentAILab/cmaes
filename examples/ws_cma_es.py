@@ -1,5 +1,5 @@
 import numpy as np
-from cmaes import CMA, get_starting_point
+from cmaes import CMA, get_warm_start_mgd
 
 
 def sphere(x1: float, x2: float, b: float) -> float:
@@ -17,7 +17,7 @@ def main() -> None:
         source_solutions.append((x, value))
 
     # Estimate a promising distribution of the source task
-    ws_mean, ws_sigma, ws_cov = get_starting_point(
+    ws_mean, ws_sigma, ws_cov = get_warm_start_mgd(
         source_solutions, gamma=0.1, alpha=0.1
     )
     optimizer = CMA(mean=ws_mean, sigma=ws_sigma, cov=ws_cov)

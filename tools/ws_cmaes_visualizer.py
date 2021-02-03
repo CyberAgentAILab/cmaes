@@ -26,7 +26,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from pylab import rcParams
 
-from cmaes import get_starting_point
+from cmaes import get_warm_start_mgd
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -268,7 +268,7 @@ def update(frame):
     ]
 
     if math.floor(len(solutions) * args.alpha) > 1:
-        mean, sigma, cov = get_starting_point(
+        mean, sigma, cov = get_warm_start_mgd(
             solutions, alpha=args.alpha, gamma=args.gamma
         )
         rv = stats.multivariate_normal(mean, cov)
