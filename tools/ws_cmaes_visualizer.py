@@ -1,19 +1,19 @@
 """
 Usage:
-  ws_cma_es.py OPTIONS
+  python3 tools/ws_cmaes_visualizer.py OPTIONS
 
 Optional arguments:
   -h, --help            show this help message and exit
-  --function {quadratic,himmelblau,rosenbrock,six-hump-camel}
+  --function {quadratic,himmelblau,rosenbrock,six-hump-camel,sphere,rot-ellipsoid}
   --seed SEED
+  --alpha ALPHA
+  --gamma GAMMA
   --frames FRAMES
   --interval INTERVAL
   --pop-per-frame POP_PER_FRAME
 
 Example:
-  python3 ws_cma_es.py --function six-hump-camel
-
-  python3 ws_cma_es.py --function himmelblau --frames 500 --interval 10 --pop-per-frame 6
+  python3 ws_cmaes_visualizer.py --function rot-ellipsoid
 """
 import argparse
 import math

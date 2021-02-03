@@ -1,6 +1,6 @@
 """
 Usage:
-  visualizer.py OPTIONS
+  cmaes_visualizer.py OPTIONS
 
 Optional arguments:
   -h, --help            show this help message and exit
@@ -12,9 +12,9 @@ Optional arguments:
   --restart-strategy {ipop,bipop}
 
 Example:
-  python3 visualizer.py --function six-hump-camel --pop-per-frame 2
+  python3 cmaes_visualizer.py --function six-hump-camel --pop-per-frame 2
 
-  python3 visualizer/visualizer.py --function himmelblau \
+  python3 tools/cmaes_visualizer.py --function himmelblau \
     --restart-strategy ipop --frames 500 --interval 10 --pop-per-frame 6
 """
 import argparse
