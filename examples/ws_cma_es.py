@@ -1,7 +1,5 @@
 import numpy as np
-
-from cmaes import CMA
-from cmaes import get_starting_point
+from cmaes import CMA, get_starting_point
 
 
 def sphere(x1: float, x2: float, b: float) -> float:
@@ -9,18 +7,12 @@ def sphere(x1: float, x2: float, b: float) -> float:
 
 
 def main() -> None:
-    print(" g    f(x1,x2)     x1      x2  ")
-    print("===  ==========  ======  ======")
-
-    seed = 0
-    source_offset = 0.4
-    target_offset = 0.6
-    rng = np.random.RandomState(seed)
+    source_offset, target_offset = 0.4, 0.6
 
     # Generate solutions from a source task
     source_solutions = []
     for _ in range(1000):
-        x = rng.random(2)
+        x = np.random.random(2)
         value = sphere(x[0], x[1], source_offset)
         source_solutions.append((x, value))
 
@@ -28,11 +20,11 @@ def main() -> None:
     ws_mean, ws_sigma, ws_cov = get_starting_point(
         source_solutions, gamma=0.1, alpha=0.1
     )
-    optimizer = CMA(
-        mean=ws_mean, sigma=ws_sigma, cov=ws_cov, population_size=8, seed=seed
-    )
+    optimizer = CMA(mean=ws_mean, sigma=ws_sigma, cov=ws_cov)
 
     # Run WS-CMA-ES
+    print(" g    f(x1,x2)     x1      x2  ")
+    print("===  ==========  ======  ======")
     while True:
         solutions = []
         for _ in range(optimizer.population_size):
