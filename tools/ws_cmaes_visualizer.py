@@ -1,21 +1,19 @@
 """
 Usage:
-  visualizer.py OPTIONS
+  python3 tools/ws_cmaes_visualizer.py OPTIONS
 
 Optional arguments:
   -h, --help            show this help message and exit
-  --function {quadratic,himmelblau,rosenbrock,six-hump-camel}
+  --function {quadratic,himmelblau,rosenbrock,six-hump-camel,sphere,rot-ellipsoid}
   --seed SEED
+  --alpha ALPHA
+  --gamma GAMMA
   --frames FRAMES
   --interval INTERVAL
   --pop-per-frame POP_PER_FRAME
-  --restart-strategy {ipop,bipop}
 
 Example:
-  python3 visualizer.py --function six-hump-camel --pop-per-frame 2
-
-  python3 visualizer/visualizer.py --function himmelblau \
-    --restart-strategy ipop --frames 500 --interval 10 --pop-per-frame 6
+  python3 ws_cmaes_visualizer.py --function rot-ellipsoid
 """
 import argparse
 import math
@@ -28,17 +26,34 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 from pylab import rcParams
 
-from cmaes._cma import CMA
+from cmaes import get_warm_start_mgd
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--function",
-    choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel"],
+    choices=[
+        "quadratic",
+        "himmelblau",
+        "rosenbrock",
+        "six-hump-camel",
+        "sphere",
+        "rot-ellipsoid",
+    ],
 )
 parser.add_argument(
     "--seed",
     type=int,
     default=1,
+)
+parser.add_argument(
+    "--alpha",
+    type=float,
+    default=0.1,
+)
+parser.add_argument(
+    "--gamma",
+    type=float,
+    default=0.1,
 )
 parser.add_argument(
     "--frames",
@@ -53,12 +68,7 @@ parser.add_argument(
 parser.add_argument(
     "--pop-per-frame",
     type=int,
-    default=1,
-)
-parser.add_argument(
-    "--restart-strategy",
-    choices=["ipop", "bipop"],
-    default="",
+    default=10,
 )
 args = parser.parse_args()
 
@@ -110,6 +120,31 @@ def six_hump_camel_contour(x1, x2):
     return np.log(six_hump_camel(x1, x2) + 1.0316)
 
 
+def sphere(x1, x2):
+    offset = 0.6
+    return (x1 - offset) ** 2 + (x2 - offset) ** 2
+
+
+def sphere_contour(x1, x2):
+    return np.log(sphere(x1, x2) + 1)
+
+
+def ellipsoid(x1, x2):
+    offset = 0.6
+    scale = 5 ** 2
+    return (x1 - offset) ** 2 + scale * (x2 - offset) ** 2
+
+
+def rot_ellipsoid(x1, x2):
+    rot_x1 = math.sqrt(3.0) / 2.0 * x1 + 1.0 / 2.0 * x2
+    rot_x2 = 1.0 / 2.0 * x1 + math.sqrt(3.0) / 2.0 * x2
+    return ellipsoid(rot_x1, rot_x2)
+
+
+def rot_ellipsoid_contour(x1, x2):
+    return np.log(rot_ellipsoid(x1, x2) + 1)
+
+
 function_name = ""
 if args.function == "quadratic":
     function_name = "Quadratic function"
@@ -157,24 +192,32 @@ elif args.function == "six-hump-camel":
     # input domain
     x1_lower_bound, x1_upper_bound = -3, 3
     x2_lower_bound, x2_upper_bound = -2, 2
+elif args.function == "sphere":
+    function_name = "Sphere function with offset=0.6"
+    objective = sphere
+    contour_function = sphere_contour
+    global_minimums = [
+        (0.6, 0.6),
+    ]
+    # input domain
+    x1_lower_bound, x1_upper_bound = 0, 1
+    x2_lower_bound, x2_upper_bound = 0, 1
+elif args.function == "rot-ellipsoid":
+    function_name = "Rot Ellipsoid function with offset=0.6"
+    objective = rot_ellipsoid
+    contour_function = rot_ellipsoid_contour
+
+    global_minimums = []
+    # input domain
+    x1_lower_bound, x1_upper_bound = 0, 1
+    x2_lower_bound, x2_upper_bound = 0, 1
 else:
     raise ValueError("invalid function type")
 
 
 seed = args.seed
-bounds = np.array([[x1_lower_bound, x1_upper_bound], [x2_lower_bound, x2_upper_bound]])
-sigma = (x1_upper_bound - x2_lower_bound) / 5
-optimizer = CMA(mean=np.zeros(2), sigma=sigma, bounds=bounds, seed=seed)
-solutions = []
-trial_number = 0
 rng = np.random.RandomState(seed)
-
-# Variables for IPOP and BIPOP
-inc_popsize = 2
-n_restarts = 0  # A small restart doesn't count in the n_restarts
-small_n_eval, large_n_eval = 0, 0
-popsize0 = optimizer.population_size
-poptype = "small"
+solutions = []
 
 
 def init():
@@ -188,7 +231,7 @@ def init():
         ax1.plot(m[0], m[1], "y*", ms=10)
         ax2.plot(m[0], m[1], "y*", ms=10)
 
-    # Plot contour of himmelbleu function
+    # Plot contour of the function
     x1 = np.arange(x1_lower_bound, x1_upper_bound, 0.01)
     x2 = np.arange(x2_lower_bound, x2_upper_bound, 0.01)
     x1, x2 = np.meshgrid(x1, x2)
@@ -196,89 +239,41 @@ def init():
     ax1.contour(x1, x2, contour_function(x1, x2), 30, cmap=bw)
 
 
-def get_next_popsize():
-    global optimizer, n_restarts, poptype, small_n_eval, large_n_eval
-    if args.restart_strategy == "ipop":
-        n_restarts += 1
-        popsize = optimizer.population_size * inc_popsize
-        print(f"Restart CMA-ES with popsize={popsize} at trial={trial_number}")
-        return popsize
-    elif args.restart_strategy == "bipop":
-        n_eval = optimizer.population_size * optimizer.generation
-        if poptype == "small":
-            small_n_eval += n_eval
-        else:  # poptype == "large"
-            large_n_eval += n_eval
-
-        if small_n_eval < large_n_eval:
-            poptype = "small"
-            popsize_multiplier = inc_popsize ** n_restarts
-            popsize = math.floor(popsize0 * popsize_multiplier ** (rng.uniform() ** 2))
-        else:
-            poptype = "large"
-            n_restarts += 1
-            popsize = popsize0 * (inc_popsize ** n_restarts)
-        print(
-            f"Restart CMA-ES with popsize={popsize} ({poptype}) at trial={trial_number}"
-        )
-        return
-    raise Exception("must not reach here")
-
-
 def update(frame):
-    global solutions, optimizer, trial_number
-    if len(solutions) == optimizer.population_size:
-        optimizer.tell(solutions)
-        solutions = []
+    global solutions
 
-        if optimizer.should_stop():
-            popsize = get_next_popsize()
-            lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
-            mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
-            optimizer = CMA(
-                mean=mean,
-                sigma=sigma,
-                bounds=bounds,
-                seed=seed,
-                population_size=popsize,
-            )
+    for i in range(args.pop_per_frame):
+        x1 = (x1_upper_bound - x1_lower_bound) * rng.random() + x1_lower_bound
+        x2 = (x2_upper_bound - x2_lower_bound) * rng.random() + x2_lower_bound
 
-    n_sample = min(optimizer.population_size - len(solutions), args.pop_per_frame)
-    for i in range(n_sample):
-        x = optimizer.ask()
-        evaluation = objective(x[0], x[1])
+        evaluation = objective(x1, x2)
 
         # Plot sample points
-        ax1.plot(x[0], x[1], "o", c="r", label="2d", alpha=0.5)
+        ax1.plot(x1, x2, "o", c="r", label="2d", alpha=0.5)
 
         solution = (
-            x,
+            np.array([x1, x2], dtype=float),
             evaluation,
         )
         solutions.append(solution)
-    trial_number += n_sample
 
     # Update title
-    if args.restart_strategy == "ipop":
-        fig.suptitle(
-            f"IPOP-CMA-ES {function_name} trial={trial_number} "
-            f"popsize={optimizer.population_size}"
-        )
-    elif args.restart_strategy == "bipop":
-        fig.suptitle(
-            f"BIPOP-CMA-ES {function_name} trial={trial_number} "
-            f"popsize={optimizer.population_size} ({poptype})"
-        )
-    else:
-        fig.suptitle(f"CMA-ES {function_name} trial={trial_number}")
+    fig.suptitle(
+        f"WS-CMA-ES {function_name} with alpha={args.alpha} and gamma={args.gamma} (frame={frame})"
+    )
 
     # Plot multivariate gaussian distribution of CMA-ES
     x, y = np.mgrid[
         x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01
     ]
-    rv = stats.multivariate_normal(optimizer._mean, optimizer._C)
-    pos = np.dstack((x, y))
-    ax2.contourf(x, y, rv.pdf(pos))
+
+    if math.floor(len(solutions) * args.alpha) > 1:
+        mean, sigma, cov = get_warm_start_mgd(
+            solutions, alpha=args.alpha, gamma=args.gamma
+        )
+        rv = stats.multivariate_normal(mean, cov)
+        pos = np.dstack((x, y))
+        ax2.contourf(x, y, rv.pdf(pos))
 
     if frame % 50 == 0:
         print(f"Processing frame {frame}")

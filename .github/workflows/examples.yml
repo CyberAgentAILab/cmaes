@@ -30,3 +30,4 @@ jobs:
       - run: python examples/bipop_cmaes.py
       - run: python examples/ellipsoid_function.py
       - run: python examples/optuna_sampler.py
+      - run: python examples/ws_cma_es.py
