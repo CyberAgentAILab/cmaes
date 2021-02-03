@@ -31,7 +31,14 @@ from cmaes import get_starting_point
 parser = argparse.ArgumentParser()
 parser.add_argument(
     "--function",
-    choices=["quadratic", "himmelblau", "rosenbrock", "six-hump-camel", "sphere", "rot-ellipsoid"],
+    choices=[
+        "quadratic",
+        "himmelblau",
+        "rosenbrock",
+        "six-hump-camel",
+        "sphere",
+        "rot-ellipsoid",
+    ],
 )
 parser.add_argument(
     "--seed",
@@ -103,9 +110,9 @@ def rosenbrock_contour(x1, x2):
 
 def six_hump_camel(x1, x2):
     return (
-            (4 - 2.1 * (x1 ** 2) + (x1 ** 4) / 3) * (x1 ** 2)
-            + x1 * x2
-            + (-4 + 4 * x2 ** 2) * (x2 ** 2)
+        (4 - 2.1 * (x1 ** 2) + (x1 ** 4) / 3) * (x1 ** 2)
+        + x1 * x2
+        + (-4 + 4 * x2 ** 2) * (x2 ** 2)
     )
 
 
@@ -251,15 +258,19 @@ def update(frame):
         solutions.append(solution)
 
     # Update title
-    fig.suptitle(f"WS-CMA-ES {function_name} with alpha={args.alpha} and gamma={args.gamma} (frame={frame})")
+    fig.suptitle(
+        f"WS-CMA-ES {function_name} with alpha={args.alpha} and gamma={args.gamma} (frame={frame})"
+    )
 
     # Plot multivariate gaussian distribution of CMA-ES
     x, y = np.mgrid[
-           x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01
-           ]
+        x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01
+    ]
 
     if math.floor(len(solutions) * args.alpha) > 1:
-        mean, sigma, cov = get_starting_point(solutions, alpha=args.alpha, gamma=args.gamma)
+        mean, sigma, cov = get_starting_point(
+            solutions, alpha=args.alpha, gamma=args.gamma
+        )
         rv = stats.multivariate_normal(mean, cov)
         pos = np.dstack((x, y))
         ax2.contourf(x, y, rv.pdf(pos))
