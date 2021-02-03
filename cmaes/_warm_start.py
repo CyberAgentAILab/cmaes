@@ -9,16 +9,16 @@ def get_starting_point(
     gamma: float = 0.1,
     alpha: float = 0.1,
 ) -> Tuple[np.ndarray, float, np.ndarray]:
-    """Estimate a promising distribution of the source task, then
-    returns a starting point (mean vector and the covariance matrix
-    of the multivariate gaussian distribution in the CMA-ES).
+    """Estimates a promising distribution of the source task, then
+    returns a multivariate gaussian distribution (the mean vector
+    and the covariance matrix) used for initialization of the CMA-ES.
 
     Args:
         source_solutions:
             List of solutions (parameter, value) on a source task.
 
         gamma:
-            top-gamma solutions are selected from a set of solutions
+            top-(gamma x 100)% solutions are selected from a set of solutions
             on a source task. (default: 0.1).
 
         alpha:
@@ -33,7 +33,7 @@ def get_starting_point(
     if len(source_solutions) == 0:
         raise ValueError("solutions should contain one or more items.")
 
-    # Select top-gamma solutions
+    # Select top-(gamma x 100)% solutions
     source_solutions = sorted(source_solutions, key=lambda t: t[1])
     gamma_n = math.floor(len(source_solutions) * gamma)
     assert gamma_n >= 1, "One or more solutions must be selected from a source task"
