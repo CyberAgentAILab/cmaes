@@ -2,18 +2,22 @@ import numpy as np
 from cmaes import CMA, get_warm_start_mgd
 
 
-def sphere(x1: float, x2: float, b: float) -> float:
+def source_task(x1: float, x2: float) -> float:
+    b = 0.4
+    return (x1 - b) ** 2 + (x2 - b) ** 2
+
+
+def target_task(x1: float, x2: float) -> float:
+    b = 0.6
     return (x1 - b) ** 2 + (x2 - b) ** 2
 
 
 def main() -> None:
-    source_offset, target_offset = 0.4, 0.6
-
     # Generate solutions from a source task
     source_solutions = []
     for _ in range(1000):
         x = np.random.random(2)
-        value = sphere(x[0], x[1], source_offset)
+        value = source_task(x[0], x[1])
         source_solutions.append((x, value))
 
     # Estimate a promising distribution of the source task
@@ -29,7 +33,7 @@ def main() -> None:
         solutions = []
         for _ in range(optimizer.population_size):
             x = optimizer.ask()
-            value = sphere(x[0], x[1], target_offset)
+            value = target_task(x[0], x[1])
             solutions.append((x, value))
             print(
                 f"{optimizer.generation:3d}  {value:10.5f}"
