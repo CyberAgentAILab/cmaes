@@ -7,14 +7,6 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
-<details>
-<summary>Rosenbrock function.</summary>
-
-![visualize-rosenbrock](https://user-images.githubusercontent.com/5564044/73486620-dac46880-43e8-11ea-9295-ec0bfa774655.gif)
-
-</details>
-
-
 ## News
 
 * **2021/02/02** The paper "Warm Starting CMA-ES for Hyperparameter Optimization" written by [@nmasahiro](https://github.com/nmasahiro), the maintainer of this library, is accepted at AAAI 2021 :tada:
@@ -75,6 +67,9 @@ if __name__ == "__main__":
     study = optuna.create_study(sampler=sampler)
     study.optimize(objective, n_trials=250)
 ```
+
+
+## CMA-ES variants
 
 <details>
 <summary>Warm Starting CMA-ES [3]</summary>
