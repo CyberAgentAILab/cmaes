@@ -71,16 +71,17 @@ if __name__ == "__main__":
 
 ## CMA-ES variants
 
-<details>
-<summary>Warm Starting CMA-ES [3]</summary>
+#### Warm Starting CMA-ES [3]
 
 Warm Starting CMA-ES is a method to transfer prior knowledge on similar HPO tasks through the initialization of CMA-ES.
 It estimates a promising distribution and generates the parameters of the multivariate gaussian distribution like below:
 
-
 | Rot Ellipsoid function | Ellipsoid function |
 | ---------------------- | ------------------ |
 | ![rot-ellipsoid](https://user-images.githubusercontent.com/5564044/106723051-0c01f500-664a-11eb-8f37-ece937a3e9a6.png) | ![quadratic](https://user-images.githubusercontent.com/5564044/106723041-09070480-664a-11eb-817a-b0292f2e0201.png) |
+
+<details>
+<summary>Source code</summary>
 
 ```python
 import numpy as np
@@ -131,14 +132,14 @@ The full source code is available [here](./examples/ws_cma_es.py).
 
 </details>
 
-
-
-<details>
-<summary>Separable CMA-ES [4]</summary>
+#### Separable CMA-ES [4]
 
 sep-CMA-ES is an algorithm which constrains the covariance matrix to be diagonal.
 Due to reduce the model complexity, the learning rate for the covariance matrix is reduced.
 Consequently, this algorithm outperforms CMA-ES on separable functions.
+
+<details>
+<summary>Source code</summary>
 
 ```python
 import numpy as np
@@ -176,13 +177,14 @@ Full source code is available [here](./examples/sepcma_ellipsoid_function.py).
 
 </details>
 
-
-<details>
-<summary>IPOP-CMA-ES [5]</summary>
+#### IPOP-CMA-ES [5]
 
 IPOP-CMA-ES is a method to restart CMA-ES with increasing population size like below.
 
 ![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88472274-f9e12480-cf4b-11ea-8aff-2a859eb51a15.gif)
+
+<details>
+<summary>Source code</summary>
 
 ```python
 import math
@@ -226,12 +228,14 @@ Full source code is available [here](./examples/ipop_cmaes.py).
 
 </details>
 
-<details>
-<summary>BIPOP-CMA-ES [6]</summary>
+#### BIPOP-CMA-ES [6]
 
 BIPOP-CMA-ES applies two interlaced restart strategies, one with an increasing population size and one with varying small population sizes.
 
 ![visualize-bipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88471815-55111800-cf48-11ea-8933-5a4b48c49eba.gif)
+
+<details>
+<summary>Source code</summary>
 
 ```python
 import math
