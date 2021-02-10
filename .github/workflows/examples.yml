@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools
-          pip install --progress-bar off optuna
+          pip install --progress-bar off optuna 'numpy<1.20.0'
           pip install --progress-bar off -U .
       - run: python examples/quadratic_function.py
       - run: python examples/ipop_cmaes.py
