@@ -1,7 +1,7 @@
 ---
 name: "Feature request"
 about: Suggest an idea for new features in cmaes.
-title: "[Feature Request]"
+title: ""
 labels: enhancement
 assignees: ''
 
