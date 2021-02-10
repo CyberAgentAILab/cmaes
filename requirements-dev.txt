@@ -10,6 +10,3 @@ mypy
 flake8
 black
 
-# release
-wheel
-twine
