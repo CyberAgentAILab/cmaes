@@ -1,0 +1,15 @@
+# install_requires
+numpy<1.20.0
+
+# visualization
+matplotlib
+scipy
+
+# lint
+mypy
+flake8
+black
+
+# release
+wheel
+twine

@@ -6,6 +6,7 @@ on:
     - 'cmaes/**.py'
     - 'benchmark/*.py'
     - 'benchmark/runner.sh'
+    - 'requirements-bench.txt'
 jobs:
   benchmark-six-hump-camel:
     name: Run kurobako benchmark
@@ -19,7 +20,7 @@ jobs:
           architecture: 'x64'
       - run: pip install -U pip setuptools
       - run: python setup.py develop
-      - run: pip install --progress-bar off -e '.[benchmark]'
+      - run: pip install --progress-bar off -r requirements-bench.txt
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
       - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
@@ -111,7 +112,7 @@ jobs:
           architecture: 'x64'
       - run: pip install -U pip setuptools
       - run: python setup.py develop
-      - run: pip install --progress-bar off -e '.[benchmark]'
+      - run: pip install --progress-bar off -r requirements-bench.txt
       - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
       - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
