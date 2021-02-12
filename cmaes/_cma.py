@@ -2,6 +2,7 @@ import math
 import numpy as np
 
 from typing import Any
+from typing import cast
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -260,16 +261,17 @@ class CMA:
     def _sample_solution(self) -> np.ndarray:
         B, D = self._eigen_decomposition()
         z = self._rng.randn(self._n_dim)  # ~ N(0, I)
-        y = B.dot(np.diag(D)).dot(z)  # ~ N(0, C)
+        y = cast(np.ndarray, B.dot(np.diag(D))).dot(z)  # ~ N(0, C)
         x = self._mean + self._sigma * y  # ~ N(m, σ^2 C)
         return x
 
     def _is_feasible(self, param: np.ndarray) -> bool:
         if self._bounds is None:
             return True
-        return np.all(param >= self._bounds[:, 0]) and np.all(
-            param <= self._bounds[:, 1]
-        )
+        return cast(
+            bool,
+            np.all(param >= self._bounds[:, 0]) and np.all(param <= self._bounds[:, 1]),
+        )  # Cast bool_ to bool.
 
     def _repair_infeasible_params(self, param: np.ndarray) -> np.ndarray:
         if self._bounds is None:
@@ -306,7 +308,9 @@ class CMA:
         self._mean += self._cm * self._sigma * y_w
 
         # Step-size control
-        C_2 = B.dot(np.diag(1 / D)).dot(B.T)  # C^(-1/2) = B D^(-1) B^T
+        C_2 = cast(
+            np.ndarray, cast(np.ndarray, B.dot(np.diag(1 / D))).dot(B.T)
+        )  # C^(-1/2) = B D^(-1) B^T
         self._p_sigma = (1 - self._c_sigma) * self._p_sigma + math.sqrt(
             self._c_sigma * (2 - self._c_sigma) * self._mu_eff
         ) * C_2.dot(y_w)

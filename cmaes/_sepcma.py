@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-from typing import Any
+from typing import Any, cast
 from typing import Dict
 from typing import List
 from typing import Optional
@@ -221,9 +221,10 @@ class SepCMA:
     def _is_feasible(self, param: np.ndarray) -> bool:
         if self._bounds is None:
             return True
-        return np.all(param >= self._bounds[:, 0]) and np.all(
-            param <= self._bounds[:, 1]
-        )
+        return cast(
+            bool,
+            np.all(param >= self._bounds[:, 0]) and np.all(param <= self._bounds[:, 1]),
+        )  # Cast bool_ to bool
 
     def _repair_infeasible_params(self, param: np.ndarray) -> np.ndarray:
         if self._bounds is None:
