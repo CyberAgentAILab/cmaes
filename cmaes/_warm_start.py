@@ -43,14 +43,14 @@ def get_warm_start_mgd(
             gamma_n,
             dim,
         ),
-        dtype=np.float,
+        dtype=float,
     )
     for i in range(gamma_n):
         top_gamma_solutions[i] = source_solutions[i][0]
 
     # Estimation of a Promising Distribution of a Source Task.
     first_term = alpha ** 2 * np.eye(dim)
-    cov_term = np.zeros(shape=(dim, dim), dtype=np.float)
+    cov_term = np.zeros(shape=(dim, dim), dtype=float)
     for i in range(gamma_n):
         cov_term += np.dot(
             top_gamma_solutions[i, :].reshape(dim, 1),
@@ -63,7 +63,7 @@ def get_warm_start_mgd(
             dim,
             1,
         ),
-        dtype=np.float,
+        dtype=float,
     )
     for i in range(gamma_n):
         mean_term += top_gamma_solutions[i, :].reshape(dim, 1)
