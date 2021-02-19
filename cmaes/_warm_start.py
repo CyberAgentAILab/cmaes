@@ -37,7 +37,7 @@ def get_warm_start_mgd(
     source_solutions = sorted(source_solutions, key=lambda t: t[1])
     gamma_n = math.floor(len(source_solutions) * gamma)
     assert gamma_n >= 1, "One or more solutions must be selected from a source task"
-    dim = len(source_solutions[0])
+    dim = len(source_solutions[0][0])
     top_gamma_solutions = np.empty(
         shape=(
             gamma_n,
