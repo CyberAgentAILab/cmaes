@@ -8,6 +8,8 @@ REPEATS=${REPEATS:-5}
 BUDGET=${BUDGET:-300}
 SEED=${SEED:-1}
 DIM=${DIM:-2}
+SURROGATE_ROOT=${SURROGATE_ROOT:-$(dirname $DIR)/tmp/surrogate-models}
+WARM_START=${WARM_START:-0}
 
 usage() {
     cat <<EOF
@@ -22,6 +24,7 @@ Problem:
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
     ackley         : https://www.sfu.ca/~ssurjano/ackley.html
     rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
+    toxic-lightgbm : https://www.kaggle.com/peterhurford/lightgbm-with-select-k-best-on-tfidf
 
 Options:
     --help, -h         print this
@@ -49,6 +52,11 @@ case "$1" in
         # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_rastrigin.py $DIM)
         ;;
+    toxic-lightgbm)
+        PROBLEM=$(kurobako problem warm-starting \
+            $(kurobako problem surrogate $SURROGATE_ROOT/wscmaes-toxic-source/) \
+            $(kurobako problem surrogate $SURROGATE_ROOT/wscmaes-toxic-target/))
+        ;;
     help|--help|-h)
         usage
         exit 0
@@ -61,13 +69,20 @@ case "$1" in
 esac
 
 RANDOM_SOLVER=$($KUROBAKO solver random)
-CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command python $DIR/optuna_solver.py cmaes)
-SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'sep-cmaes' command python $DIR/optuna_solver.py sep-cmaes)
-IPOP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-cmaes' command python $DIR/optuna_solver.py ipop-cmaes)
-IPOP_SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-sep-cmaes' command python $DIR/optuna_solver.py ipop-sep-cmaes)
-PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command python $DIR/optuna_solver.py pycma)
+CMAES_SOLVER=$($KUROBAKO solver --name 'cmaes' command -- python $DIR/optuna_solver.py cmaes)
+SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'sep-cmaes' command -- python $DIR/optuna_solver.py sep-cmaes)
+IPOP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-cmaes' command -- python $DIR/optuna_solver.py ipop-cmaes)
+IPOP_SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-sep-cmaes' command -- python $DIR/optuna_solver.py ipop-sep-cmaes)
+PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command -- python $DIR/optuna_solver.py pycma)
+WS_CMAES_SOLVER=$($KUROBAKO solver --name 'ws-cmaes' command -- python $DIR/optuna_solver.py ws-cmaes --warm-starting-trials $WARM_START)
 
-if [ $BUDGET -le 500 ]; then
+if [ $WARM_START -ge 0 ]; then
+  $KUROBAKO studies \
+    --solvers $CMAES_SOLVER $WS_CMAES_SOLVER \
+    --problems $PROBLEM \
+    --seed $SEED --repeats $REPEATS --budget $BUDGET \
+    | $KUROBAKO run --parallelism 6 > $2
+elif [ $BUDGET -le 500 ]; then
   $KUROBAKO studies \
     --solvers $RANDOM_SOLVER $PYCMA_SOLVER $CMAES_SOLVER $SEP_CMAES_SOLVER \
     --problems $PROBLEM \
