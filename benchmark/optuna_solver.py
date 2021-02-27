@@ -26,13 +26,13 @@ elif args.loglevel == "error":
 
 def create_cmaes_study(seed):
     sampler = optuna.samplers.CmaEsSampler(seed=seed, warn_independent_sampling=True)
-    return optuna.create_study(sampler=sampler)
+    return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
 
 def create_sep_cmaes_study(seed):
     optuna.samplers._cmaes.CMA = SepCMA  # monkey patch
     sampler = optuna.samplers.CmaEsSampler(seed=seed, warn_independent_sampling=True)
-    return optuna.create_study(sampler=sampler)
+    return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
 
 def create_ipop_cmaes_study(seed):
@@ -42,7 +42,7 @@ def create_ipop_cmaes_study(seed):
         restart_strategy="ipop",
         inc_popsize=2,
     )
-    return optuna.create_study(sampler=sampler)
+    return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
 
 def create_ipop_sep_cmaes_study(seed):
@@ -53,7 +53,7 @@ def create_ipop_sep_cmaes_study(seed):
         restart_strategy="ipop",
         inc_popsize=2,
     )
-    return optuna.create_study(sampler=sampler)
+    return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
 
 def create_pycma_study(seed):
@@ -61,7 +61,7 @@ def create_pycma_study(seed):
         seed=seed,
         warn_independent_sampling=True,
     )
-    return optuna.create_study(sampler=sampler)
+    return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
 
 if __name__ == "__main__":
