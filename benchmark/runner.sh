@@ -84,7 +84,7 @@ if [ $WARM_START -gt 0 ]; then
     | $KUROBAKO run --parallelism 6 > $2
 elif [ $BUDGET -le 500 ]; then
   $KUROBAKO studies \
-    --solvers $RANDOM_SOLVER $PYCMA_SOLVER $CMAES_SOLVER $SEP_CMAES_SOLVER \
+    --solvers $SEP_CMAES_SOLVER \
     --problems $PROBLEM \
     --seed $SEED --repeats $REPEATS --budget $BUDGET \
     | $KUROBAKO run --parallelism 4 > $2

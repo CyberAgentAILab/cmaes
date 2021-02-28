@@ -2,12 +2,13 @@ import argparse
 import optuna
 import warnings
 
-from cmaes import SepCMA
 from kurobako import solver
 from kurobako.solver.optuna import OptunaSolverFactory
 
 warnings.filterwarnings(
-    "default", category=optuna.exceptions.ExperimentalWarning, module="optuna.samplers"
+    "ignore",
+    category=optuna.exceptions.ExperimentalWarning,
+    module="optuna.samplers._cmaes",
 )
 
 parser = argparse.ArgumentParser()
@@ -37,8 +38,9 @@ def create_cmaes_study(seed):
 
 
 def create_sep_cmaes_study(seed):
-    optuna.samplers._cmaes.CMA = SepCMA  # monkey patch
-    sampler = optuna.samplers.CmaEsSampler(seed=seed, warn_independent_sampling=True)
+    sampler = optuna.samplers.CmaEsSampler(
+        seed=seed, warn_independent_sampling=True, use_separable_cma=True
+    )
     return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
 
@@ -53,12 +55,12 @@ def create_ipop_cmaes_study(seed):
 
 
 def create_ipop_sep_cmaes_study(seed):
-    optuna.samplers._cmaes.CMA = SepCMA  # monkey patch
     sampler = optuna.samplers.CmaEsSampler(
         seed=seed,
         warn_independent_sampling=True,
         restart_strategy="ipop",
         inc_popsize=2,
+        use_separable_cma=True,
     )
     return optuna.create_study(sampler=sampler, pruner=optuna.pruners.NopPruner())
 
