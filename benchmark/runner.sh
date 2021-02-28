@@ -53,9 +53,9 @@ case "$1" in
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_rastrigin.py $DIM)
         ;;
     toxic-lightgbm)
-        PROBLEM=$(kurobako problem warm-starting \
-            $(kurobako problem surrogate $SURROGATE_ROOT/wscmaes-toxic-source/) \
-            $(kurobako problem surrogate $SURROGATE_ROOT/wscmaes-toxic-target/))
+        PROBLEM=$($KUROBAKO problem warm-starting \
+            $($KUROBAKO problem surrogate $SURROGATE_ROOT/wscmaes-toxic-source/) \
+            $($KUROBAKO problem surrogate $SURROGATE_ROOT/wscmaes-toxic-target/))
         ;;
     help|--help|-h)
         usage
