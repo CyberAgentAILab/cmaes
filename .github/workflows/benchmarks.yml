@@ -229,12 +229,12 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./toxic-lightgbm-warm-start.zip
-          key: toxic-lightgbm-warm-start
+          key: toxic-lightgbm-warm-start-zip
       - name: Download toxic-dataset
         if: steps.cache-toxic-surrogate.outputs.cache-hit != 'true'
-        run: |
-          curl -L https://storage.googleapis.com/hpo-bench/kurobako-surrogate/toxic-lightgbm-warm-start.zip -o toxic-lightgbm-warm-start.zip
-          unzip ./toxic-lightgbm-warm-start.zip
+        run: curl -L https://storage.googleapis.com/hpo-bench/kurobako-surrogate/toxic-lightgbm-warm-start.zip -o toxic-lightgbm-warm-start.zip
+      - name: Unarchive toxic-dataset
+        run: unzip ./toxic-lightgbm-warm-start.zip
 
       - name: Run kurobako for Warm Starting CMA-ES
         env:
