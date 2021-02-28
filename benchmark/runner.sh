@@ -76,7 +76,7 @@ IPOP_SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-sep-cmaes' command -- pyth
 PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command -- python $DIR/optuna_solver.py pycma)
 WS_CMAES_SOLVER=$($KUROBAKO solver --name 'ws-cmaes' command -- python $DIR/optuna_solver.py ws-cmaes --warm-starting-trials $WARM_START)
 
-if [ $WARM_START -ge 0 ]; then
+if [ $WARM_START -gt 0 ]; then
   $KUROBAKO studies \
     --solvers $CMAES_SOLVER $WS_CMAES_SOLVER \
     --problems $PROBLEM \

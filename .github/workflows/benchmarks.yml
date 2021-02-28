@@ -45,7 +45,6 @@ jobs:
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
-          error-bar: 'true'
       - name: Generate kurobako markdown report
         run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
@@ -249,6 +248,7 @@ jobs:
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
+          error-bar: 'true'
       - name: Generate kurobako markdown report
         run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
 
