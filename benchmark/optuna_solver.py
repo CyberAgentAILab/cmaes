@@ -7,14 +7,13 @@ from kurobako import solver
 from kurobako.solver.optuna import OptunaSolverFactory
 
 warnings.filterwarnings(
-    "default",
-    category=optuna.exceptions.ExperimentalWarning,
-    module="optuna.samplers"
+    "default", category=optuna.exceptions.ExperimentalWarning, module="optuna.samplers"
 )
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "sampler", choices=["cmaes", "sep-cmaes", "ipop-cmaes", "ipop-sep-cmaes", "pycma", "ws-cmaes"]
+    "sampler",
+    choices=["cmaes", "sep-cmaes", "ipop-cmaes", "ipop-sep-cmaes", "pycma", "ws-cmaes"],
 )
 parser.add_argument(
     "--loglevel", choices=["debug", "info", "warning", "error"], default="warning"
@@ -92,7 +91,9 @@ class WarmStartingCmaEsSampler(optuna.samplers.BaseSampler):
         return self._sampler.sample_relative(study, trial, search_space)
 
     def sample_independent(self, study, trial, param_name, param_distribution):
-        return self._sampler.sample_independent(study, trial, param_name, param_distribution)
+        return self._sampler.sample_independent(
+            study, trial, param_name, param_distribution
+        )
 
     def after_trial(
         self,
@@ -109,7 +110,9 @@ class WarmStartingCmaEsSampler(optuna.samplers.BaseSampler):
 
             self._source_trials.append(
                 optuna.create_trial(
-                    params=trial.params, distributions=trial.distributions, values=values
+                    params=trial.params,
+                    distributions=trial.distributions,
+                    values=values,
                 )
             )
         if len(self._source_trials) == self._warm_starting_trials:
@@ -138,7 +141,9 @@ if __name__ == "__main__":
     elif args.sampler == "pycma":
         factory = OptunaSolverFactory(create_pycma_study)
     elif args.sampler == "ws-cmaes":
-        factory = OptunaSolverFactory(create_warm_start_study, warm_starting_trials=args.warm_starting_trials)
+        factory = OptunaSolverFactory(
+            create_warm_start_study, warm_starting_trials=args.warm_starting_trials
+        )
     else:
         raise ValueError("unsupported sampler")
 

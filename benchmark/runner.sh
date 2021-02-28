@@ -24,7 +24,7 @@ Problem:
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
     ackley         : https://www.sfu.ca/~ssurjano/ackley.html
     rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
-    toxic-lightgbm : https://www.kaggle.com/peterhurford/lightgbm-with-select-k-best-on-tfidf
+    toxic-lightgbm : https://github.com/c-bata/benchmark-warm-starting-cmaes
 
 Options:
     --help, -h         print this
