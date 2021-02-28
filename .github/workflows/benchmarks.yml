@@ -28,11 +28,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./kurobako
-          key: kurobako-0-2-8
+          key: kurobako-0-2-9
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.2.8/kurobako-0.2.8.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.9/kurobako-0.2.9.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -41,7 +41,7 @@ jobs:
           KUROBAKO: ./kurobako
         run: ./benchmark/runner.sh six-hump-camel ./kurobako-report.json
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v1
+        uses: c-bata/github-actions-kurobako/plot@v3
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
@@ -120,11 +120,11 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ./kurobako
-          key: kurobako-0-2-8
+          key: kurobako-0-2-9
       - name: Download kurobako CLI
         if: steps.cache-kurobako.outputs.cache-hit != 'true'
         run: |
-          curl -L https://github.com/sile/kurobako/releases/download/0.2.8/kurobako-0.2.8.linux-amd64 -o kurobako
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.9/kurobako-0.2.9.linux-amd64 -o kurobako
           chmod +x kurobako
           ./kurobako -h
 
@@ -136,7 +136,7 @@ jobs:
           BUDGET: 2500
         run: ./benchmark/runner.sh rastrigin ./kurobako-report.json
       - name: Plot kurobako result
-        uses: c-bata/github-actions-kurobako/plot@v1
+        uses: c-bata/github-actions-kurobako/plot@v3
         id: kurobako-plot
         with:
           report-json-path: './kurobako-report.json'
@@ -194,3 +194,112 @@ jobs:
         with:
           name: kurobako-report
           path: kurobako-report-rastrigin.md
+
+  benchmark-toxic-warm-start:
+    name: Run kurobako benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+      - run: pip install -U pip setuptools
+      - run: python setup.py develop
+      - run: pip install --progress-bar off -r requirements-bench.txt
+      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
+      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
+      - name: Cache kurobako CLI
+        id: cache-kurobako
+        uses: actions/cache@v2
+        with:
+          path: ./kurobako
+          key: kurobako-0-2-9
+      - name: Download kurobako CLI
+        if: steps.cache-kurobako.outputs.cache-hit != 'true'
+        run: |
+          curl -L https://github.com/sile/kurobako/releases/download/0.2.9/kurobako-0.2.9.linux-amd64 -o kurobako
+          chmod +x kurobako
+          ./kurobako -h
+
+      - name: Cache surrogate model of tuning lightgbm for Toxic Data Challenge
+        id: cache-toxic-surrogate
+        uses: actions/cache@v2
+        with:
+          path: ./toxic-lightgbm-warm-start.zip
+          key: toxic-lightgbm-warm-start-zip
+      - name: Download toxic-dataset
+        if: steps.cache-toxic-surrogate.outputs.cache-hit != 'true'
+        run: curl -L https://storage.googleapis.com/hpo-bench/kurobako-surrogate/toxic-lightgbm-warm-start.zip -o toxic-lightgbm-warm-start.zip
+      - name: Unarchive toxic-dataset
+        run: unzip ./toxic-lightgbm-warm-start.zip
+
+      - name: Run kurobako for Warm Starting CMA-ES
+        env:
+          KUROBAKO: ./kurobako
+          SURROGATE_ROOT: ./toxic-lightgbm-warm-start
+          WARM_START: 100
+          REPEATS: 12
+          BUDGET: 30
+        run: ./benchmark/runner.sh toxic-lightgbm ./kurobako-report.json
+      - name: Plot kurobako result
+        uses: c-bata/github-actions-kurobako/plot@v3
+        id: kurobako-plot
+        with:
+          report-json-path: './kurobako-report.json'
+          error-bar: 'true'
+      - name: Generate kurobako markdown report
+        run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+
+      - name: Set HAS_SECRET flag
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+        run: |
+          if [ ! -z $GCP_PROJECT_ID ] && [ ! -z $GCP_SA_KEY ]; then
+              echo "HAS_SECRET=1" >> $GITHUB_ENV
+          else
+              echo "HAS_SECRET=0" >> $GITHUB_ENV
+          fi
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+        if: ${{ env.HAS_SECRET == 1 }}
+        with:
+          version: '275.0.0'
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+      - run: gcloud info
+        if: ${{ env.HAS_SECRET == 1 }}
+      - run: gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
+        if: ${{ env.HAS_SECRET == 1 }}
+      - run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://kurobako-reports/${{ github.repository }}/toxic-lightgbm-${{ github.sha }}.png
+        if: ${{ env.HAS_SECRET == 1 }}
+      - name: Comment to a pull request
+        if: ${{ env.HAS_SECRET == 1 }}
+        uses: c-bata/github-actions-kurobako@v2
+        with:
+          report-md-path: './kurobako-report.md'
+          public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/toxic-lightgbm-${{ github.sha }}.png
+          title: 'Tuning LightGBM for Kaggle Toxic Challenge (Surrogate)'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: mv ./kurobako-report.json ./kurobako-report-toxic-lightgbm.json
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-toxic-lightgbm.json
+
+      - run: mv ${{ steps.kurobako-plot.outputs.image-path }} toxic-lightgbm.png
+        if: ${{ env.HAS_SECRET == 0 }}
+      - run: mv ./kurobako-report.md ./kurobako-report-toxic-lightgbm.md
+        if: ${{ env.HAS_SECRET == 0 }}
+      - uses: actions/upload-artifact@v2
+        if: ${{ env.HAS_SECRET == 0 }}
+        with:
+          name: kurobako-report
+          path: toxic-lightgbm.png
+      - uses: actions/upload-artifact@v2
+        if: ${{ env.HAS_SECRET == 0 }}
+        with:
+          name: kurobako-report
+          path: kurobako-report-toxic-lightgbm.md
