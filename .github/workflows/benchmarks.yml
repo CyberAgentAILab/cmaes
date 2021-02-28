@@ -279,7 +279,7 @@ jobs:
         with:
           report-md-path: './kurobako-report.md'
           public-image-url: https://storage.googleapis.com/kurobako-reports/${{ github.repository }}/toxic-lightgbm-${{ github.sha }}.png
-          title: 'Tuning LightGBM for Kaggle Toxic Data Challenge (Surrogate ver.)'
+          title: 'Tuning LightGBM for Kaggle Toxic Challenge (Surrogate)'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
