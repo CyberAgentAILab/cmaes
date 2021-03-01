@@ -74,11 +74,11 @@ if __name__ == "__main__":
 #### Warm Starting CMA-ES [3]
 
 Warm Starting CMA-ES is a method to transfer prior knowledge on similar HPO tasks through the initialization of CMA-ES.
-It estimates a promising distribution and generates the parameters of the multivariate gaussian distribution like below:
+Here is the result of an experiment that tuning LightGBM for Kaggle's Toxic Comment Classification Challenge data, a multilabel classification dataset.
+In this benchmark, we use 10% of a full dataset as the source task, and a full dataset as the target task.
+Please refer [the paper](https://arxiv.org/abs/2012.06932) and/or https://github.com/c-bata/benchmark-warm-starting-cmaes for more details of experiment settings.
 
-| Rot Ellipsoid function | Ellipsoid function |
-| ---------------------- | ------------------ |
-| ![rot-ellipsoid](https://user-images.githubusercontent.com/5564044/106723051-0c01f500-664a-11eb-8f37-ece937a3e9a6.png) | ![quadratic](https://user-images.githubusercontent.com/5564044/106723041-09070480-664a-11eb-817a-b0292f2e0201.png) |
+![benchmark-lightgbm-toxic](https://github.com/c-bata/benchmark-warm-starting-cmaes/raw/main/result.png)
 
 <details>
 <summary>Source code</summary>
@@ -103,7 +103,8 @@ if __name__ == "__main__":
         value = source_task(x[0], x[1])
         source_solutions.append((x, value))
 
-    # Estimate a promising distribution of the source task
+    # Estimate a promising distribution of the source task,
+    # then generate parameters of the multivariate gaussian distribution.
     ws_mean, ws_sigma, ws_cov = get_warm_start_mgd(
         source_solutions, gamma=0.1, alpha=0.1
     )
