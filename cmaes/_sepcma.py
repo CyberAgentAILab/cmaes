@@ -140,9 +140,7 @@ class SepCMA:
         self._C: np.ndarray = np.ones(n_dim)
 
         # bounds contains low and high of each parameter.
-        assert (
-            bounds is None or (mean.size, 2) == bounds.shape
-        ), "bounds should be (n_dim, 2)-dim matrix"
+        assert bounds is None or _is_valid_bounds(bounds, mean), "invalid bounds"
         self._bounds = bounds
         self._n_max_resampling = n_max_resampling
 
@@ -190,9 +188,7 @@ class SepCMA:
 
     def set_bounds(self, bounds: Optional[np.ndarray]) -> None:
         """Update boundary constraints"""
-        assert (
-            bounds is None or (self._mean.size, 2) == bounds.shape
-        ), "bounds should be (n_dim, 2)-dim matrix"
+        assert bounds is None or _is_valid_bounds(bounds, self._mean), "invalid bounds"
         self._bounds = bounds
 
     def ask(self) -> np.ndarray:
@@ -345,3 +341,15 @@ class SepCMA:
             return True
 
         return False
+
+
+def _is_valid_bounds(bounds: Optional[np.ndarray], mean: np.ndarray) -> bool:
+    if bounds is None:
+        return True
+    if (mean.size, 2) != bounds.shape:
+        return False
+    if not np.all(bounds[:, 0] <= mean):
+        return False
+    if not np.all(mean <= bounds[:, 1]):
+        return False
+    return True
