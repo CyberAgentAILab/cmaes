@@ -9,7 +9,8 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 
 ## News
 
-* **2021/02/02** The paper "Warm Starting CMA-ES for Hyperparameter Optimization" written by [@nmasahiro](https://github.com/nmasahiro), the maintainer of this library, is accepted at AAAI 2021 :tada:
+* **2021/03/10** ["Introduction to CMA-ES sampler"](https://medium.com/optuna/introduction-to-cma-es-sampler-ee68194c8f88) is published at Optuna Medium Blog. This article explains when and how to make the best use out of CMA-ES sampler. Please check it out!
+* **2021/02/02** The paper ["Warm Starting CMA-ES for Hyperparameter Optimization"](https://arxiv.org/abs/2012.06932) written by [@nmasahiro](https://github.com/nmasahiro), the maintainer of this library, is accepted at AAAI 2021 :tada:
 * **2020/07/29** Optuna's built-in CMA-ES sampler which uses this library under the hood is stabled at Optuna v2.0. Please check out the [v2.0 release blog](https://medium.com/optuna/optuna-v2-3165e3f1fc2).
 
 ## Installation
@@ -334,7 +335,7 @@ I respect all libraries involved in CMA-ES.
 
 * [1] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [2] [T. Akiba, S. Sano, T. Yanase, T. Ohta, M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
-* [3] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi. Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
-* [4] [R. Ros, N. Hansen. A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
-* [5] [A. Auger, N. Hansen. A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
-* [6] [N. Hansen, Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed, GECCO workshop, 2009.](https://hal.inria.fr/inria-00382093/document)
+* [3] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi, Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
+* [4] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
+* [5] [A. Auger, N. Hansen, A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
+* [6] [N. Hansen, Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed, GECCO Workshop, 2009.](https://hal.inria.fr/inria-00382093/document)
