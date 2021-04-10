@@ -14,12 +14,18 @@ class TestFuzzing(unittest.TestCase):
         mean = data.draw(npst.arrays(dtype=float, shape=dim))
         sigma = data.draw(st.floats(min_value=1e-16))
         n_iterations = data.draw(st.integers(min_value=1))
-        optimizer = CMA(mean, sigma)
+        try:
+            optimizer = CMA(mean, sigma)
+        except AssertionError:
+            return
         popsize = optimizer.population_size
         for _ in range(n_iterations):
             tell_solutions = data.draw(
-                st.lists(st.tuples(npst.arrays(dtype=float, shape=dim), st.floats()),
-                         min_size=popsize, max_size=popsize)
+                st.lists(
+                    st.tuples(npst.arrays(dtype=float, shape=dim), st.floats()),
+                    min_size=popsize,
+                    max_size=popsize,
+                )
             )
             optimizer.ask()
             optimizer.tell(tell_solutions)

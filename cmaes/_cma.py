@@ -10,6 +10,7 @@ from typing import Tuple
 
 
 _EPS = 1e-8
+_MEAN_MAX = 1e32
 _SIGMA_MAX = 1e32
 
 
@@ -77,6 +78,10 @@ class CMA:
         cov: Optional[np.ndarray] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
+
+        assert np.all(
+            mean < _MEAN_MAX
+        ), f"All elements of mean vector must be less than {_MEAN_MAX} to avoid overflow errors"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
