@@ -80,8 +80,8 @@ class CMA:
         assert sigma > 0, "sigma must be non-zero positive value"
 
         assert np.all(
-            mean < _MEAN_MAX
-        ), f"All elements of mean vector must be less than {_MEAN_MAX} to avoid overflow errors"
+            np.abs(mean) < _MEAN_MAX
+        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX} to avoid overflow errors"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
@@ -285,8 +285,12 @@ class CMA:
 
     def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
         """Tell evaluation values"""
-        if len(solutions) != self._popsize:
-            raise ValueError("Must tell popsize-length solutions.")
+
+        assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
+        for s in solutions:
+            assert np.all(
+                np.abs(s[0]) < _MEAN_MAX
+            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])

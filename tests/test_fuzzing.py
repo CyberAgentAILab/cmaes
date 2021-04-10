@@ -28,5 +28,8 @@ class TestFuzzing(unittest.TestCase):
                 )
             )
             optimizer.ask()
-            optimizer.tell(tell_solutions)
+            try:
+                optimizer.tell(tell_solutions)
+            except AssertionError:
+                return
             optimizer.ask()
