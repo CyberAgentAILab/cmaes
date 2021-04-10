@@ -10,6 +10,7 @@ from typing import Tuple
 
 
 _EPS = 1e-8
+_MEAN_MAX = 1e32
 _SIGMA_MAX = 1e32
 
 
@@ -77,6 +78,10 @@ class CMA:
         cov: Optional[np.ndarray] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
+
+        assert np.all(
+            np.abs(mean) < _MEAN_MAX
+        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
@@ -280,8 +285,12 @@ class CMA:
 
     def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
         """Tell evaluation values"""
-        if len(solutions) != self._popsize:
-            raise ValueError("Must tell popsize-length solutions.")
+
+        assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
+        for s in solutions:
+            assert np.all(
+                np.abs(s[0]) < _MEAN_MAX
+            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
