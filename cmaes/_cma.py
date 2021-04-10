@@ -81,7 +81,7 @@ class CMA:
 
         assert np.all(
             np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX} to avoid overflow errors"
+        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
