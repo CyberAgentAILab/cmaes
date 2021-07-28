@@ -136,7 +136,7 @@ The full source code is available [here](./examples/ws_cma_es.py).
 #### Separable CMA-ES [4]
 
 sep-CMA-ES is an algorithm which constrains the covariance matrix to be diagonal.
-Due to reduce the model complexity, the learning rate for the covariance matrix is reduced.
+Due to the reduction of the number of parameters, the learning rate for the covariance matrix can be increased.
 Consequently, this algorithm outperforms CMA-ES on separable functions.
 
 <details>
