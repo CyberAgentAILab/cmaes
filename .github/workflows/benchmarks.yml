@@ -58,7 +58,7 @@ jobs:
           else
               echo "HAS_SECRET=0" >> $GITHUB_ENV
           fi
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@main
         if: ${{ env.HAS_SECRET == 1 }}
         with:
           version: '275.0.0'
@@ -153,7 +153,7 @@ jobs:
           else
               echo "HAS_SECRET=0" >> $GITHUB_ENV
           fi
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@main
         if: ${{ env.HAS_SECRET == 1 }}
         with:
           version: '275.0.0'
@@ -262,7 +262,7 @@ jobs:
           else
               echo "HAS_SECRET=0" >> $GITHUB_ENV
           fi
-      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@master
+      - uses: GoogleCloudPlatform/github-actions/setup-gcloud@main
         if: ${{ env.HAS_SECRET == 1 }}
         with:
           version: '275.0.0'
