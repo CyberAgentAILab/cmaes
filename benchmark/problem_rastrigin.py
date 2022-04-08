@@ -16,7 +16,7 @@ class RastriginEvaluator(problem.Evaluator):
 
     def evaluate(self, next_step: int) -> List[float]:
         self._current_step = 1
-        value = 10 * self.n + np.sum(self.x ** 2 - 10 * np.cos(2 * np.pi * self.x))
+        value = 10 * self.n + np.sum(self.x**2 - 10 * np.cos(2 * np.pi * self.x))
         return [value]
 
     def current_step(self) -> int:

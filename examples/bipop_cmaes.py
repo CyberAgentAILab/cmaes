@@ -5,7 +5,7 @@ from cmaes import CMA
 
 def ackley(x1, x2):
     return (
-        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1 ** 2 + x2 ** 2)))
+        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1**2 + x2**2)))
         - math.exp(0.5 * (math.cos(2 * math.pi * x1) + math.cos(2 * math.pi * x2)))
         + math.e
         + 20
@@ -53,14 +53,14 @@ def main():
 
             if small_n_eval < large_n_eval:
                 poptype = "small"
-                popsize_multiplier = inc_popsize ** n_restarts
+                popsize_multiplier = inc_popsize**n_restarts
                 popsize = math.floor(
                     popsize0 * popsize_multiplier ** (rng.uniform() ** 2)
                 )
             else:
                 poptype = "large"
                 n_restarts += 1
-                popsize = popsize0 * (inc_popsize ** n_restarts)
+                popsize = popsize0 * (inc_popsize**n_restarts)
             mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
             optimizer = CMA(
                 mean=mean,

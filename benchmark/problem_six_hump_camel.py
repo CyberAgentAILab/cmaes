@@ -17,9 +17,9 @@ class SixHumpCamelEvaluator(problem.Evaluator):
     def evaluate(self, next_step: int) -> List[float]:
         self._current_step = 1
         value = (
-            (4 - 2.1 * (self._x1 ** 2) + (self._x1 ** 4) / 3) * (self._x1 ** 2)
+            (4 - 2.1 * (self._x1**2) + (self._x1**4) / 3) * (self._x1**2)
             + self._x1 * self._x2
-            + (-4 + 4 * self._x2 ** 2) * (self._x2 ** 2)
+            + (-4 + 4 * self._x2**2) * (self._x2**2)
         )
         return [value]
 

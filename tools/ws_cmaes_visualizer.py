@@ -85,7 +85,7 @@ bw = LinearSegmentedColormap("BlueWhile", color_dict)
 
 
 def himmelbleu(x1, x2):
-    return (x1 ** 2 + x2 - 11.0) ** 2 + (x1 + x2 ** 2 - 7.0) ** 2
+    return (x1**2 + x2 - 11.0) ** 2 + (x1 + x2**2 - 7.0) ** 2
 
 
 def himmelbleu_contour(x1, x2):
@@ -101,7 +101,7 @@ def quadratic_contour(x1, x2):
 
 
 def rosenbrock(x1, x2):
-    return 100 * (x2 - x1 ** 2) ** 2 + (x1 - 1) ** 2
+    return 100 * (x2 - x1**2) ** 2 + (x1 - 1) ** 2
 
 
 def rosenbrock_contour(x1, x2):
@@ -110,9 +110,9 @@ def rosenbrock_contour(x1, x2):
 
 def six_hump_camel(x1, x2):
     return (
-        (4 - 2.1 * (x1 ** 2) + (x1 ** 4) / 3) * (x1 ** 2)
+        (4 - 2.1 * (x1**2) + (x1**4) / 3) * (x1**2)
         + x1 * x2
-        + (-4 + 4 * x2 ** 2) * (x2 ** 2)
+        + (-4 + 4 * x2**2) * (x2**2)
     )
 
 
@@ -131,7 +131,7 @@ def sphere_contour(x1, x2):
 
 def ellipsoid(x1, x2):
     offset = 0.6
-    scale = 5 ** 2
+    scale = 5**2
     return (x1 - offset) ** 2 + scale * (x2 - offset) ** 2
 
 
