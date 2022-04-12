@@ -22,10 +22,8 @@ jobs:
           python-version: '3.x'
           architecture: 'x64'
       - run: pip install -U pip setuptools
-      - run: python setup.py develop
+      - run: pip install .
       - run: pip install --progress-bar off -r requirements-bench.txt
-      - run: pip install --progress-bar off -U git+https://github.com/c-bata/kurobako-py.git@fix-log-completed-trials
-      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
         id: cache-kurobako
         uses: actions/cache@v2
@@ -118,10 +116,8 @@ jobs:
           python-version: '3.x'
           architecture: 'x64'
       - run: pip install -U pip setuptools
-      - run: python setup.py develop
+      - run: pip install .
       - run: pip install --progress-bar off -r requirements-bench.txt
-      - run: pip install --progress-bar off -U git+https://github.com/c-bata/kurobako-py.git@fix-log-completed-trials
-      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
         id: cache-kurobako
         uses: actions/cache@v2
@@ -217,10 +213,8 @@ jobs:
           python-version: '3.x'
           architecture: 'x64'
       - run: pip install -U pip setuptools
-      - run: python setup.py develop
+      - run: pip install .
       - run: pip install --progress-bar off -r requirements-bench.txt
-      - run: pip install --progress-bar off -U git+https://github.com/c-bata/kurobako-py.git@fix-log-completed-trials
-      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
       - name: Cache kurobako CLI
         id: cache-kurobako
         uses: actions/cache@v2
