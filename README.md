@@ -7,7 +7,7 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
 ## News
-
+* **2022/05/13** The paper, ["CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization"](https://arxiv.org/abs/2205.13482) written by Hamano, Saito, [@nomuramasahir0](https://github.com/nomuramasahir0) (the maintainer of this library), and Shirakawa, has been nominated as best paper at GECCO'22 ENUM track.
 * **2021/03/10** ["Introduction to CMA-ES sampler"](https://medium.com/optuna/introduction-to-cma-es-sampler-ee68194c8f88) is published at Optuna Medium Blog. This article explains when and how to make the best use out of CMA-ES sampler. Please check it out!
 * **2021/02/02** The paper ["Warm Starting CMA-ES for Hyperparameter Optimization"](https://arxiv.org/abs/2012.06932) written by [@nomuramasahir0](https://github.com/nomuramasahir0), the maintainer of this library, is accepted at AAAI 2021 :tada:
 * **2020/07/29** Optuna's built-in CMA-ES sampler which uses this library under the hood is stabled at Optuna v2.0. Please check out the [v2.0 release blog](https://medium.com/optuna/optuna-v2-3165e3f1fc2).
