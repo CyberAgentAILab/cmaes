@@ -12,8 +12,8 @@ class HimmelblauEvaluator(problem.Evaluator):
 
     def evaluate(self, next_step: int) -> List[float]:
         self._current_step = 1
-        value = (self._x1 ** 2 + self._x2 - 11.0) ** 2 + (
-            self._x1 + self._x2 ** 2 - 7.0
+        value = (self._x1**2 + self._x2 - 11.0) ** 2 + (
+            self._x1 + self._x2**2 - 7.0
         ) ** 2
         return [value]
 

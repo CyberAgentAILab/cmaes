@@ -5,7 +5,7 @@ from cmaes import CMA
 
 def ackley(x1, x2):
     return (
-        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1 ** 2 + x2 ** 2)))
+        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1**2 + x2**2)))
         - math.exp(0.5 * (math.cos(2 * math.pi * x1) + math.cos(2 * math.pi * x2)))
         + math.e
         + 20

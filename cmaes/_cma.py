@@ -159,7 +159,7 @@ class CMA:
 
         # E||N(0, I)|| (p.28)
         self._chi_n = math.sqrt(self._n_dim) * (
-            1.0 - (1.0 / (4.0 * self._n_dim)) + 1.0 / (21.0 * (self._n_dim ** 2))
+            1.0 - (1.0 / (4.0 * self._n_dim)) + 1.0 / (21.0 * (self._n_dim**2))
         )
 
         self._weights = weights
@@ -255,7 +255,7 @@ class CMA:
         self._C = (self._C + self._C.T) / 2
         D2, B = np.linalg.eigh(self._C)
         D = np.sqrt(np.where(D2 < 0, _EPS, D2))
-        self._C = np.dot(np.dot(B, np.diag(D ** 2)), B.T)
+        self._C = np.dot(np.dot(B, np.diag(D**2)), B.T)
 
         self._B, self._D = B, D
         return B, D
