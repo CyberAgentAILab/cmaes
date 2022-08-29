@@ -92,7 +92,7 @@ class SepCMA:
             [math.log(mu + 1) - math.log(i + 1) for i in range(mu)]
         )
         weights = weights_prime / sum(weights_prime)
-        mu_eff = 1 / sum(weights ** 2)
+        mu_eff = 1 / sum(weights**2)
 
         # learning rate for the rank-one update
         alpha_cov = 2
@@ -130,7 +130,7 @@ class SepCMA:
 
         # E||N(0, I)|| (p.28)
         self._chi_n = math.sqrt(self._n_dim) * (
-            1.0 - (1.0 / (4.0 * self._n_dim)) + 1.0 / (21.0 * (self._n_dim ** 2))
+            1.0 - (1.0 / (4.0 * self._n_dim)) + 1.0 / (21.0 * (self._n_dim**2))
         )
 
         self._weights = weights
@@ -292,9 +292,9 @@ class SepCMA:
         assert delta_h_sigma <= 1
 
         # (eq.47)
-        rank_one = self._pc ** 2
+        rank_one = self._pc**2
         rank_mu = np.sum(
-            np.array([w * (y ** 2) for w, y in zip(self._weights, y_k)]), axis=0
+            np.array([w * (y**2) for w, y in zip(self._weights, y_k)]), axis=0
         )
         self._C = (
             (

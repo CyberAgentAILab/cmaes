@@ -75,7 +75,7 @@ bw = LinearSegmentedColormap("BlueWhile", color_dict)
 
 
 def himmelbleu(x1, x2):
-    return (x1 ** 2 + x2 - 11.0) ** 2 + (x1 + x2 ** 2 - 7.0) ** 2
+    return (x1**2 + x2 - 11.0) ** 2 + (x1 + x2**2 - 7.0) ** 2
 
 
 def himmelbleu_contour(x1, x2):
@@ -91,7 +91,7 @@ def quadratic_contour(x1, x2):
 
 
 def rosenbrock(x1, x2):
-    return 100 * (x2 - x1 ** 2) ** 2 + (x1 - 1) ** 2
+    return 100 * (x2 - x1**2) ** 2 + (x1 - 1) ** 2
 
 
 def rosenbrock_contour(x1, x2):
@@ -100,9 +100,9 @@ def rosenbrock_contour(x1, x2):
 
 def six_hump_camel(x1, x2):
     return (
-        (4 - 2.1 * (x1 ** 2) + (x1 ** 4) / 3) * (x1 ** 2)
+        (4 - 2.1 * (x1**2) + (x1**4) / 3) * (x1**2)
         + x1 * x2
-        + (-4 + 4 * x2 ** 2) * (x2 ** 2)
+        + (-4 + 4 * x2**2) * (x2**2)
     )
 
 
@@ -212,12 +212,12 @@ def get_next_popsize():
 
         if small_n_eval < large_n_eval:
             poptype = "small"
-            popsize_multiplier = inc_popsize ** n_restarts
+            popsize_multiplier = inc_popsize**n_restarts
             popsize = math.floor(popsize0 * popsize_multiplier ** (rng.uniform() ** 2))
         else:
             poptype = "large"
             n_restarts += 1
-            popsize = popsize0 * (inc_popsize ** n_restarts)
+            popsize = popsize0 * (inc_popsize**n_restarts)
         print(
             f"Restart CMA-ES with popsize={popsize} ({poptype}) at trial={trial_number}"
         )

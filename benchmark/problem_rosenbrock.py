@@ -16,7 +16,7 @@ class RosenbrockEvaluator(problem.Evaluator):
 
     def evaluate(self, next_step: int) -> List[float]:
         self._current_step = 1
-        value = 100 * (self._x2 - self._x1 ** 2) ** 2 + (self._x1 - 1) ** 2
+        value = 100 * (self._x2 - self._x1**2) ** 2 + (self._x1 - 1) ** 2
         return [value]
 
     def current_step(self) -> int:
