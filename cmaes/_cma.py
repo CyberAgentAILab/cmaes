@@ -1,6 +1,5 @@
 import math
 import numpy as np
-import copy
 
 from typing import Any
 from typing import cast
@@ -168,7 +167,7 @@ class CMA:
         self._p_sigma = np.zeros(n_dim)
         self._pc = np.zeros(n_dim)
 
-        self._mean = copy.deepcopy(mean)
+        self._mean = mean.copy()
 
         if cov is None:
             self._C = np.eye(n_dim)
