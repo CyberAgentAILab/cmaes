@@ -323,12 +323,19 @@ See [benchmark](./benchmark) for details.
 
 ## Links
 
+**Projects using cmaes:**
+
+* [Optuna](https://github.com/optuna/optuna) : A hyperparameter optimization framework that supports CMA-ES using this library under the hood.
+* (If you have a project which uses `cmaes` and want your own project to be listed here, please submit a GitHub issue.)
+
 **Other libraries:**
 
 I respect all libraries involved in CMA-ES.
 
 * [pycma](https://github.com/CMA-ES/pycma) : Most famous CMA-ES implementation by Nikolaus Hansen.
 * [pymoo](https://github.com/msu-coinlab/pymoo) : Multi-objective optimization in Python.
+* [evojax](https://github.com/google/evojax) : EvoJAX provides a JAX-port of this library.
+* [evosax](https://github.com/RobertTLange/evosax) : evosax provides JAX-based CMA-ES and sep-CMA-ES implementation, which is inspired by this library.
 
 **References:**
 
