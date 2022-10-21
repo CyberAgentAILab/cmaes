@@ -34,10 +34,15 @@ class CMAwM:
                 onemax = n_zdim - (0. < x[(n - n_zdim):]).sum()
                 return ellipsoid + 10 * onemax
 
-            dim = 20
-            binary_dim = dim//2
-            discrete_space = np.tile(np.arange(0, 2, 1), (binary_dim, 1))     # binary variables
-            optimizer = CMAwM(mean=0 * np.ones(dim), sigma=2.0, discrete_space=discrete_space)
+            binary_dim, continuous_dim = 10, 10
+            bounds = np.concatenate(
+                [
+                    np.tile([0, 1], (binary_dim, 1)),
+                    np.tile([-np.inf, np.inf], (continuous_dim, 1)),
+                ]
+            )
+            steps = np.concatenate([np.ones(binary_dim), np.zeros(continuous_dim)])
+            optimizer = CMAwM(mean=np.zeros(binary_dim + continuous_dim), sigma=2.0, bounds=bounds, steps=steps)
 
             evals = 0
             while True:
@@ -60,11 +65,12 @@ class CMAwM:
         sigma:
             Initial standard deviation of covariance matrix.
 
-        discrete_space:
-            Discrete space. Both binary and integer are acceptable.
+        bounds:
+            Lower and upper domain boundaries for each parameter.
 
-        continuous_space:
-            Lower and upper domain boundaries for each parameter (optional).
+        steps:
+            Each value represents a step of discretization for each dimension.
+            Zero (or negative value) means a continuous space.
 
         n_max_resampling:
             A maximum number of resampling parameters (default: 100).
@@ -90,14 +96,35 @@ class CMAwM:
         self,
         mean: np.ndarray,
         sigma: float,
-        discrete_space: np.ndarray,
-        continuous_space: Optional[np.ndarray] = None,
+        bounds: np.ndarray,
+        steps: np.ndarray,
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
         population_size: Optional[int] = None,
         cov: Optional[np.ndarray] = None,
         margin: Optional[float] = None,
     ):
+        assert len(bounds) == len(steps), "bounds and steps must be the same length"
+        assert not np.isnan(steps).any(), "steps should not include NaN"
+
+        # split discrete space and continuous space
+        discrete_idx = np.where(steps > 0)[0]
+        continuous_idx = np.where(steps <= 0)[0]
+        discrete_list = [
+            np.arange(bounds[i][0], bounds[i][1] + steps[i] / 2, steps[i])
+            for i in discrete_idx
+        ]
+        max_discrete = max(len(discrete) for discrete in discrete_list)
+        discrete_space = np.full((len(discrete_idx), max_discrete), np.nan)
+        for i, discrete in enumerate(discrete_list):
+            discrete_space[i, : len(discrete)] = discrete
+        continuous_space = bounds[continuous_idx]
+
+        # fix index order so that discrete dims come after continuous dims
+        mean = np.concatenate([mean[continuous_idx], mean[discrete_idx]])
+        if cov is not None:
+            cov = np.concatenate([cov[continuous_idx], cov[discrete_idx]])
+
         assert sigma > 0, "sigma must be non-zero positive value"
 
         assert np.all(
@@ -208,7 +235,7 @@ class CMAwM:
         self._B: Optional[np.ndarray] = None
 
         # continuous_space contains low and high of each parameter.
-        assert continuous_space is None or _is_valid_bounds(
+        assert _is_valid_bounds(
             continuous_space, mean[: self._n_rdim]
         ), "invalid bounds"
         self._continuous_space = continuous_space
