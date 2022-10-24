@@ -14,12 +14,16 @@ def ellipsoid_onemax(x, n_zdim):
 
 
 def main():
-    dim = 20
-    binary_dim = dim // 2
-    discrete_space = np.tile(
-        np.arange(0, 2, 1), (binary_dim, 1)
-    )  # binary variables (dim_bi x 2)
-    optimizer = CMAwM(mean=0 * np.ones(dim), sigma=2.0, discrete_space=discrete_space)
+    binary_dim, continuous_dim = 10, 10
+    dim = binary_dim + continuous_dim
+    bounds = np.concatenate(
+        [
+            np.tile([0, 1], (binary_dim, 1)),
+            np.tile([-np.inf, np.inf], (continuous_dim, 1)),
+        ]
+    )
+    steps = np.concatenate([np.ones(binary_dim), np.zeros(continuous_dim)])
+    optimizer = CMAwM(mean=np.zeros(dim), sigma=2.0, bounds=bounds, steps=steps)
     print(" evals    f(x)")
     print("======  ==========")
 

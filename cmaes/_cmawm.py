@@ -35,6 +35,7 @@ class CMAwM:
                 return ellipsoid + 10 * onemax
 
             binary_dim, continuous_dim = 10, 10
+            dim = binary_dim + continuous_dim
             bounds = np.concatenate(
                 [
                     np.tile([0, 1], (binary_dim, 1)),
@@ -42,7 +43,7 @@ class CMAwM:
                 ]
             )
             steps = np.concatenate([np.ones(binary_dim), np.zeros(continuous_dim)])
-            optimizer = CMAwM(mean=np.zeros(binary_dim + continuous_dim), sigma=2.0, bounds=bounds, steps=steps)
+            optimizer = CMAwM(mean=np.zeros(dim), sigma=2.0, bounds=bounds, steps=steps)
 
             evals = 0
             while True:
