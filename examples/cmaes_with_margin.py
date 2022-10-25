@@ -18,11 +18,11 @@ def main():
     dim = binary_dim + continuous_dim
     bounds = np.concatenate(
         [
-            np.tile([0, 1], (binary_dim, 1)),
             np.tile([-np.inf, np.inf], (continuous_dim, 1)),
+            np.tile([0, 1], (binary_dim, 1)),
         ]
     )
-    steps = np.concatenate([np.ones(binary_dim), np.zeros(continuous_dim)])
+    steps = np.concatenate([np.zeros(continuous_dim), np.ones(binary_dim)])
     optimizer = CMAwM(mean=np.zeros(dim), sigma=2.0, bounds=bounds, steps=steps)
     print(" evals    f(x)")
     print("======  ==========")
