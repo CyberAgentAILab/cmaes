@@ -321,12 +321,18 @@ class CMAwM:
             x = self._sample_solution()
             if self._is_continuous_feasible(x[self._continuous_idx]):
                 x_encoded = x.copy()
-                x_encoded[self._discrete_idx] = self._encoding_discrete_params(x[self._discrete_idx])
+                x_encoded[self._discrete_idx] = self._encoding_discrete_params(
+                    x[self._discrete_idx]
+                )
                 return x_encoded, x
         x = self._sample_solution()
         x_encoded = x.copy()
-        x_encoded[self._continuous_idx] = self._repair_continuous_params(x[self._continuous_idx])
-        x_encoded[self._discrete_idx] = self._encoding_discrete_params(x[self._discrete_idx])
+        x_encoded[self._continuous_idx] = self._repair_continuous_params(
+            x[self._continuous_idx]
+        )
+        x_encoded[self._discrete_idx] = self._encoding_discrete_params(
+            x[self._discrete_idx]
+        )
         return x_encoded, x
 
     def _eigen_decomposition(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -530,7 +536,9 @@ class CMAwM:
                 self._mean[self._discrete_idx] = self._mean[
                     self._discrete_idx
                 ] + modify_mask * edge_mask * (
-                    self.m_z_lim_up + modify_sign * dist - self._mean[self._discrete_idx]
+                    self.m_z_lim_up
+                    + modify_sign * dist
+                    - self._mean[self._discrete_idx]
                 )
 
             # correct probability
@@ -556,7 +564,9 @@ class CMAwM:
                 / ((chi_low_sq + chi_up_sq) * self._sigma * C_diag_sq)
                 - self._A[self._discrete_idx]
             )
-            self._mean[self._discrete_idx] = self._mean[self._discrete_idx] + side_mask * (
+            self._mean[self._discrete_idx] = self._mean[
+                self._discrete_idx
+            ] + side_mask * (
                 (self.m_z_lim_low * chi_up_sq + self.m_z_lim_up * chi_low_sq)
                 / (chi_low_sq + chi_up_sq)
                 - self._mean[self._discrete_idx]
