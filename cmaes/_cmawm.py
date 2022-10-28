@@ -111,6 +111,10 @@ class CMAwM:
         # split discrete space and continuous space
         self._discrete_idx = np.where(steps > 0)[0]
         self._continuous_idx = np.where(steps <= 0)[0]
+        assert (
+            len(self._discrete_idx) > 0
+        ), """steps should include at least one positive values corresponding to discrete
+        dimensions."""
         discrete_list = [
             np.arange(bounds[i][0], bounds[i][1] + steps[i] / 2, steps[i])
             for i in self._discrete_idx
