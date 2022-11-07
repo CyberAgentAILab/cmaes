@@ -31,4 +31,5 @@ jobs:
       - run: python examples/ellipsoid_function.py
       - run: python examples/optuna_sampler.py
       - run: python examples/ws_cma_es.py
-      - run: python examples/cmaes_with_margin.py
+      - run: python examples/cmaes_with_margin_binary.py
+      - run: python examples/cmaes_with_margin_integer.py
