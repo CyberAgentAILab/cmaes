@@ -1,7 +1,5 @@
 import math
 import numpy as np
-from scipy.stats import chi2
-from scipy.stats import norm
 
 from typing import Any
 from typing import cast
@@ -9,6 +7,8 @@ from typing import Dict
 from typing import List
 from typing import Optional
 from typing import Tuple
+
+from cmaes._stats import chi2_ppf, norm_cdf
 
 
 _EPS = 1e-8
@@ -512,8 +512,8 @@ class CMAwM:
                 * np.sqrt(np.diag(self._C)[self._discrete_idx])
             )
             updated_m_integer = updated_m_integer.flatten()
-            low_cdf = norm.cdf(self.m_z_lim_low, loc=updated_m_integer, scale=z_scale)
-            up_cdf = 1.0 - norm.cdf(
+            low_cdf = norm_cdf(self.m_z_lim_low, loc=updated_m_integer, scale=z_scale)
+            up_cdf = 1.0 - norm_cdf(
                 self.m_z_lim_up, loc=updated_m_integer, scale=z_scale
             )
             mid_cdf = 1.0 - (low_cdf + up_cdf)
@@ -532,7 +532,7 @@ class CMAwM:
                     self._sigma
                     * self._A[self._discrete_idx]
                     * np.sqrt(
-                        chi2.ppf(q=1.0 - 2.0 * self.margin, df=1)
+                        chi2_ppf(q=1.0 - 2.0 * self.margin)
                         * np.diag(self._C)[self._discrete_idx]
                     )
                 )
@@ -558,8 +558,8 @@ class CMAwM:
             modified_up_cdf = np.clip(modified_up_cdf, 1e-10, 0.5 - 1e-10)
 
             # modify mean vector and A (with sigma and C fixed)
-            chi_low_sq = np.sqrt(chi2.ppf(q=1.0 - 2 * modified_low_cdf, df=1))
-            chi_up_sq = np.sqrt(chi2.ppf(q=1.0 - 2 * modified_up_cdf, df=1))
+            chi_low_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * modified_low_cdf))
+            chi_up_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * modified_up_cdf))
             C_diag_sq = np.sqrt(np.diag(self._C))[self._discrete_idx]
 
             # simultaneous equations
