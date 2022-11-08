@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
           architecture: x64
@@ -31,4 +31,5 @@ jobs:
       - run: python examples/ellipsoid_function.py
       - run: python examples/optuna_sampler.py
       - run: python examples/ws_cma_es.py
-      - run: python examples/cmaes_with_margin.py
+      - run: python examples/cmaes_with_margin_binary.py
+      - run: python examples/cmaes_with_margin_integer.py
