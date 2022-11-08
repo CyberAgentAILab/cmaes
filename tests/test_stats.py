@@ -12,17 +12,26 @@ class TestNormCDF(TestCase):
         self.assertAlmostEqual(_stats.norm_cdf(-1), 0.15865525393145707)
         self.assertAlmostEqual(_stats.norm_cdf(0), 0.5)
         self.assertAlmostEqual(_stats.norm_cdf(1), 0.8413447460685429)
-        self.assertAlmostEqual(_stats.norm_cdf(8), 0.9999999999999993338661852249060757458209991455078125, places=30)
-        self.assertAlmostEqual(_stats.norm_cdf(10), 1.)
+        self.assertAlmostEqual(
+            _stats.norm_cdf(8),
+            0.9999999999999993338661852249060757458209991455078125,
+            places=30,
+        )
+        self.assertAlmostEqual(_stats.norm_cdf(10), 1.0)
 
     def test_mu_and_sigma(self):
         self.assertAlmostEqual(_stats.norm_cdf(1, loc=2, scale=3), 0.36944134018176367)
-        
+
 
 class TestChi2PPF(TestCase):
     def test(self):
-        self.assertAlmostEqual(_stats.chi2_ppf(0.), 0.)
-        self.assertAlmostEqual(_stats.chi2_ppf(0.00000001), 1.5707963267948962e-16, places=25)
+        self.assertAlmostEqual(_stats.chi2_ppf(0.0), 0.0)
+        self.assertAlmostEqual(
+            _stats.chi2_ppf(0.00000001), 1.5707963267948962e-16, places=25
+        )
         self.assertAlmostEqual(_stats.chi2_ppf(0.5), 0.454936423119572)
         self.assertAlmostEqual(_stats.chi2_ppf(0.99999999), 32.84125335146885)
-        self.assertAlmostEqual(_stats.chi2_ppf(1.), math.inf)
+        self.assertAlmostEqual(
+            _stats.chi2_ppf(0.999999999999999777955395074969), 67.39648382445012
+        )
+        self.assertAlmostEqual(_stats.chi2_ppf(1.0), math.inf)
