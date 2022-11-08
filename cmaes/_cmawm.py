@@ -1,3 +1,4 @@
+import functools
 import math
 import numpy as np
 
@@ -8,7 +9,14 @@ from typing import List
 from typing import Optional
 from typing import Tuple
 
-from cmaes._stats import chi2_ppf, norm_cdf
+try:
+    from scipy import stats
+
+    chi2_ppf = functools.partial(stats.chi2.ppf, df=1)
+    norm_cdf = stats.norm.cdf
+except ImportError:
+    from cmaes._stats import chi2_ppf  # type: ignore
+    from cmaes._stats import norm_cdf
 
 
 _EPS = 1e-8
