@@ -1,9 +1,11 @@
 # install_requires
 numpy>=1.20.0
 
+# Unit tests for CMA with Margin
+scipy
+
 # visualization
 matplotlib
-scipy
 
 # Fuzzing
 hypothesis
