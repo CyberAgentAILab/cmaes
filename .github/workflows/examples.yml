@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools
-          pip install --progress-bar off optuna numpy
+          pip install --progress-bar off optuna numpy scipy
           pip install --progress-bar off -U .
       - run: python examples/quadratic_function.py
       - run: python examples/ipop_cmaes.py
@@ -31,5 +31,21 @@ jobs:
       - run: python examples/ellipsoid_function.py
       - run: python examples/optuna_sampler.py
       - run: python examples/ws_cma_es.py
+      - run: python examples/cmaes_with_margin_binary.py
+      - run: python examples/cmaes_with_margin_integer.py
+  examples-cmawm-without-scipy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.11
+          architecture: x64
+          check-latest: true
+      - name: Install dependencies
+        run: |
+          pip install -U pip setuptools
+          pip install --progress-bar off -U .
       - run: python examples/cmaes_with_margin_binary.py
       - run: python examples/cmaes_with_margin_integer.py
