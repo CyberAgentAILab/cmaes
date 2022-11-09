@@ -14,7 +14,7 @@ Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] impleme
 
 ## Installation
 
-Supported Python versions are 3.6 or later.
+Supported Python versions are 3.7 or later.
 
 ```
 $ pip install cmaes
