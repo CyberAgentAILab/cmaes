@@ -6,7 +6,6 @@ __pycache__/
 *.pyc
 .eggs/
 *.egg-info/
-.tox/
 .hypothesis
 
 tmp/
