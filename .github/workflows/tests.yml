@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - '.github/workflows/tests.yml'
-      - 'setup.cfg'
       - '**.py'
 
 jobs:
