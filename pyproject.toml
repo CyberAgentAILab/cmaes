@@ -13,7 +13,7 @@ maintainers = [
     { name = "Masahiro Nomura", "email" = "nomura_masahiro@cyberagent.co.jp" }
 ]
 requires-python = ">=3.7"
-license = {text = "MIT License"}
+license = {file = "LICENSE"}
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
@@ -24,11 +24,15 @@ classifiers = [
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3 :: Only",
     "Intended Audience :: Science/Research",
 ]
 dependencies = ["numpy"]
 dynamic = ["version"]
+
+[project.optional-dependencies]
+cmawm = ["scipy"]
 
 [project.urls]
 "Homepage" = "https://github.com/CyberAgentAILab/cmaes"
