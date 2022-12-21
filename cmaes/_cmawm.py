@@ -206,10 +206,10 @@ class CMAwM:
                 )
                 return x_encoded, x
         x = self._cma._sample_solution()
-        x_encoded = x.copy()
-        x_encoded[self._continuous_idx] = self._repair_continuous_params(
+        x[self._continuous_idx] = self._repair_continuous_params(
             x[self._continuous_idx]
         )
+        x_encoded = x.copy()
         x_encoded[self._discrete_idx] = self._encoding_discrete_params(
             x[self._discrete_idx]
         )
