@@ -232,6 +232,9 @@ class CMA:
         when multi-variate gaussian distribution is updated."""
         return self._g
 
+    def reseed_rng(self, seed: int) -> None:
+        self._rng.seed(seed)
+
     def set_bounds(self, bounds: Optional[np.ndarray]) -> None:
         """Update boundary constraints"""
         assert bounds is None or _is_valid_bounds(bounds, self._mean), "invalid bounds"
