@@ -177,6 +177,9 @@ class SepCMA:
         when multi-variate gaussian distribution is updated."""
         return self._g
 
+    def reseed_rng(self, seed: int) -> None:
+        self._rng.seed(seed)
+
     def __getstate__(self) -> Dict[str, Any]:
         attrs = {}
         for name in self.__dict__:
