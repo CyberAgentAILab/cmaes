@@ -193,6 +193,13 @@ class CMAwM:
         when multi-variate gaussian distribution is updated."""
         return self._cma.generation
 
+    @property
+    def _rng(self) -> np.random.RandomState:
+        return self._cma._rng
+
+    def reseed_rng(self, seed: int) -> None:
+        self._cma.reseed_rng(seed)
+
     def ask(self) -> Tuple[np.ndarray, np.ndarray]:
         """Sample a parameter and return (i) encoded x and (ii) raw x.
         The encoded x is used for the evaluation.
