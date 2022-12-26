@@ -213,9 +213,7 @@ class CMAwM:
                 )
                 return x_encoded, x
         x = self._cma._sample_solution()
-        x[self._continuous_idx] = self._repair_continuous_params(
-            x[self._continuous_idx]
-        )
+        x = self._cma._repair_infeasible_params(x)
         x_encoded = x.copy()
         x_encoded[self._discrete_idx] = self._encoding_discrete_params(
             x[self._discrete_idx]
@@ -230,21 +228,6 @@ class CMAwM:
             np.all(continuous_param >= self._continuous_space[:, 0])
             and np.all(continuous_param <= self._continuous_space[:, 1]),
         )  # Cast bool_ to bool.
-
-    def _repair_continuous_params(self, continuous_param: np.ndarray) -> np.ndarray:
-        if self._continuous_space is None:
-            return continuous_param
-
-        # clip with lower and upper bound.
-        param = np.where(
-            continuous_param < self._continuous_space[:, 0],
-            self._continuous_space[:, 0],
-            continuous_param,
-        )
-        param = np.where(
-            param > self._continuous_space[:, 1], self._continuous_space[:, 1], param
-        )
-        return param
 
     def _encoding_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
         """Encode the values into discrete domain."""
