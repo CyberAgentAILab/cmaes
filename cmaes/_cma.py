@@ -1,12 +1,11 @@
+from __future__ import annotations
+
 import math
 import numpy as np
 
 from typing import Any
 from typing import cast
-from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Tuple
 
 
 _EPS = 1e-8
@@ -196,7 +195,7 @@ class CMA:
         self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
         self._funhist_values = np.empty(self._funhist_term * 2)
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         attrs = {}
         for name in self.__dict__:
             # Remove _rng in pickle serialized object.
@@ -209,7 +208,7 @@ class CMA:
             attrs[name] = getattr(self, name)
         return attrs
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         state["_C"] = _decompress_symmetric(state["_c_1d"])
         del state["_c_1d"]
         self.__dict__.update(state)
@@ -250,7 +249,7 @@ class CMA:
         x = self._repair_infeasible_params(x)
         return x
 
-    def _eigen_decomposition(self) -> Tuple[np.ndarray, np.ndarray]:
+    def _eigen_decomposition(self) -> tuple[np.ndarray, np.ndarray]:
         if self._B is not None and self._D is not None:
             return self._B, self._D
 
@@ -286,7 +285,7 @@ class CMA:
         param = np.where(param > self._bounds[:, 1], self._bounds[:, 1], param)
         return param
 
-    def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
+    def tell(self, solutions: list[tuple[np.ndarray, float]]) -> None:
         """Tell evaluation values"""
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
