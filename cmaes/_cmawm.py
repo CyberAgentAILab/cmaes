@@ -1,7 +1,6 @@
 import functools
 import numpy as np
 
-from typing import cast
 from typing import List
 from typing import Optional
 from typing import Tuple
