@@ -1,11 +1,11 @@
+from __future__ import annotations
+
 import math
 import numpy as np
 
-from typing import Any, cast
-from typing import Dict
-from typing import List
+from typing import Any
+from typing import cast
 from typing import Optional
-from typing import Tuple
 
 
 _EPS = 1e-8
@@ -180,7 +180,7 @@ class SepCMA:
     def reseed_rng(self, seed: int) -> None:
         self._rng.seed(seed)
 
-    def __getstate__(self) -> Dict[str, Any]:
+    def __getstate__(self) -> dict[str, Any]:
         attrs = {}
         for name in self.__dict__:
             # Remove _rng in pickle serialized object.
@@ -189,7 +189,7 @@ class SepCMA:
             attrs[name] = getattr(self, name)
         return attrs
 
-    def __setstate__(self, state: Dict[str, Any]) -> None:
+    def __setstate__(self, state: dict[str, Any]) -> None:
         self.__dict__.update(state)
         # Set _rng for unpickled object.
         setattr(self, "_rng", np.random.RandomState())
@@ -239,7 +239,7 @@ class SepCMA:
         param = np.where(param > self._bounds[:, 1], self._bounds[:, 1], param)
         return param
 
-    def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
+    def tell(self, solutions: list[tuple[np.ndarray, float]]) -> None:
         """Tell evaluation values"""
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
