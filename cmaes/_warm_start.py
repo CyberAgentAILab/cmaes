@@ -1,14 +1,14 @@
+from __future__ import annotations
+
 import math
 import numpy as np
 
-from typing import Tuple, List
-
 
 def get_warm_start_mgd(
-    source_solutions: List[Tuple[np.ndarray, float]],
+    source_solutions: list[tuple[np.ndarray, float]],
     gamma: float = 0.1,
     alpha: float = 0.1,
-) -> Tuple[np.ndarray, float, np.ndarray]:
+) -> tuple[np.ndarray, float, np.ndarray]:
     """Estimates a promising distribution of the source task, then
     returns a multivariate gaussian distribution (the mean vector
     and the covariance matrix) used for initialization of the CMA-ES.

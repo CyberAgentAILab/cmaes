@@ -1,9 +1,9 @@
+from __future__ import annotations
+
 import functools
 import numpy as np
 
-from typing import List
 from typing import Optional
-from typing import Tuple
 
 
 from cmaes import CMA
@@ -199,7 +199,7 @@ class CMAwM:
     def reseed_rng(self, seed: int) -> None:
         self._cma.reseed_rng(seed)
 
-    def ask(self) -> Tuple[np.ndarray, np.ndarray]:
+    def ask(self) -> tuple[np.ndarray, np.ndarray]:
         """Sample a parameter and return (i) encoded x and (ii) raw x.
         The encoded x is used for the evaluation.
         The raw x is used for updating the distribution."""
@@ -233,7 +233,7 @@ class CMAwM:
         ).sum(axis=1)
         return x_enc.reshape(self._n_zdim)
 
-    def tell(self, solutions: List[Tuple[np.ndarray, float]]) -> None:
+    def tell(self, solutions: list[tuple[np.ndarray, float]]) -> None:
         """Tell evaluation values"""
         self._cma.tell(solutions)
         mean = self._cma._mean
