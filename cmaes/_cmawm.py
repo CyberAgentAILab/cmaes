@@ -3,7 +3,6 @@ from __future__ import annotations
 import functools
 import numpy as np
 
-from typing import cast
 from typing import Optional
 
 
@@ -120,7 +119,6 @@ class CMAwM:
         assert len(bounds) == len(steps), "bounds and steps must be the same length"
         assert not np.isnan(steps).any(), "steps should not include NaN"
         self._discrete_idx = np.where(steps > 0)[0]
-        self._continuous_idx = np.where(steps <= 0)[0]
         assert (
             len(self._discrete_idx) > 0
         ), """steps should include at least one positive values corresponding to discrete
@@ -133,7 +131,6 @@ class CMAwM:
         discrete_space = np.full((len(self._discrete_idx), max_discrete), np.nan)
         for i, discrete in enumerate(discrete_list):
             discrete_space[i, : len(discrete)] = discrete
-        continuous_space = bounds[self._continuous_idx]
 
         n_zdim = len(discrete_space)
         n_rdim = n_dim - n_zdim
@@ -145,10 +142,7 @@ class CMAwM:
         self._n_rdim = n_rdim
 
         # continuous_space contains low and high of each parameter.
-        assert _is_valid_bounds(
-            continuous_space, mean[self._continuous_idx]
-        ), "invalid bounds"
-        self._continuous_space = continuous_space
+        assert _is_valid_bounds(bounds[steps <= 0], mean[steps <= 0]), "invalid bounds"
         self._n_max_resampling = n_max_resampling
 
         # discrete_space
@@ -206,7 +200,7 @@ class CMAwM:
         The raw x is used for updating the distribution."""
         for i in range(self._n_max_resampling):
             x = self._cma._sample_solution()
-            if self._is_continuous_feasible(x[self._continuous_idx]):
+            if self._cma._is_feasible(x):
                 x_encoded = x.copy()
                 x_encoded[self._discrete_idx] = self._encoding_discrete_params(
                     x[self._discrete_idx]
@@ -219,15 +213,6 @@ class CMAwM:
             x[self._discrete_idx]
         )
         return x_encoded, x
-
-    def _is_continuous_feasible(self, continuous_param: np.ndarray) -> bool:
-        if self._continuous_space is None:
-            return True
-        return cast(
-            bool,
-            np.all(continuous_param >= self._continuous_space[:, 0])
-            and np.all(continuous_param <= self._continuous_space[:, 1]),
-        )  # Cast bool_ to bool.
 
     def _encoding_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
         """Encode the values into discrete domain."""
