@@ -198,16 +198,7 @@ class CMAwM:
         """Sample a parameter and return (i) encoded x and (ii) raw x.
         The encoded x is used for the evaluation.
         The raw x is used for updating the distribution."""
-        for i in range(self._n_max_resampling):
-            x = self._cma._sample_solution()
-            if self._cma._is_feasible(x):
-                x_encoded = x.copy()
-                x_encoded[self._discrete_idx] = self._encoding_discrete_params(
-                    x[self._discrete_idx]
-                )
-                return x_encoded, x
-        x = self._cma._sample_solution()
-        x = self._cma._repair_infeasible_params(x)
+        x = self._cma.ask()
         x_encoded = x.copy()
         x_encoded[self._discrete_idx] = self._encoding_discrete_params(
             x[self._discrete_idx]
