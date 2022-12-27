@@ -132,21 +132,13 @@ class CMAwM:
         for i, discrete in enumerate(discrete_list):
             discrete_space[i, : len(discrete)] = discrete
 
-        n_zdim = len(discrete_space)
-        n_rdim = n_dim - n_zdim
-
-        margin = margin if margin is not None else 1 / (n_dim * population_size)
-        assert margin > 0, "margin must be non-zero positive value."
-
-        self._n_zdim = n_zdim
-        self._n_rdim = n_rdim
-
         # continuous_space contains low and high of each parameter.
         assert _is_valid_bounds(bounds[steps <= 0], mean[steps <= 0]), "invalid bounds"
-        self._n_max_resampling = n_max_resampling
 
         # discrete_space
+        self._n_zdim = len(discrete_space)
         self.margin = margin if margin is not None else 1 / (n_dim * population_size)
+        assert self.margin > 0, "margin must be non-zero positive value."
         self.z_space = discrete_space
         self.z_lim = (self.z_space[:, 1:] + self.z_space[:, :-1]) / 2
         for i in range(self._n_zdim):
