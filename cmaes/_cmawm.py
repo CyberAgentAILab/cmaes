@@ -119,7 +119,6 @@ class CMAwM:
         assert len(bounds) == len(steps), "bounds and steps must be the same length"
         assert not np.isnan(steps).any(), "steps should not include NaN"
         self._discrete_idx = np.where(steps > 0)[0]
-        self._continuous_idx = np.where(steps <= 0)[0]
         assert (
             len(self._discrete_idx) > 0
         ), """steps should include at least one positive values corresponding to discrete
@@ -132,7 +131,6 @@ class CMAwM:
         discrete_space = np.full((len(self._discrete_idx), max_discrete), np.nan)
         for i, discrete in enumerate(discrete_list):
             discrete_space[i, : len(discrete)] = discrete
-        continuous_space = bounds[self._continuous_idx]
 
         n_zdim = len(discrete_space)
         n_rdim = n_dim - n_zdim
@@ -144,10 +142,7 @@ class CMAwM:
         self._n_rdim = n_rdim
 
         # continuous_space contains low and high of each parameter.
-        assert _is_valid_bounds(
-            continuous_space, mean[self._continuous_idx]
-        ), "invalid bounds"
-        self._continuous_space = continuous_space
+        assert _is_valid_bounds(bounds[steps <= 0], mean[steps <= 0]), "invalid bounds"
         self._n_max_resampling = n_max_resampling
 
         # discrete_space
