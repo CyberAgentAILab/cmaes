@@ -192,12 +192,12 @@ class CMAwM:
         The raw x is used for updating the distribution."""
         x = self._cma.ask()
         x_encoded = x.copy()
-        x_encoded[self._discrete_idx] = self._encoding_discrete_params(
+        x_encoded[self._discrete_idx] = self._encode_discrete_params(
             x[self._discrete_idx]
         )
         return x_encoded, x
 
-    def _encoding_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
+    def _encode_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
         """Encode the values into discrete domain."""
         mean = self._cma._mean
 
