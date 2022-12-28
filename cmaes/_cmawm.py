@@ -132,21 +132,13 @@ class CMAwM:
         for i, discrete in enumerate(discrete_list):
             discrete_space[i, : len(discrete)] = discrete
 
-        n_zdim = len(discrete_space)
-        n_rdim = n_dim - n_zdim
-
-        margin = margin if margin is not None else 1 / (n_dim * population_size)
-        assert margin > 0, "margin must be non-zero positive value."
-
-        self._n_zdim = n_zdim
-        self._n_rdim = n_rdim
-
         # continuous_space contains low and high of each parameter.
         assert _is_valid_bounds(bounds[steps <= 0], mean[steps <= 0]), "invalid bounds"
-        self._n_max_resampling = n_max_resampling
 
         # discrete_space
+        self._n_zdim = len(discrete_space)
         self.margin = margin if margin is not None else 1 / (n_dim * population_size)
+        assert self.margin > 0, "margin must be non-zero positive value."
         self.z_space = discrete_space
         self.z_lim = (self.z_space[:, 1:] + self.z_space[:, :-1]) / 2
         for i in range(self._n_zdim):
@@ -198,23 +190,14 @@ class CMAwM:
         """Sample a parameter and return (i) encoded x and (ii) raw x.
         The encoded x is used for the evaluation.
         The raw x is used for updating the distribution."""
-        for i in range(self._n_max_resampling):
-            x = self._cma._sample_solution()
-            if self._cma._is_feasible(x):
-                x_encoded = x.copy()
-                x_encoded[self._discrete_idx] = self._encoding_discrete_params(
-                    x[self._discrete_idx]
-                )
-                return x_encoded, x
-        x = self._cma._sample_solution()
-        x = self._cma._repair_infeasible_params(x)
+        x = self._cma.ask()
         x_encoded = x.copy()
-        x_encoded[self._discrete_idx] = self._encoding_discrete_params(
+        x_encoded[self._discrete_idx] = self._encode_discrete_params(
             x[self._discrete_idx]
         )
         return x_encoded, x
 
-    def _encoding_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
+    def _encode_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
         """Encode the values into discrete domain."""
         mean = self._cma._mean
 
@@ -235,101 +218,97 @@ class CMAwM:
         sigma = self._cma._sigma
         C = self._cma._C
 
-        # margin correction if margin > 0
-        if self.margin > 0:
-            updated_m_integer = mean[self._discrete_idx, np.newaxis]
-            self.z_lim_low = np.concatenate(
-                [self.z_lim.min(axis=1).reshape([self._n_zdim, 1]), self.z_lim], 1
+        # margin correction
+        updated_m_integer = mean[self._discrete_idx, np.newaxis]
+        self.z_lim_low = np.concatenate(
+            [self.z_lim.min(axis=1).reshape([self._n_zdim, 1]), self.z_lim], 1
+        )
+        self.z_lim_up = np.concatenate(
+            [self.z_lim, self.z_lim.max(axis=1).reshape([self._n_zdim, 1])], 1
+        )
+        self.m_z_lim_low = (
+            self.z_lim_low
+            * np.where(
+                np.sort(np.concatenate([self.z_lim, updated_m_integer], 1))
+                == updated_m_integer,
+                1,
+                0,
             )
-            self.z_lim_up = np.concatenate(
-                [self.z_lim, self.z_lim.max(axis=1).reshape([self._n_zdim, 1])], 1
+        ).sum(axis=1)
+        self.m_z_lim_up = (
+            self.z_lim_up
+            * np.where(
+                np.sort(np.concatenate([self.z_lim, updated_m_integer], 1))
+                == updated_m_integer,
+                1,
+                0,
             )
-            self.m_z_lim_low = (
-                self.z_lim_low
-                * np.where(
-                    np.sort(np.concatenate([self.z_lim, updated_m_integer], 1))
-                    == updated_m_integer,
-                    1,
-                    0,
-                )
-            ).sum(axis=1)
-            self.m_z_lim_up = (
-                self.z_lim_up
-                * np.where(
-                    np.sort(np.concatenate([self.z_lim, updated_m_integer], 1))
-                    == updated_m_integer,
-                    1,
-                    0,
-                )
-            ).sum(axis=1)
+        ).sum(axis=1)
 
-            # calculate probability low_cdf := Pr(X <= m_z_lim_low) and up_cdf := Pr(m_z_lim_up < X)
-            # sig_z_sq_Cdiag = self.model.sigma * self.model.A * np.sqrt(np.diag(self.model.C))
-            z_scale = (
+        # calculate probability low_cdf := Pr(X <= m_z_lim_low) and up_cdf := Pr(m_z_lim_up < X)
+        # sig_z_sq_Cdiag = self.model.sigma * self.model.A * np.sqrt(np.diag(self.model.C))
+        z_scale = (
+            sigma
+            * self._A[self._discrete_idx]
+            * np.sqrt(np.diag(C)[self._discrete_idx])
+        )
+        updated_m_integer = updated_m_integer.flatten()
+        low_cdf = norm_cdf(self.m_z_lim_low, loc=updated_m_integer, scale=z_scale)
+        up_cdf = 1.0 - norm_cdf(self.m_z_lim_up, loc=updated_m_integer, scale=z_scale)
+        mid_cdf = 1.0 - (low_cdf + up_cdf)
+        # edge case
+        edge_mask = np.maximum(low_cdf, up_cdf) > 0.5
+        # otherwise
+        side_mask = np.maximum(low_cdf, up_cdf) <= 0.5
+
+        if np.any(edge_mask):
+            # modify mask (modify or not)
+            modify_mask = np.minimum(low_cdf, up_cdf) < self.margin
+            # modify sign
+            modify_sign = np.sign(mean[self._discrete_idx] - self.m_z_lim_up)
+            # distance from m_z_lim_up
+            dist = (
                 sigma
                 * self._A[self._discrete_idx]
-                * np.sqrt(np.diag(C)[self._discrete_idx])
-            )
-            updated_m_integer = updated_m_integer.flatten()
-            low_cdf = norm_cdf(self.m_z_lim_low, loc=updated_m_integer, scale=z_scale)
-            up_cdf = 1.0 - norm_cdf(
-                self.m_z_lim_up, loc=updated_m_integer, scale=z_scale
-            )
-            mid_cdf = 1.0 - (low_cdf + up_cdf)
-            # edge case
-            edge_mask = np.maximum(low_cdf, up_cdf) > 0.5
-            # otherwise
-            side_mask = np.maximum(low_cdf, up_cdf) <= 0.5
-
-            if np.any(edge_mask):
-                # modify mask (modify or not)
-                modify_mask = np.minimum(low_cdf, up_cdf) < self.margin
-                # modify sign
-                modify_sign = np.sign(mean[self._discrete_idx] - self.m_z_lim_up)
-                # distance from m_z_lim_up
-                dist = (
-                    sigma
-                    * self._A[self._discrete_idx]
-                    * np.sqrt(
-                        chi2_ppf(q=1.0 - 2.0 * self.margin)
-                        * np.diag(C)[self._discrete_idx]
-                    )
+                * np.sqrt(
+                    chi2_ppf(q=1.0 - 2.0 * self.margin) * np.diag(C)[self._discrete_idx]
                 )
-                # modify mean vector
-                mean[self._discrete_idx] = mean[
-                    self._discrete_idx
-                ] + modify_mask * edge_mask * (
-                    self.m_z_lim_up + modify_sign * dist - mean[self._discrete_idx]
-                )
-
-            # correct probability
-            low_cdf = np.maximum(low_cdf, self.margin / 2.0)
-            up_cdf = np.maximum(up_cdf, self.margin / 2.0)
-            modified_low_cdf = low_cdf + (1.0 - low_cdf - up_cdf - mid_cdf) * (
-                low_cdf - self.margin / 2
-            ) / (low_cdf + mid_cdf + up_cdf - 3.0 * self.margin / 2)
-            modified_up_cdf = up_cdf + (1.0 - low_cdf - up_cdf - mid_cdf) * (
-                up_cdf - self.margin / 2
-            ) / (low_cdf + mid_cdf + up_cdf - 3.0 * self.margin / 2)
-            modified_low_cdf = np.clip(modified_low_cdf, 1e-10, 0.5 - 1e-10)
-            modified_up_cdf = np.clip(modified_up_cdf, 1e-10, 0.5 - 1e-10)
-
-            # modify mean vector and A (with sigma and C fixed)
-            chi_low_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * modified_low_cdf))
-            chi_up_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * modified_up_cdf))
-            C_diag_sq = np.sqrt(np.diag(C))[self._discrete_idx]
-
-            # simultaneous equations
-            self._A[self._discrete_idx] = self._A[self._discrete_idx] + side_mask * (
-                (self.m_z_lim_up - self.m_z_lim_low)
-                / ((chi_low_sq + chi_up_sq) * sigma * C_diag_sq)
-                - self._A[self._discrete_idx]
             )
-            mean[self._discrete_idx] = mean[self._discrete_idx] + side_mask * (
-                (self.m_z_lim_low * chi_up_sq + self.m_z_lim_up * chi_low_sq)
-                / (chi_low_sq + chi_up_sq)
-                - mean[self._discrete_idx]
+            # modify mean vector
+            mean[self._discrete_idx] = mean[
+                self._discrete_idx
+            ] + modify_mask * edge_mask * (
+                self.m_z_lim_up + modify_sign * dist - mean[self._discrete_idx]
             )
+
+        # correct probability
+        low_cdf = np.maximum(low_cdf, self.margin / 2.0)
+        up_cdf = np.maximum(up_cdf, self.margin / 2.0)
+        modified_low_cdf = low_cdf + (1.0 - low_cdf - up_cdf - mid_cdf) * (
+            low_cdf - self.margin / 2
+        ) / (low_cdf + mid_cdf + up_cdf - 3.0 * self.margin / 2)
+        modified_up_cdf = up_cdf + (1.0 - low_cdf - up_cdf - mid_cdf) * (
+            up_cdf - self.margin / 2
+        ) / (low_cdf + mid_cdf + up_cdf - 3.0 * self.margin / 2)
+        modified_low_cdf = np.clip(modified_low_cdf, 1e-10, 0.5 - 1e-10)
+        modified_up_cdf = np.clip(modified_up_cdf, 1e-10, 0.5 - 1e-10)
+
+        # modify mean vector and A (with sigma and C fixed)
+        chi_low_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * modified_low_cdf))
+        chi_up_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * modified_up_cdf))
+        C_diag_sq = np.sqrt(np.diag(C))[self._discrete_idx]
+
+        # simultaneous equations
+        self._A[self._discrete_idx] = self._A[self._discrete_idx] + side_mask * (
+            (self.m_z_lim_up - self.m_z_lim_low)
+            / ((chi_low_sq + chi_up_sq) * sigma * C_diag_sq)
+            - self._A[self._discrete_idx]
+        )
+        mean[self._discrete_idx] = mean[self._discrete_idx] + side_mask * (
+            (self.m_z_lim_low * chi_up_sq + self.m_z_lim_up * chi_low_sq)
+            / (chi_low_sq + chi_up_sq)
+            - mean[self._discrete_idx]
+        )
 
     def should_stop(self) -> bool:
         return self._cma.should_stop()
