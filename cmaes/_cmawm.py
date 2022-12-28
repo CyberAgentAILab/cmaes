@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import functools
+import warnings
 import numpy as np
 
 from typing import Optional
@@ -119,15 +120,11 @@ class CMAwM:
         assert len(bounds) == len(steps), "bounds and steps must be the same length"
         assert not np.isnan(steps).any(), "steps should not include NaN"
         self._discrete_idx = np.where(steps > 0)[0]
-        assert (
-            len(self._discrete_idx) > 0
-        ), """steps should include at least one positive values corresponding to discrete
-        dimensions."""
         discrete_list = [
             np.arange(bounds[i][0], bounds[i][1] + steps[i] / 2, steps[i])
             for i in self._discrete_idx
         ]
-        max_discrete = max(len(discrete) for discrete in discrete_list)
+        max_discrete = max([len(discrete) for discrete in discrete_list], default=0)
         discrete_space = np.full((len(self._discrete_idx), max_discrete), np.nan)
         for i, discrete in enumerate(discrete_list):
             discrete_space[i, : len(discrete)] = discrete
@@ -137,6 +134,11 @@ class CMAwM:
 
         # discrete_space
         self._n_zdim = len(discrete_space)
+        if self._n_zdim == 0:
+            warnings.warn(
+                "CMAwM is used with no discrete dimensions. It behaves the same as CMA."
+            )
+            return
         self.margin = margin if margin is not None else 1 / (n_dim * population_size)
         assert self.margin > 0, "margin must be non-zero positive value."
         self.z_space = discrete_space
@@ -192,9 +194,10 @@ class CMAwM:
         The raw x is used for updating the distribution."""
         x = self._cma.ask()
         x_encoded = x.copy()
-        x_encoded[self._discrete_idx] = self._encode_discrete_params(
-            x[self._discrete_idx]
-        )
+        if self._n_zdim > 0:
+            x_encoded[self._discrete_idx] = self._encode_discrete_params(
+                x[self._discrete_idx]
+            )
         return x_encoded, x
 
     def _encode_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
@@ -218,6 +221,8 @@ class CMAwM:
         sigma = self._cma._sigma
         C = self._cma._C
 
+        if self._n_zdim == 0:
+            return
         # margin correction
         updated_m_integer = mean[self._discrete_idx, np.newaxis]
         self.z_lim_low = np.concatenate(
