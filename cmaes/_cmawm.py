@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import functools
-import warnings
 import numpy as np
 
 from typing import Optional
@@ -135,9 +134,6 @@ class CMAwM:
         # discrete_space
         self._n_zdim = len(discrete_space)
         if self._n_zdim == 0:
-            warnings.warn(
-                "CMAwM is used with no discrete dimensions. It behaves the same as CMA."
-            )
             return
         self.margin = margin if margin is not None else 1 / (n_dim * population_size)
         assert self.margin > 0, "margin must be non-zero positive value."
