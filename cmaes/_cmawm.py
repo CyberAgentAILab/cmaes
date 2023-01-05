@@ -198,18 +198,20 @@ class CMAwM:
             x = self._cma._sample_solution()
             if self._is_continuous_feasible(x[self._continuous_idx]):
                 x_encoded = x.copy()
-                x_encoded[self._discrete_idx] = self._encode_discrete_params(
-                    x[self._discrete_idx]
-                )
+                if self._n_zdim > 0:
+                    x_encoded[self._discrete_idx] = self._encode_discrete_params(
+                        x[self._discrete_idx]
+                    )
                 return x_encoded, x
         x = self._cma._sample_solution()
         x[self._continuous_idx] = self._repair_continuous_params(
             x[self._continuous_idx]
         )
         x_encoded = x.copy()
-        x_encoded[self._discrete_idx] = self._encode_discrete_params(
-            x[self._discrete_idx]
-        )
+        if self._n_zdim > 0:
+            x_encoded[self._discrete_idx] = self._encode_discrete_params(
+                x[self._discrete_idx]
+            )
         return x_encoded, x
 
     def _is_continuous_feasible(self, continuous_param: np.ndarray) -> bool:
