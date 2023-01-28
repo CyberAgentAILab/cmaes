@@ -7,6 +7,8 @@ from typing import Any
 from typing import cast
 from typing import Optional
 
+import torch
+from scipy.stats import qmc
 
 _EPS = 1e-8
 _MEAN_MAX = 1e32
@@ -185,6 +187,8 @@ class CMA:
 
         self._g = 0
         self._rng = np.random.RandomState(seed)
+        self._scipy_sobol = qmc.Sobol(n_dim, scramble=True)
+        self._torch_sobol = torch.quasirandom.SobolEngine(n_dim, scramble=True, seed=None)
 
         # Termination criteria
         self._tolx = 1e-12 * sigma
@@ -239,13 +243,13 @@ class CMA:
         assert bounds is None or _is_valid_bounds(bounds, self._mean), "invalid bounds"
         self._bounds = bounds
 
-    def ask(self) -> np.ndarray:
+    def ask(self, z: Optional[np.ndarray] = None) -> np.ndarray:
         """Sample a parameter"""
         for i in range(self._n_max_resampling):
-            x = self._sample_solution()
+            x = self._sample_solution(z)
             if self._is_feasible(x):
                 return x
-        x = self._sample_solution()
+        x = self._sample_solution(z)
         x = self._repair_infeasible_params(x)
         return x
 
@@ -261,9 +265,13 @@ class CMA:
         self._B, self._D = B, D
         return B, D
 
-    def _sample_solution(self) -> np.ndarray:
+    def _sample_solution(self, z: Optional[np.ndarray]) -> np.ndarray:
         B, D = self._eigen_decomposition()
-        z = self._rng.randn(self._n_dim)  # ~ N(0, I)
+
+        if z is None:
+            z = self._rng.randn(self._n_dim)  # ~ N(0, I)
+        else:
+            assert z.shape == (self._n_dim,)
         y = cast(np.ndarray, B.dot(np.diag(D))).dot(z)  # ~ N(0, C)
         x = self._mean + self._sigma * y  # ~ N(m, σ^2 C)
         return x
