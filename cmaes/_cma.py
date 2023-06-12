@@ -75,6 +75,9 @@ class CMA:
         seed: Optional[int] = None,
         population_size: Optional[int] = None,
         cov: Optional[np.ndarray] = None,
+        ftol: float = 1e-12,
+        minstep: float = 1e-12,
+        **kwargs: Any,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
@@ -187,9 +190,9 @@ class CMA:
         self._rng = np.random.RandomState(seed)
 
         # Termination criteria
-        self._tolx = 1e-12 * sigma
+        self._tolx = minstep * sigma
         self._tolxup = 1e4
-        self._tolfun = 1e-12
+        self._tolfun = ftol
         self._tolconditioncov = 1e14
 
         self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)

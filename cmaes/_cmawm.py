@@ -102,21 +102,24 @@ class CMAwM:
         mean: np.ndarray,
         sigma: float,
         bounds: np.ndarray,
-        steps: np.ndarray,
+        steps: np.ndarray = None,
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
         population_size: Optional[int] = None,
         cov: Optional[np.ndarray] = None,
         margin: Optional[float] = None,
+        **kwargs,
     ):
         # initialize `CMA`
         self._cma = CMA(
-            mean, sigma, bounds, n_max_resampling, seed, population_size, cov
+            mean, sigma, bounds, n_max_resampling, seed, population_size, cov, **kwargs
         )
         n_dim = self._cma.dim
         population_size = self._cma.population_size
         self._n_max_resampling = n_max_resampling
 
+        if steps is None:
+            steps = np.zeros(n_dim)
         # split discrete space and continuous space
         assert len(bounds) == len(steps), "bounds and steps must be the same length"
         assert not np.isnan(steps).any(), "steps should not include NaN"

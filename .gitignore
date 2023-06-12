@@ -1,15 +1,17 @@
-venv/
-dist/
-build/
-__pycache__/
-.mypy_cache/
+venv
+dist
+build
+# Temp files
+__pycache__
+.mypy_cache
 *.pyc
-.eggs/
-*.egg-info/
+.eggs
+*.egg-info
 .hypothesis
 
-tmp/
+tmp
 benchmark/*.json
 *.stats
 *.sqlite3
 
+.DS_Store
