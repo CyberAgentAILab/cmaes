@@ -64,6 +64,12 @@ class CMA:
 
         cov:
             A covariance matrix (optional).
+
+        ftol:
+            A tolerance of objective function (optional).
+
+        minstep:
+            A minimum step size (optional).
     """
 
     def __init__(
@@ -77,7 +83,7 @@ class CMA:
         cov: Optional[np.ndarray] = None,
         ftol: float = 1e-12,
         minstep: float = 1e-12,
-        **kwargs: Any,
+        **kwargs,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
