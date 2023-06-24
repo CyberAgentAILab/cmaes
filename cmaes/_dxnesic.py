@@ -125,7 +125,7 @@ class DXNESIC:
         self._w_rank_hat = w_rank_hat
 
         # for antithetic sampling
-        self._zsym = None
+        self._zsym: Optional[np.ndarray] = None
 
         # learning rate
         self._eta_mean = 1.0
@@ -175,27 +175,27 @@ class DXNESIC:
         when multi-variate gaussian distribution is updated."""
         return self._g
 
-    def _alpha_dist(self, num_feasible):
+    def _alpha_dist(self, num_feasible: int) -> float:
         return (
             self._h_inv
             * min(1.0, math.sqrt(float(self._popsize) / self._n_dim))
             * math.sqrt(float(num_feasible) / self._popsize)
         )
 
-    def _w_dist_hat(self, z, num_feasible):
+    def _w_dist_hat(self, z: np.ndarray, num_feasible: int) -> float:
         return math.exp(self._alpha_dist(num_feasible) * np.linalg.norm(z))
 
-    def _eta_stag_sigma(self, num_feasible):
+    def _eta_stag_sigma(self, num_feasible: int) -> float:
         return math.tanh(
             (0.024 * num_feasible + 0.7 * self._n_dim + 20.0) / (self._n_dim + 12.0)
         )
 
-    def _eta_conv_sigma(self, num_feasible):
+    def _eta_conv_sigma(self, num_feasible: int) -> float:
         return 2.0 * math.tanh(
             (0.025 * num_feasible + 0.75 * self._n_dim + 10.0) / (self._n_dim + 4.0)
         )
 
-    def _eta_move_B(self, num_feasible):
+    def _eta_move_B(self, num_feasible: int) -> float:
         return (
             180
             * self._n_dim
@@ -203,7 +203,7 @@ class DXNESIC:
             / (47 * (self._n_dim**2) + 6400)
         )
 
-    def _eta_stag_B(self, num_feasible):
+    def _eta_stag_B(self, num_feasible: int) -> float:
         return (
             168
             * self._n_dim
@@ -211,7 +211,7 @@ class DXNESIC:
             / (47 * (self._n_dim**2) + 6400)
         )
 
-    def _eta_conv_B(self, num_feasible):
+    def _eta_conv_B(self, num_feasible: int) -> float:
         return (
             12
             * self._n_dim
@@ -430,11 +430,11 @@ def _is_valid_bounds(bounds: Optional[np.ndarray], mean: np.ndarray) -> bool:
     return True
 
 
-def _get_h_inv(dim):
-    def f(a):
+def _get_h_inv(dim: int) -> float:
+    def f(a: float) -> float:
         return ((1.0 + a * a) * math.exp(a * a / 2.0) / 0.24) - 10.0 - dim
 
-    def f_prime(a):
+    def f_prime(a: float) -> float:
         return (1.0 / 0.24) * a * math.exp(a * a / 2.0) * (3.0 + a * a)
 
     h_inv = 6.0
