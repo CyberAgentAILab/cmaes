@@ -4,7 +4,6 @@ import math
 import sys
 
 import numpy as np
-from scipy.linalg import expm
 
 from typing import cast
 from typing import Optional
@@ -348,7 +347,8 @@ class DXNESIC:
         bBBT = self._B @ self._B.T
         self._mean += self._eta_mean * self._sigma * np.dot(self._B, G_delta)
         self._sigma *= math.exp((eta_sigma / 2.0) * G_sigma)
-        self._B = self._B.dot(expm((eta_B / 2.0) * G_B))
+        # self._B = self._B.dot(expm((eta_B / 2.0) * G_B))
+        self._B = self._B.dot(_expm((eta_B / 2.0) * G_B))
         aBBT = self._B @ self._B.T
 
         # emphasizing expansion
@@ -445,3 +445,9 @@ def _get_h_inv(dim: int) -> float:
             # Exit early since no further improvements are happening
             break
     return h_inv
+
+
+def _expm(mat: np.ndarray) -> np.ndarray:
+    D, U = np.linalg.eigh(mat)
+    expD = np.exp(D)
+    return U @ np.diag(expD) @ U.T
