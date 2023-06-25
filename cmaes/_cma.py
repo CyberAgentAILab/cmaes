@@ -195,8 +195,8 @@ class CMA:
         self._gamma = 0.1
         self._Emean = np.zeros([self._n_dim, 1])
         self._ESigma = np.zeros([self._n_dim * self._n_dim, 1])
-        self._Vmean = 0
-        self._VSigma = 0
+        self._Vmean = 0.0
+        self._VSigma = 0.0
         self._eta_mean = 1.0
         self._eta_Sigma = 1.0
 
@@ -392,6 +392,10 @@ class CMA:
 
         # Learning rate adaptation: https://arxiv.org/abs/2304.03473
         if self._lr_adapt:
+            assert isinstance(old_mean, np.ndarray)
+            assert isinstance(old_sigma, float)
+            assert isinstance(old_Sigma, np.ndarray)
+            assert isinstance(old_invsqrtC, np.ndarray)
             self._lr_adaptation(old_mean, old_sigma, old_Sigma, old_invsqrtC)
 
     def _lr_adaptation(
@@ -401,6 +405,7 @@ class CMA:
         old_Sigma: np.ndarray,
         old_invsqrtC: np.ndarray,
     ) -> None:
+
         # calculate one-step difference of the parameters
         Deltamean = (self._mean - old_mean).reshape([self._n_dim, 1])
         Sigma = (self._sigma**2) * self._C
@@ -422,10 +427,10 @@ class CMA:
             1 - self._beta_Sigma
         ) * self._ESigma + self._beta_Sigma * locDeltaSigma
         self._Vmean = (1 - self._beta_mean) * self._Vmean + self._beta_mean * (
-            np.linalg.norm(locDeltamean) ** 2
+            float(np.linalg.norm(locDeltamean)) ** 2
         )
         self._VSigma = (1 - self._beta_Sigma) * self._VSigma + self._beta_Sigma * (
-            np.linalg.norm(locDeltaSigma) ** 2
+            float(np.linalg.norm(locDeltaSigma)) ** 2
         )
 
         # estimate SNR
