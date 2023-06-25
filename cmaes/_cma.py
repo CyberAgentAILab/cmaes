@@ -405,7 +405,6 @@ class CMA:
         old_Sigma: np.ndarray,
         old_invsqrtC: np.ndarray,
     ) -> None:
-
         # calculate one-step difference of the parameters
         Deltamean = (self._mean - old_mean).reshape([self._n_dim, 1])
         Sigma = (self._sigma**2) * self._C
