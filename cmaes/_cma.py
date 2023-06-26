@@ -64,6 +64,9 @@ class CMA:
 
         cov:
             A covariance matrix (optional).
+
+        lr_adapt:
+            Flag for learning rate adaptation (optional; default=False)
     """
 
     def __init__(
