@@ -64,6 +64,9 @@ class CMA:
 
         cov:
             A covariance matrix (optional).
+
+        lr_adapt:
+            Flag for learning rate adaptation (optional; default=False)
     """
 
     def __init__(
@@ -75,6 +78,7 @@ class CMA:
         seed: Optional[int] = None,
         population_size: Optional[int] = None,
         cov: Optional[np.ndarray] = None,
+        lr_adapt: bool = False,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
@@ -185,6 +189,19 @@ class CMA:
 
         self._g = 0
         self._rng = np.random.RandomState(seed)
+
+        # for learning rate adaptation
+        self._lr_adapt = lr_adapt
+        self._alpha = 1.4
+        self._beta_mean = 0.1
+        self._beta_Sigma = 0.03
+        self._gamma = 0.1
+        self._Emean = np.zeros([self._n_dim, 1])
+        self._ESigma = np.zeros([self._n_dim * self._n_dim, 1])
+        self._Vmean = 0.0
+        self._VSigma = 0.0
+        self._eta_mean = 1.0
+        self._eta_Sigma = 1.0
 
         # Termination criteria
         self._tolx = 1e-12 * sigma
@@ -307,6 +324,15 @@ class CMA:
         B, D = self._eigen_decomposition()
         self._B, self._D = None, None
 
+        # keep old values for learning rate adaptation
+        if self._lr_adapt:
+            old_mean = np.copy(self._mean)
+            old_sigma = self._sigma
+            old_Sigma = self._sigma**2 * self._C
+            old_invsqrtC = B @ np.diag(1 / D) @ B.T
+        else:
+            old_mean, old_sigma, old_Sigma, old_invsqrtC = None, None, None, None
+
         x_k = np.array([s[0] for s in solutions])  # ~ N(m, σ^2 C)
         y_k = (x_k - self._mean) / self._sigma  # ~ N(0, C)
 
@@ -366,6 +392,90 @@ class CMA:
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
+
+        # Learning rate adaptation: https://arxiv.org/abs/2304.03473
+        if self._lr_adapt:
+            assert isinstance(old_mean, np.ndarray)
+            assert isinstance(old_sigma, float)
+            assert isinstance(old_Sigma, np.ndarray)
+            assert isinstance(old_invsqrtC, np.ndarray)
+            self._lr_adaptation(old_mean, old_sigma, old_Sigma, old_invsqrtC)
+
+    def _lr_adaptation(
+        self,
+        old_mean: np.ndarray,
+        old_sigma: float,
+        old_Sigma: np.ndarray,
+        old_invsqrtC: np.ndarray,
+    ) -> None:
+        # calculate one-step difference of the parameters
+        Deltamean = (self._mean - old_mean).reshape([self._n_dim, 1])
+        Sigma = (self._sigma**2) * self._C
+        # note that we use here matrix representation instead of vec one
+        DeltaSigma = Sigma - old_Sigma
+
+        # local coordinate
+        old_inv_sqrtSigma = old_invsqrtC / old_sigma
+        locDeltamean = old_inv_sqrtSigma.dot(Deltamean)
+        locDeltaSigma = (
+            old_inv_sqrtSigma.dot(DeltaSigma.dot(old_inv_sqrtSigma))
+        ).reshape(self.dim * self.dim, 1) / np.sqrt(2)
+
+        # moving average E and V
+        self._Emean = (
+            1 - self._beta_mean
+        ) * self._Emean + self._beta_mean * locDeltamean
+        self._ESigma = (
+            1 - self._beta_Sigma
+        ) * self._ESigma + self._beta_Sigma * locDeltaSigma
+        self._Vmean = (1 - self._beta_mean) * self._Vmean + self._beta_mean * (
+            float(np.linalg.norm(locDeltamean)) ** 2
+        )
+        self._VSigma = (1 - self._beta_Sigma) * self._VSigma + self._beta_Sigma * (
+            float(np.linalg.norm(locDeltaSigma)) ** 2
+        )
+
+        # estimate SNR
+        sqnormEmean = np.linalg.norm(self._Emean) ** 2
+        hatSNRmean = (
+            sqnormEmean - (self._beta_mean / (2 - self._beta_mean)) * self._Vmean
+        ) / (self._Vmean - sqnormEmean)
+        sqnormESigma = np.linalg.norm(self._ESigma) ** 2
+        hatSNRSigma = (
+            sqnormESigma - (self._beta_Sigma / (2 - self._beta_Sigma)) * self._VSigma
+        ) / (self._VSigma - sqnormESigma)
+
+        # update learning rate
+        before_eta_mean = self._eta_mean
+        relativeSNRmean = np.clip(
+            (hatSNRmean / self._alpha / self._eta_mean) - 1, -1, 1
+        )
+        self._eta_mean = self._eta_mean * np.exp(
+            min(self._gamma * self._eta_mean, self._beta_mean) * relativeSNRmean
+        )
+        relativeSNRSigma = np.clip(
+            (hatSNRSigma / self._alpha / self._eta_Sigma) - 1, -1, 1
+        )
+        self._eta_Sigma = self._eta_Sigma * np.exp(
+            min(self._gamma * self._eta_Sigma, self._beta_Sigma) * relativeSNRSigma
+        )
+        # cap
+        self._eta_mean = min(self._eta_mean, 1.0)
+        self._eta_Sigma = min(self._eta_Sigma, 1.0)
+
+        # update parameters
+        self._mean = old_mean + self._eta_mean * Deltamean.reshape(self._n_dim)
+        Sigma = old_Sigma + self._eta_Sigma * DeltaSigma
+
+        # decompose Sigma to sigma and C
+        eigs, _ = np.linalg.eigh(Sigma)
+        logeigsum = sum([np.log(e) for e in eigs])
+        self._sigma = np.exp(logeigsum / 2.0 / self._n_dim)
+        self._sigma = min(self._sigma, _SIGMA_MAX)
+        self._C = Sigma / (self._sigma**2)
+
+        # step-size correction
+        self._sigma *= before_eta_mean / self._eta_mean
 
     def should_stop(self) -> bool:
         B, D = self._eigen_decomposition()
