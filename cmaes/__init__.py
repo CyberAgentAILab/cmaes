@@ -5,4 +5,4 @@ from ._cmawm import CMAwM  # NOQA
 from ._xnes import XNES  # NOQA
 from ._dxnesic import DXNESIC  # NOQA
 
-__version__ = "0.9.1"
+__version__ = "0.10.0"
