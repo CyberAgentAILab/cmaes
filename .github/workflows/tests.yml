@@ -19,8 +19,8 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools numpy
-          pip install --progress-bar off -r requirements-dev.txt
+          python -m pip install --upgrade pip setuptools
+          pip install --progress-bar off numpy matplotlib scipy mypy flake8 black
       - run: flake8 . --show-source --statistics
       - run: black --check .
       - run: mypy cmaes

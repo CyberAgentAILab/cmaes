@@ -39,7 +39,7 @@ class RastriginProblemFactory(problem.ProblemFactory):
 
     def specification(self) -> problem.ProblemSpec:
         params = [
-            problem.Var(f"x{i+1}", problem.ContinuousRange(-5.12, 5.12))
+            problem.Var(f"x{i + 1}", problem.ContinuousRange(-5.12, 5.12))
             for i in range(self.dim)
         ]
         return problem.ProblemSpec(
