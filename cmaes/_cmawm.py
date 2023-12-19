@@ -184,6 +184,11 @@ class CMAwM:
         return self._cma.generation
 
     @property
+    def mean(self) -> np.ndarray:
+        """Mean Vector"""
+        return self._cma.mean
+
+    @property
     def _rng(self) -> np.random.RandomState:
         return self._cma._rng
 
