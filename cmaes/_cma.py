@@ -248,6 +248,11 @@ class CMA:
         when multi-variate gaussian distribution is updated."""
         return self._g
 
+    @property
+    def mean(self) -> np.ndarray:
+        """Mean Vector"""
+        return self._mean
+
     def reseed_rng(self, seed: int) -> None:
         self._rng.seed(seed)
 
