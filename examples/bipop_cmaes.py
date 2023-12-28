@@ -20,7 +20,8 @@ def main():
     lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
 
     mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
-    sigma = 32.768 * 2 / 5  # 1/5 of the domain width
+    sigma0 = 32.768 * 2 / 5  # 1/5 of the domain width
+    sigma = sigma0
     optimizer = CMA(mean=mean, sigma=sigma, bounds=bounds, seed=0)
 
     n_restarts = 0  # A small restart doesn't count in the n_restarts
@@ -57,10 +58,12 @@ def main():
                 popsize = math.floor(
                     popsize0 * popsize_multiplier ** (rng.uniform() ** 2)
                 )
+                sigma = sigma0 * 10 ** (-2 * rng.uniform())
             else:
                 poptype = "large"
                 n_restarts += 1
                 popsize = popsize0 * (inc_popsize**n_restarts)
+                sigma = sigma0
             mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
             optimizer = CMA(
                 mean=mean,
