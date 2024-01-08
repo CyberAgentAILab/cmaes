@@ -383,9 +383,13 @@ class CMA:
 
         # (eq.47)
         rank_one = np.outer(self._pc, self._pc)
+
         rank_mu = np.sum(
-            np.array([w * np.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0
+            w_io.reshape(-1, 1, 1) * np.einsum("...i,...j->...ij", y_k, y_k), axis=0
         )
+        # The above line is equivalent to:
+        # rank_mu = np.sum(np.array([w * np.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0)
+
         self._C = (
             (
                 1
