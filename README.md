@@ -399,6 +399,7 @@ See [benchmark](./benchmark) for details.
 **Projects using cmaes:**
 
 * [Optuna](https://github.com/optuna/optuna) : A hyperparameter optimization framework that supports CMA-ES using this library under the hood.
+* [Kubeflow/Katib](https://www.kubeflow.org/docs/components/katib/katib-config/) : Kubernetes-based system for hyperparameter tuning and neural architecture search
 * (If you have a project which uses `cmaes` and want your own project to be listed here, please submit a GitHub issue.)
 
 **Other libraries:**
