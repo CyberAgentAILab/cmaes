@@ -1,0 +1,78 @@
+name: Run kurobako benchmark
+on:
+  pull_request:
+    paths:
+    - '.github/workflows/benchmarks.yml'
+    - 'cmaes/**.py'
+    - 'benchmark/*.py'
+    - 'benchmark/runner.sh'
+    - 'requirements-bench.txt'
+jobs:
+  benchmark-sphere:
+    name: Run kurobako benchmark
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          architecture: 'x64'
+      - run: pip install -U pip setuptools
+      - run: pip install -e .
+      - run: pip install --progress-bar off -r requirements-bench.txt
+      - run: pip install --progress-bar off -U git+https://github.com/sile/kurobako-py
+      - run: pip install --progress-bar off -U git+https://github.com/optuna/optuna.git
+      - name: Cache kurobako CLI
+        id: cache-kurobako
+        uses: actions/cache@v3
+        with:
+          path: ./kurobako
+          key: kurobako-0-2-10
+      - name: Download kurobako CLI
+        if: steps.cache-kurobako.outputs.cache-hit != 'true'
+        run: |
+          curl -L https://github.com/optuna/kurobako/releases/download/0.2.10/kurobako-0.2.10.linux-amd64 -o kurobako
+          chmod +x kurobako
+          ./kurobako -h
+      - name: Run benchmark of Sphere function
+        env:
+          KUROBAKO: ./kurobako
+          DIM: 5
+          REPEATS: 5
+          BUDGET: 500
+        run: ./benchmark/runner.sh sphere ./kurobako-report.json
+      - name: Plot kurobako result
+        uses: c-bata/github-actions-kurobako/plot@master
+        id: kurobako-plot
+        with:
+          ylogscale: true
+          report-json-path: './kurobako-report.json'
+      - name: Generate kurobako markdown report
+        run: cat ./kurobako-report.json | ./kurobako report > ./kurobako-report.md
+
+      - id: 'auth'
+        uses: 'google-github-actions/auth@v2'
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+      - name: 'Set up Cloud SDK'
+        uses: 'google-github-actions/setup-gcloud@v2'
+        with:
+          version: '>= 363.0.0'
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+      - run: gcloud info
+      - run: gsutil cp ${{ steps.kurobako-plot.outputs.image-path }} gs://alg-cmaes-gh-benchmark/${{ github.repository }}/sphere-${{ github.sha }}.png
+      - name: Comment to a pull request
+        uses: c-bata/github-actions-kurobako@master
+        with:
+          report-md-path: './kurobako-report.md'
+          public-image-url: https://storage.googleapis.com/alg-cmaes-gh-benchmark/${{ github.repository }}/sphere-${{ github.sha }}.png
+          title: 'Benchmark of Sphere function'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - run: mv ./kurobako-report.json ./kurobako-report-sphere.json
+      - uses: actions/upload-artifact@v2
+        with:
+          name: kurobako-report
+          path: kurobako-report-sphere.json
