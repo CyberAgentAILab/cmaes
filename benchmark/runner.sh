@@ -24,6 +24,7 @@ Problem:
     himmelblau     : https://en.wikipedia.org/wiki/Himmelblau%27s_function
     ackley         : https://www.sfu.ca/~ssurjano/ackley.html
     rastrigin      : https://www.sfu.ca/~ssurjano/rastr.html
+    sphere         : https://www.sfu.ca/~ssurjano/spheref.html
     toxic-lightgbm : https://github.com/c-bata/benchmark-warm-starting-cmaes
 
 Options:
@@ -52,6 +53,10 @@ case "$1" in
         # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
         PROBLEM=$($KUROBAKO problem command python $DIR/problem_rastrigin.py $DIM)
         ;;
+    sphere)
+        # "kurobako problem sigopt --dim 8 rastrigin" only accepts 8-dim.
+        PROBLEM=$($KUROBAKO problem command python $DIR/problem_sphere.py $DIM)
+        ;;
     toxic-lightgbm)
         PROBLEM=$($KUROBAKO problem warm-starting \
             $($KUROBAKO problem surrogate $SURROGATE_ROOT/wscmaes-toxic-source/) \
@@ -76,22 +81,9 @@ IPOP_SEP_CMAES_SOLVER=$($KUROBAKO solver --name 'ipop-sep-cmaes' command -- pyth
 PYCMA_SOLVER=$($KUROBAKO solver --name 'pycma' command -- python $DIR/optuna_solver.py pycma)
 WS_CMAES_SOLVER=$($KUROBAKO solver --name 'ws-cmaes' command -- python $DIR/optuna_solver.py ws-cmaes --warm-starting-trials $WARM_START)
 
-if [ $WARM_START -gt 0 ]; then
-  $KUROBAKO studies \
-    --solvers $CMAES_SOLVER $WS_CMAES_SOLVER \
-    --problems $PROBLEM \
-    --seed $SEED --repeats $REPEATS --budget $BUDGET \
-    | $KUROBAKO run --parallelism 6 > $2
-elif [ $BUDGET -le 500 ]; then
-  $KUROBAKO studies \
-    --solvers $RANDOM_SOLVER $PYCMA_SOLVER $CMAES_SOLVER $SEP_CMAES_SOLVER \
-    --problems $PROBLEM \
-    --seed $SEED --repeats $REPEATS --budget $BUDGET \
-    | $KUROBAKO run --parallelism 4 > $2
-else
-  $KUROBAKO studies \
-    --solvers $RANDOM_SOLVER $CMAES_SOLVER $IPOP_SEP_CMAES_SOLVER $IPOP_CMAES_SOLVER $SEP_CMAES_SOLVER \
-    --problems $PROBLEM \
-    --seed $SEED --repeats $REPEATS --budget $BUDGET \
-    | $KUROBAKO run --parallelism 6 > $2
-fi
+$KUROBAKO studies \
+  --solvers $RANDOM_SOLVER $CMAES_SOLVER $PYCMA_SOLVER \
+  --problems $PROBLEM \
+  --seed $SEED --repeats $REPEATS --budget $BUDGET \
+  | $KUROBAKO run --parallelism 6 > $2
+
