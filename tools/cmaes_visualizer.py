@@ -74,12 +74,12 @@ color_dict = {
 bw = LinearSegmentedColormap("BlueWhile", color_dict)
 
 
-def himmelbleu(x1, x2):
+def himmelblau(x1, x2):
     return (x1**2 + x2 - 11.0) ** 2 + (x1 + x2**2 - 7.0) ** 2
 
 
-def himmelbleu_contour(x1, x2):
-    return np.log(himmelbleu(x1, x2) + 1)
+def himmelblau_contour(x1, x2):
+    return np.log(himmelblau(x1, x2) + 1)
 
 
 def quadratic(x1, x2):
@@ -123,8 +123,8 @@ if args.function == "quadratic":
     x2_lower_bound, x2_upper_bound = -4, 4
 elif args.function == "himmelblau":
     function_name = "Himmelblau function"
-    objective = himmelbleu
-    contour_function = himmelbleu_contour
+    objective = himmelblau
+    contour_function = himmelblau_contour
     global_minimums = [
         (3.0, 2.0),
         (-2.805118, 3.131312),
@@ -188,7 +188,7 @@ def init():
         ax1.plot(m[0], m[1], "y*", ms=10)
         ax2.plot(m[0], m[1], "y*", ms=10)
 
-    # Plot contour of himmelbleu function
+    # Plot contour of himmelblau function
     x1 = np.arange(x1_lower_bound, x1_upper_bound, 0.01)
     x2 = np.arange(x2_lower_bound, x2_upper_bound, 0.01)
     x1, x2 = np.meshgrid(x1, x2)
