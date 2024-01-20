@@ -163,8 +163,8 @@ else:
 
 seed = args.seed
 bounds = np.array([[x1_lower_bound, x1_upper_bound], [x2_lower_bound, x2_upper_bound]])
-sigma = (x1_upper_bound - x2_lower_bound) / 5
-optimizer = CMA(mean=np.zeros(2), sigma=sigma, bounds=bounds, seed=seed)
+sigma0 = (x1_upper_bound - x2_lower_bound) / 5
+optimizer = CMA(mean=np.zeros(2), sigma=sigma0, bounds=bounds, seed=seed)
 solutions = []
 trial_number = 0
 rng = np.random.RandomState(seed)
@@ -196,13 +196,13 @@ def init():
     ax1.contour(x1, x2, contour_function(x1, x2), 30, cmap=bw)
 
 
-def get_next_popsize():
-    global optimizer, n_restarts, poptype, small_n_eval, large_n_eval
+def get_next_popsize_sigma():
+    global optimizer, n_restarts, poptype, small_n_eval, large_n_eval, sigma0
     if args.restart_strategy == "ipop":
         n_restarts += 1
         popsize = optimizer.population_size * inc_popsize
         print(f"Restart CMA-ES with popsize={popsize} at trial={trial_number}")
-        return popsize
+        return popsize, sigma0
     elif args.restart_strategy == "bipop":
         n_eval = optimizer.population_size * optimizer.generation
         if poptype == "small":
@@ -214,14 +214,16 @@ def get_next_popsize():
             poptype = "small"
             popsize_multiplier = inc_popsize**n_restarts
             popsize = math.floor(popsize0 * popsize_multiplier ** (rng.uniform() ** 2))
+            sigma = sigma0 * 10 ** (-2 * rng.uniform())
         else:
             poptype = "large"
             n_restarts += 1
             popsize = popsize0 * (inc_popsize**n_restarts)
+            sigma = sigma0
         print(
             f"Restart CMA-ES with popsize={popsize} ({poptype}) at trial={trial_number}"
         )
-        return
+        return popsize, sigma
     raise Exception("must not reach here")
 
 
@@ -232,7 +234,7 @@ def update(frame):
         solutions = []
 
         if optimizer.should_stop():
-            popsize = get_next_popsize()
+            popsize, sigma = get_next_popsize_sigma()
             lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
             mean = lower_bounds + (rng.rand(2) * (upper_bounds - lower_bounds))
             optimizer = CMA(
