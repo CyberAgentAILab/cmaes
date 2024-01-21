@@ -2,18 +2,9 @@
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](./LICENSE) [![PyPI - Downloads](https://img.shields.io/pypi/dw/cmaes)](https://pypistats.org/packages/cmaes)
 
-Lightweight Covariance Matrix Adaptation Evolution Strategy (CMA-ES) [1] implementation.
+Simple and Practical CMA-ES [Hansen 2016] implementation in Python.
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
-
-## News
-* **2023/08/07** [LRA-CMA-ES (CMA-ES with Learning Rate Adaptation)](https://arxiv.org/abs/2304.03473) has been incorporated into [Optuna](https://optuna.org/), a highly popular software for hyperparameter optimization! You can use it through [CmaEsSampler](https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.CmaEsSampler.html) by simply setting the argument `lr_adapt=True`. Note that you can also use [Warm Starting CMA-ES](https://arxiv.org/abs/2012.06932) and [CMA-ES with Margin](https://arxiv.org/abs/2205.13482) from [CmaEsSampler in Optuna](https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.CmaEsSampler.html).
-* **2023/05/23** Our paper, [M. Nomura, Y. Akimoto, and I. Ono, CMA-ES with Learning Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal and Noisy Problems?](https://arxiv.org/abs/2304.03473), has been nominated for the Best Paper Award in the ENUM track at GECCO'23 :whale:
-* **2023/04/01** Two papers have been accepted to GECCO'23 ENUM Track: (1) [M. Nomura, Y. Akimoto, and I. Ono, CMA-ES with Learning Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal and Noisy Problems?](https://arxiv.org/abs/2304.03473), and (2) [Y. Watanabe, K. Uchida, R. Hamano, S. Saito, M. Nomura, and S. Shirakawa, (1+1)-CMA-ES with Margin for Discrete and Mixed-Integer Problems](https://arxiv.org/abs/2305.00849) :tada:
-* **2022/05/13** The paper, ["CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization"](https://arxiv.org/abs/2205.13482) written by Hamano, Saito, [@nomuramasahir0](https://github.com/nomuramasahir0) (the maintainer of this library), and Shirakawa, has been nominated as best paper at GECCO'22 ENUM track.
-* **2021/03/10** ["Introduction to CMA-ES sampler"](https://medium.com/optuna/introduction-to-cma-es-sampler-ee68194c8f88) is published at Optuna Medium Blog. This article explains when and how to make the best use out of CMA-ES sampler. Please check it out!
-* **2021/02/02** The paper ["Warm Starting CMA-ES for Hyperparameter Optimization"](https://arxiv.org/abs/2012.06932) written by [@nomuramasahir0](https://github.com/nomuramasahir0), the maintainer of this library, is accepted at AAAI 2021 :tada:
-* **2020/07/29** Optuna's built-in CMA-ES sampler which uses this library under the hood is stabled at Optuna v2.0. Please check out the [v2.0 release blog](https://medium.com/optuna/optuna-v2-3165e3f1fc2).
 
 ## Installation
 
@@ -74,12 +65,118 @@ if __name__ == "__main__":
 
 ## CMA-ES variants
 
-#### CMA-ES with Margin [3]
+### Learning Rate Adaptation CMA-ES [Nomura et al. 2023]
+The performance of the CMA-ES can deteriorate when faced with *difficult* problems such as multimodal or noisy ones, if its hyperparameter values are not properly configured.
+The Learning Rate Adaptation CMA-ES (LRA-CMA) effectively addresses this issue by autonomously adjusting the learning rate.
+Consequently, LRA-CMA eliminates the need for expensive hyperparameter tuning.
 
-CMA-ES with Margin introduces a lower bound on the marginal probability associated with each discrete dimension so that samples can avoid being fixed to a single point.
-It can be applied to mixed spaces of continuous (float) and discrete (including integer and binary).
+LRA-CMA can be used by simply adding `lr_adapt=True` to the initialization of `CMA()`.
 
-|CMA-ES|CMA-ESwM|
+<details>
+
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CMA
+
+
+def rastrigin(x):
+    dim = len(x)
+    return 10 * dim + sum(x**2 - 10 * np.cos(2 * np.pi * x))
+
+
+if __name__ == "__main__":
+    dim = 40
+    optimizer = CMA(mean=3*np.ones(dim), sigma=2.0, lr_adapt=True)
+
+    for generation in range(50000):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = rastrigin(x)
+            if generation % 500 == 0:
+                print(f"#{generation} {value}")
+            solutions.append((x, value))
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/lra_cma.py).
+
+</details>
+
+
+
+#### Warm Starting CMA-ES [Nomura et al. 2021]
+
+Warm Starting CMA-ES (WS-CMA) is a method that transfers prior knowledge from similar tasks through the initialization of the CMA-ES.
+This is useful especially when the evaluation budget is limited.
+
+![benchmark-lightgbm-toxic](https://github.com/c-bata/benchmark-warm-starting-cmaes/raw/main/result.png)
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CMA, get_warm_start_mgd
+
+def source_task(x1: float, x2: float) -> float:
+    b = 0.4
+    return (x1 - b) ** 2 + (x2 - b) ** 2
+
+def target_task(x1: float, x2: float) -> float:
+    b = 0.6
+    return (x1 - b) ** 2 + (x2 - b) ** 2
+
+if __name__ == "__main__":
+    # Generate solutions from a source task
+    source_solutions = []
+    for _ in range(1000):
+        x = np.random.random(2)
+        value = source_task(x[0], x[1])
+        source_solutions.append((x, value))
+
+    # Estimate a promising distribution of the source task,
+    # then generate parameters of the multivariate gaussian distribution.
+    ws_mean, ws_sigma, ws_cov = get_warm_start_mgd(
+        source_solutions, gamma=0.1, alpha=0.1
+    )
+    optimizer = CMA(mean=ws_mean, sigma=ws_sigma, cov=ws_cov)
+
+    # Run WS-CMA-ES
+    print(" g    f(x1,x2)     x1      x2  ")
+    print("===  ==========  ======  ======")
+    while True:
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = target_task(x[0], x[1])
+            solutions.append((x, value))
+            print(
+                f"{optimizer.generation:3d}  {value:10.5f}"
+                f"  {x[0]:6.2f}  {x[1]:6.2f}"
+            )
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/ws_cma_es.py).
+
+</details>
+
+
+#### CMA-ES with Margin [Hamano et al. 2022]
+
+CMA-ES with Margin (CMAwM) introduces a lower bound on the marginal probability for each discrete dimension, ensuring that samples avoid being fixed to a single point.
+This method can be applied to mixed spaces consisting of continuous (such as float) and discrete elements (including integer and binary types).
+
+|CMA|CMAwM|
 |---|---|
 |![CMA-ES](https://raw.githubusercontent.com/EvoConJP/CMA-ES_with_Margin/main/fig/CMA-ES.gif)|![CMA-ESwM](https://raw.githubusercontent.com/EvoConJP/CMA-ES_with_Margin/main/fig/CMA-ESwM.gif)|
 
@@ -142,73 +239,12 @@ Source code is also available [here](./examples/cmaes_with_margin.py).
 
 </details>
 
-#### Warm Starting CMA-ES [4]
 
-Warm Starting CMA-ES is a method to transfer prior knowledge on similar HPO tasks through the initialization of CMA-ES.
-Here is the result of an experiment that tuning LightGBM for Kaggle's Toxic Comment Classification Challenge data, a multilabel classification dataset.
-In this benchmark, we use 10% of a full dataset as the source task, and a full dataset as the target task.
-Please refer [the paper](https://arxiv.org/abs/2012.06932) and/or https://github.com/c-bata/benchmark-warm-starting-cmaes for more details of experiment settings.
+#### Separable CMA-ES [Ros and Hansen 2008]
 
-![benchmark-lightgbm-toxic](https://github.com/c-bata/benchmark-warm-starting-cmaes/raw/main/result.png)
-
-<details>
-<summary>Source code</summary>
-
-```python
-import numpy as np
-from cmaes import CMA, get_warm_start_mgd
-
-def source_task(x1: float, x2: float) -> float:
-    b = 0.4
-    return (x1 - b) ** 2 + (x2 - b) ** 2
-
-def target_task(x1: float, x2: float) -> float:
-    b = 0.6
-    return (x1 - b) ** 2 + (x2 - b) ** 2
-
-if __name__ == "__main__":
-    # Generate solutions from a source task
-    source_solutions = []
-    for _ in range(1000):
-        x = np.random.random(2)
-        value = source_task(x[0], x[1])
-        source_solutions.append((x, value))
-
-    # Estimate a promising distribution of the source task,
-    # then generate parameters of the multivariate gaussian distribution.
-    ws_mean, ws_sigma, ws_cov = get_warm_start_mgd(
-        source_solutions, gamma=0.1, alpha=0.1
-    )
-    optimizer = CMA(mean=ws_mean, sigma=ws_sigma, cov=ws_cov)
-
-    # Run WS-CMA-ES
-    print(" g    f(x1,x2)     x1      x2  ")
-    print("===  ==========  ======  ======")
-    while True:
-        solutions = []
-        for _ in range(optimizer.population_size):
-            x = optimizer.ask()
-            value = target_task(x[0], x[1])
-            solutions.append((x, value))
-            print(
-                f"{optimizer.generation:3d}  {value:10.5f}"
-                f"  {x[0]:6.2f}  {x[1]:6.2f}"
-            )
-        optimizer.tell(solutions)
-
-        if optimizer.should_stop():
-            break
-```
-
-The full source code is available [here](./examples/ws_cma_es.py).
-
-</details>
-
-#### Separable CMA-ES [5]
-
-sep-CMA-ES is an algorithm which constrains the covariance matrix to be diagonal.
-Due to the reduction of the number of parameters, the learning rate for the covariance matrix can be increased.
-Consequently, this algorithm outperforms CMA-ES on separable functions.
+Sep-CMA-ES is an algorithm that limits the covariance matrix to a diagonal form.
+This reduction in the number of parameters enhances scalability, making Sep-CMA-ES well-suited for high-dimensional optimization tasks.
+Additionally, the learning rate for the covariance matrix is increased, leading to superior performance over the (full-covariance) CMA-ES on separable functions.
 
 <details>
 <summary>Source code</summary>
@@ -249,9 +285,9 @@ Full source code is available [here](./examples/sepcma_ellipsoid_function.py).
 
 </details>
 
-#### IPOP-CMA-ES [6]
+#### IPOP-CMA-ES [Auger and Hansen 2005]
 
-IPOP-CMA-ES is a method to restart CMA-ES with increasing population size like below.
+IPOP-CMA-ES is a method that involves restarting the CMA-ES with an incrementally increasing population size, as described below.
 
 ![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88472274-f9e12480-cf4b-11ea-8aff-2a859eb51a15.gif)
 
@@ -298,101 +334,6 @@ if __name__ == "__main__":
 
 Full source code is available [here](./examples/ipop_cmaes.py).
 
-</details>
-
-#### BIPOP-CMA-ES [7]
-
-BIPOP-CMA-ES applies two interlaced restart strategies, one with an increasing population size and one with varying small population sizes.
-
-![visualize-bipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88471815-55111800-cf48-11ea-8933-5a4b48c49eba.gif)
-
-<details>
-<summary>Source code</summary>
-
-```python
-import math
-import numpy as np
-from cmaes import CMA
-
-def ackley(x1, x2):
-    # https://www.sfu.ca/~ssurjano/ackley.html
-    return (
-        -20 * math.exp(-0.2 * math.sqrt(0.5 * (x1 ** 2 + x2 ** 2)))
-        - math.exp(0.5 * (math.cos(2 * math.pi * x1) + math.cos(2 * math.pi * x2)))
-        + math.e + 20
-    )
-
-if __name__ == "__main__":
-    bounds = np.array([[-32.768, 32.768], [-32.768, 32.768]])
-    lower_bounds, upper_bounds = bounds[:, 0], bounds[:, 1]
-
-    mean = lower_bounds + (np.random.rand(2) * (upper_bounds - lower_bounds))
-    sigma0 = 32.768 * 2 / 5  # 1/5 of the domain width
-    sigma = sigma0
-    optimizer = CMA(mean=mean, sigma=sigma, bounds=bounds, seed=0)
-
-    n_restarts = 0  # A small restart doesn't count in the n_restarts
-    small_n_eval, large_n_eval = 0, 0
-    popsize0 = optimizer.population_size
-    inc_popsize = 2
-
-    # Initial run is with "normal" population size; it is
-    # the large population before first doubling, but its
-    # budget accounting is the same as in case of small
-    # population.
-    poptype = "small"
-
-    for generation in range(200):
-        solutions = []
-        for _ in range(optimizer.population_size):
-            x = optimizer.ask()
-            value = ackley(x[0], x[1])
-            solutions.append((x, value))
-            print(f"#{generation} {value} (x1={x[0]}, x2 = {x[1]})")
-        optimizer.tell(solutions)
-
-        if optimizer.should_stop():
-            n_eval = optimizer.population_size * optimizer.generation
-            if poptype == "small":
-                small_n_eval += n_eval
-            else:  # poptype == "large"
-                large_n_eval += n_eval
-
-            if small_n_eval < large_n_eval:
-                poptype = "small"
-                popsize_multiplier = inc_popsize ** n_restarts
-                popsize = math.floor(
-                    popsize0 * popsize_multiplier ** (np.random.uniform() ** 2)
-                )
-                sigma = sigma0 * 10 ** (-2 * np.random.uniform())
-            else:
-                poptype = "large"
-                n_restarts += 1
-                popsize = popsize0 * (inc_popsize ** n_restarts)
-                sigma = sigma0
-                
-            mean = lower_bounds + (np.random.rand(2) * (upper_bounds - lower_bounds))
-            optimizer = CMA(
-                mean=mean,
-                sigma=sigma,
-                bounds=bounds,
-                population_size=popsize,
-            )
-            print("Restart CMA-ES with popsize={} ({})".format(popsize, poptype))
-```
-
-Full source code is available [here](./examples/bipop_cmaes.py).
-
-</details>
-
-## Benchmark results
-
-| [Rosenbrock function](https://www.sfu.ca/~ssurjano/rosen.html) | [Six-Hump Camel function](https://www.sfu.ca/~ssurjano/camel6.html) |
-| ------------------- | ----------------------- |
-| ![rosenbrock](https://user-images.githubusercontent.com/5564044/73486735-0cd5ca80-43e9-11ea-9e6e-35028edf4ee8.png) | ![six-hump-camel](https://user-images.githubusercontent.com/5564044/73486738-0e9f8e00-43e9-11ea-8e65-d60fd5853b8d.png) |
-
-This implementation (green) stands comparison with [pycma](https://github.com/CMA-ES/pycma) (blue).
-See [benchmark](./benchmark) for details.
 
 ## Links
 
@@ -413,10 +354,12 @@ I respect all libraries involved in CMA-ES.
 
 **References:**
 
-* [1] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
-* [2] [T. Akiba, S. Sano, T. Yanase, T. Ohta, M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
-* [3] [R. Hamano, S. Saito, M. Nomura, S. Shirakawa, CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization, GECCO, 2022.](https://arxiv.org/abs/2205.13482)
-* [4] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi, Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
-* [5] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
-* [6] [A. Auger, N. Hansen, A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
-* [7] [N. Hansen, Benchmarking a BI-Population CMA-ES on the BBOB-2009 Function Testbed, GECCO Workshop, 2009.](https://hal.inria.fr/inria-00382093/document)
+* [Akiba et al. 2019] [T. Akiba, S. Sano, T. Yanase, T. Ohta, M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
+* [Auger and Hansen 2005] [A. Auger, N. Hansen, A restart CMA evolution strategy with increasing population size, CEC, 2005.](https://sci2s.ugr.es/sites/default/files/files/TematicWebSites/EAMHCO/contributionsCEC05/auger05ARCMA.pdf)
+* [Hamano et al. 2022] [R. Hamano, S. Saito, M. Nomura, S. Shirakawa, CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization, GECCO, 2022.](https://arxiv.org/abs/2205.13482)
+* [Hansen 2016] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
+* [Nomura et al. 2021] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi, Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
+* [Nomura et al. 2023] [M. Nomura, Y. Akimoto, I. Ono, CMA-ES with Learning
+Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal
+and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
+* [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
