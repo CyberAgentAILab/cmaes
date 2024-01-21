@@ -113,7 +113,7 @@ The full source code is available [here](./examples/lra_cma.py).
 #### Warm Starting CMA-ES [Nomura et al. 2021]
 
 Warm Starting CMA-ES (WS-CMA) is a method that transfers prior knowledge from similar tasks through the initialization of the CMA-ES.
-This is useful especially when the evaluation budget is limited.
+This is useful especially when the evaluation budget is limited (e.g., hyperparameter optimization of machine learning algorithms).
 
 ![benchmark-lightgbm-toxic](https://github.com/c-bata/benchmark-warm-starting-cmaes/raw/main/result.png)
 
