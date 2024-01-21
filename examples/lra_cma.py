@@ -11,7 +11,7 @@ def rastrigin(x):
 
 if __name__ == "__main__":
     dim = 40
-    optimizer = CMA(mean=3*np.ones(dim), sigma=2.0, seed=10, lr_adapt=True)
+    optimizer = CMA(mean=3 * np.ones(dim), sigma=2.0, seed=10, lr_adapt=True)
 
     for generation in range(50000):
         solutions = []

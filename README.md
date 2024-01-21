@@ -166,7 +166,7 @@ if __name__ == "__main__":
             break
 ```
 
-The full source code is available [here](./examples/ws_cma_es.py).
+The full source code is available [here](./examples/ws_cma.py).
 
 </details>
 
@@ -281,7 +281,7 @@ if __name__ == "__main__":
             break
 ```
 
-Full source code is available [here](./examples/sepcma_ellipsoid_function.py).
+Full source code is available [here](./examples/sep_cma.py).
 
 </details>
 
@@ -332,7 +332,7 @@ if __name__ == "__main__":
             print(f"Restart CMA-ES with popsize={popsize}")
 ```
 
-Full source code is available [here](./examples/ipop_cmaes.py).
+Full source code is available [here](./examples/ipop_cma.py).
 
 
 ## Links

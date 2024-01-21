@@ -25,14 +25,15 @@ jobs:
           pip install -U pip setuptools
           pip install --progress-bar off optuna numpy scipy
           pip install --progress-bar off -U .
-      - run: python examples/quadratic_function.py
-      - run: python examples/ipop_cmaes.py
-      - run: python examples/bipop_cmaes.py
+      - run: python examples/2d_quadratic_function.py
+      - run: python examples/ipop_cma.py
+      - run: python examples/bipop_cma.py
       - run: python examples/ellipsoid_function.py
       - run: python examples/optuna_sampler.py
-      - run: python examples/ws_cma_es.py
-      - run: python examples/cmaes_with_margin_binary.py
-      - run: python examples/cmaes_with_margin_integer.py
+      - run: python examples/lra_cma.py
+      - run: python examples/ws_cma.py
+      - run: python examples/cma_with_margin_binary.py
+      - run: python examples/cma_with_margin_integer.py
   examples-cmawm-without-scipy:
     runs-on: ubuntu-latest
     steps:
@@ -47,5 +48,5 @@ jobs:
         run: |
           pip install -U pip setuptools
           pip install --progress-bar off -U .
-      - run: python examples/cmaes_with_margin_binary.py
-      - run: python examples/cmaes_with_margin_integer.py
+      - run: python examples/cma_with_margin_binary.py
+      - run: python examples/cma_with_margin_integer.py
