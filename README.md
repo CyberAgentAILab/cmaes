@@ -2,7 +2,7 @@
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](./LICENSE) [![PyPI - Downloads](https://img.shields.io/pypi/dw/cmaes)](https://pypistats.org/packages/cmaes)
 
-*Simple* and *Practical* CMA-ES implementation in Python.
+*Simple* and *Practical* Python library for CMA-ES [Hansen 2016].
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
 ## CMA-ES variants
 
-### Learning Rate Adaptation CMA-ES [Nomura et al. 2023]
+#### Learning Rate Adaptation CMA-ES [Nomura et al. 2023]
 The performance of the CMA-ES can deteriorate when faced with *difficult* problems such as multimodal or noisy ones, if its hyperparameter values are not properly configured.
 The Learning Rate Adaptation CMA-ES (LRA-CMA) effectively addresses this issue by autonomously adjusting the learning rate.
 Consequently, LRA-CMA eliminates the need for expensive hyperparameter tuning.
