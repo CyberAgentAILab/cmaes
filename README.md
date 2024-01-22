@@ -1,4 +1,4 @@
-# CyberAgentAILab/cmaes
+# cmaes
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](./LICENSE) [![PyPI - Downloads](https://img.shields.io/pypi/dw/cmaes)](https://pypistats.org/packages/cmaes)
 
@@ -13,7 +13,7 @@ libraries
 * implementations of highly practical methods with easy-to-use APIs
 * The methods include [LRA-CMA](https://arxiv.org/abs/2304.03473) [Nomura et al. 2023] (removing hyperparameter tuning), [WS-CMA](https://arxiv.org/abs/2012.06932) [Nomura et al. 2021] (transfer learning), and [CMAwM](https://arxiv.org/abs/2205.13482) [Hamano et al. 2022] (mixed-integer optimization)
 
-(We also provide [animated visualization](https://github.com/CyberAgentAILab/cmaes/blob/main/tools/cmaes_visualizer.py).)
+(We also provide [animated visualization](./tools/cmaes_visualizer.py).)
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
 ## Installation
@@ -359,7 +359,7 @@ We have great respect for all libraries involved in CMA-ES.
 
 * [pycma](https://github.com/CMA-ES/pycma) : Most renowned CMA-ES implementation, created and maintained by Nikolaus Hansen.
 * [pymoo](https://github.com/msu-coinlab/pymoo) : A library for multi-objective optimization in Python.
-* [evojax](https://github.com/google/evojax) : EvoJAX offers a JAX-port of this library.
+* [evojax](https://github.com/google/evojax) : evojax offers a JAX-port of this library.
 * [evosax](https://github.com/RobertTLange/evosax) : evosax provides a JAX-based implementation of CMA-ES and sep-CMA-ES, inspired by this library.
 
 **References:**
