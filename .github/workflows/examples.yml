@@ -25,7 +25,7 @@ jobs:
           pip install -U pip setuptools
           pip install --progress-bar off optuna numpy scipy
           pip install --progress-bar off -U .
-      - run: python examples/2d_quadratic_function.py
+      - run: python examples/quadratic_2d_function.py
       - run: python examples/ipop_cma.py
       - run: python examples/bipop_cma.py
       - run: python examples/ellipsoid_function.py
