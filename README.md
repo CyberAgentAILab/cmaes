@@ -44,7 +44,7 @@ if __name__ == "__main__":
         optimizer.tell(solutions)
 ```
 
-And you can use this library via [Optuna](https://github.com/optuna/optuna) [2], an automatic hyperparameter optimization framework.
+And you can use this library via [Optuna](https://github.com/optuna/optuna), an automatic hyperparameter optimization framework.
 Optuna's built-in CMA-ES sampler which uses this library under the hood is available from [v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0) and stabled at [v2.0.0](https://github.com/optuna/optuna/releases/tag/v2.2.0).
 See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.CmaEsSampler.html) or [v2.0 release blog](https://medium.com/optuna/optuna-v2-3165e3f1fc2) for more details.
 
