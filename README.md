@@ -356,10 +356,6 @@ Bibtex:
 }
 ```
 
-## Project Team
-* [Masahiro Nomura](https://scholar.google.co.jp/citations?user=dml10nwAAAAJ&hl=en) (CyberAgent)
-* [Masashi Shibata](https://github.com/c-bata) (Preferred Networks)
-
 ## Contact
 For any questions about the code and the paper, please feel free to raise an issue or contact directly at nomura_masahiro@cyberagent.co.jp.
 
