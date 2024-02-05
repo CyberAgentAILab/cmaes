@@ -342,7 +342,7 @@ Full source code is available [here](./examples/ipop_cma.py).
 ## Citation
 If you use our library in your work, please cite our paper:
 
-[Masahiro Nomura](https://scholar.google.co.jp/citations?user=dml10nwAAAAJ&hl=en), [Masashi Shibata](https://github.com/c-bata).<br>
+Masahiro Nomura, Masashi Shibata.<br>
 **cmaes : A Simple yet Practical Python Library for CMA-ES**<br>
 [https://arxiv.org/abs/2402.01373](https://arxiv.org/abs/2402.01373)
 
