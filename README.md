@@ -2,7 +2,7 @@
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](./LICENSE) [![PyPI - Downloads](https://img.shields.io/pypi/dw/cmaes)](https://pypistats.org/packages/cmaes)
 
-:whale: [**Paper**](https://arxiv.org/abs/2402.01373)
+:whale: [**Paper is now available on arXiv!**](https://arxiv.org/abs/2402.01373)
 
 *Simple* and *Practical* Python library for CMA-ES.
 Please refer to the paper [Nomura and Shibata 2024] for detailed information, including the design philosophy and advanced examples.
