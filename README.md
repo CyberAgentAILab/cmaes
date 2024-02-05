@@ -2,7 +2,10 @@
 
 [![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](./LICENSE) [![PyPI - Downloads](https://img.shields.io/pypi/dw/cmaes)](https://pypistats.org/packages/cmaes)
 
-*Simple* and *Practical* Python library for CMA-ES [Hansen 2016].
+:whale: [**Paper**](https://arxiv.org/abs/2402.01373)
+
+*Simple* and *Practical* Python library for CMA-ES.
+Please refer to the paper [Nomura and Shibata 2024] for detailed information, including the design philosophy and advanced examples.
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
@@ -22,7 +25,7 @@ $ conda install -c conda-forge cmaes
 
 ## Usage
 
-This library provides an "ask-and-tell" style interface.
+This library provides an "ask-and-tell" style interface. We employ the standard version of CMA-ES [Hansen 2016].
 
 ```python
 import numpy as np
@@ -363,4 +366,5 @@ We have great respect for all libraries involved in CMA-ES.
 * [Nomura et al. 2023] [M. Nomura, Y. Akimoto, I. Ono, CMA-ES with Learning
 Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal
 and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
+* [Nomura and Shibata 2024] [M. Nomura, M. Shibata, cmaes : A Simple yet Practical Python Library for CMA-ES, arXiv:2402.01373, 2024.](https://arxiv.org/abs/2402.01373)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
