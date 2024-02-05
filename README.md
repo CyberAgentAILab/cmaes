@@ -357,7 +357,7 @@ Bibtex:
 ```
 
 ## Contact
-For questions regarding the code or paper, feel free to raise an issue or contact at nomura_masahiro@cyberagent.co.jp.
+For any questions, feel free to raise an issue or contact me at nomura_masahiro@cyberagent.co.jp.
 
 ## Links
 
