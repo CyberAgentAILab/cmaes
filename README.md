@@ -342,7 +342,7 @@ Full source code is available [here](./examples/ipop_cma.py).
 ## Citation
 If you use our library in your work, please cite our paper:
 
-Masahiro Nomura, Masashi Shibata.<br>
+[Masahiro Nomura](https://scholar.google.co.jp/citations?user=dml10nwAAAAJ&hl=en), [Masashi Shibata](https://github.com/c-bata).<br>
 **cmaes : A Simple yet Practical Python Library for CMA-ES**<br>
 [https://arxiv.org/abs/2402.01373](https://arxiv.org/abs/2402.01373)
 
@@ -355,6 +355,13 @@ Bibtex:
   year={2024}
 }
 ```
+
+## Project Team
+* [Masahiro Nomura](https://scholar.google.co.jp/citations?user=dml10nwAAAAJ&hl=en) (CyberAgent)
+* [Masashi Shibata](https://github.com/c-bata) (Preferred Networks)
+
+## Contact
+For any questions about the code and the paper, please feel free to raise an issue or contact directly at nomura_masahiro@cyberagent.co.jp.
 
 ## Links
 
