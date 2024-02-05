@@ -339,6 +339,23 @@ Full source code is available [here](./examples/ipop_cma.py).
 
 </details>
 
+## Citation
+If you use our library in your work, please cite our paper:
+
+Masahiro Nomura, Masashi Shibata.<br>
+**cmaes : A Simple yet Practical Python Library for CMA-ES**<br>
+[https://arxiv.org/abs/2402.01373](https://arxiv.org/abs/2402.01373)
+
+Bibtex:
+```
+@article{nomura2024cmaes,
+  title={cmaes : A Simple yet Practical Python Library for CMA-ES},
+  author={Nomura, Masahiro and Shibata, Masashi},
+  journal={arXiv preprint arXiv:2402.01373},
+  year={2024}
+}
+```
+
 ## Links
 
 **Projects using cmaes:**
