@@ -401,7 +401,7 @@ class CMA:
         # Learning rate adaptation: https://arxiv.org/abs/2304.03473
         if self._lr_adapt:
             assert isinstance(old_mean, np.ndarray)
-            assert isinstance(old_sigma, float)
+            assert isinstance(old_sigma, (int, float))
             assert isinstance(old_Sigma, np.ndarray)
             assert isinstance(old_invsqrtC, np.ndarray)
             self._lr_adaptation(old_mean, old_sigma, old_Sigma, old_invsqrtC)
