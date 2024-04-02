@@ -17,6 +17,7 @@ Example:
   python3 tools/cmaes_visualizer.py --function himmelblau \
     --restart-strategy ipop --frames 500 --interval 10 --pop-per-frame 6
 """
+
 import argparse
 import math
 

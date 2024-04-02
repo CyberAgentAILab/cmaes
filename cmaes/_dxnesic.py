@@ -317,16 +317,20 @@ class DXNESIC:
         eta_sigma = (
             self._eta_move_sigma
             if norm_p_sigma >= self._chi_n
-            else self._eta_stag_sigma(lamb_feas)
-            if norm_p_sigma >= 0.1 * self._chi_n
-            else self._eta_conv_sigma(lamb_feas)
+            else (
+                self._eta_stag_sigma(lamb_feas)
+                if norm_p_sigma >= 0.1 * self._chi_n
+                else self._eta_conv_sigma(lamb_feas)
+            )
         )
         eta_B = (
             self._eta_move_B(lamb_feas)
             if norm_p_sigma >= self._chi_n
-            else self._eta_stag_B(lamb_feas)
-            if norm_p_sigma >= 0.1 * self._chi_n
-            else self._eta_conv_B(lamb_feas)
+            else (
+                self._eta_stag_B(lamb_feas)
+                if norm_p_sigma >= 0.1 * self._chi_n
+                else self._eta_conv_B(lamb_feas)
+            )
         )
 
         # natural gradient estimation in local coordinate

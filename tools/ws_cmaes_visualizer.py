@@ -15,6 +15,7 @@ Optional arguments:
 Example:
   python3 ws_cmaes_visualizer.py --function rot-ellipsoid
 """
+
 import argparse
 import math
 
