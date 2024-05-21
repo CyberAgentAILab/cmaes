@@ -76,12 +76,6 @@ class CatCMA:
 
         min_eigenvalue:
             Lower bound of eigenvalue of multivariate Gaussian distribution (optional).
-
-        delta_init:
-            Initial trust region radius in ASNG (optional).
-
-        Delta_max:
-            Upper bound of Delta in ASNG (optional).
     """
 
     # Paper: https://arxiv.org/abs/2405.09962
