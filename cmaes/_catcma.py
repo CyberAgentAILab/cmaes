@@ -84,6 +84,8 @@ class CatCMA:
             Upper bound of Delta in ASNG (optional).
     """
 
+    # Paper: https://arxiv.org/abs/2405.09962
+
     def __init__(
         self,
         mean: np.ndarray,
@@ -97,8 +99,6 @@ class CatCMA:
         cat_param: Optional[np.ndarray] = None,
         margin: Optional[np.ndarray] = None,
         min_eigenvalue: Optional[float] = None,
-        delta_init: Optional[float] = None,
-        Delta_max: Optional[float] = None,
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
@@ -110,6 +110,7 @@ class CatCMA:
         self._n_ca = len(cat_num)
         self._n = self._n_co + self._n_ca
         assert self._n_co > 1, "The dimension of mean must be larger than 1"
+        assert self._n_ca > 0, "The dimension of categorical variable must be positive"
         assert np.all(cat_num > 1), "The number of categories must be larger than 1"
 
         if population_size is None:
@@ -195,15 +196,31 @@ class CatCMA:
         self._B: Optional[np.ndarray] = None
 
         # categorical distribution
-        # Distribution parameters with fewer categories are zero-padded at the end.
+        # Parameters in categorical distribution with fewer categories
+        # must be zero-padded at the end.
         self._K = cat_num
         self._Kmax = np.max(self._K)
-        if cat_param is not None:
-            self._q = cat_param
-        else:
+        if cat_param is None:
             self._q = np.zeros((self._n_ca, self._Kmax))
             for i in range(self._n_ca):
                 self._q[i, : self._K[i]] = 1 / self._K[i]
+        else:
+            assert cat_param.shape == (
+                self._n_ca,
+                self._Kmax,
+            ), "Invalid shape of categorical distribution parameter"
+            for i in range(self._n_ca):
+                assert np.all(cat_param[i, self._K[i] :] == 0), (
+                    "Parameters in categorical distribution with fewer categories "
+                    "must be zero-padded at the end"
+                )
+            assert np.all(
+                (cat_param >= 0) & (cat_param <= 1)
+            ), "All elements in categorical distribution parameter must be between 0 and 1"
+            assert np.allclose(
+                np.sum(cat_param, axis=1), 1
+            ), "Each row in categorical distribution parameter must sum to 1"
+            self._q = cat_param
 
         self._q_min = (
             margin
@@ -215,9 +232,9 @@ class CatCMA:
         # ASNG
         self._param_sum = np.sum(cat_num - 1)
         self._alpha = 1.5
-        self._delta_init = delta_init if delta_init is not None else 1.0
+        self._delta_init = 1.0
         self._Delta = 1.0
-        self._Delta_max = Delta_max if Delta_max is not None else np.inf
+        self._Delta_max = np.inf
         self._gamma = 0.0
         self._s = np.zeros(self._param_sum)
         self._delta = self._delta_init / self._Delta
