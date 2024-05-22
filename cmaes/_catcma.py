@@ -221,7 +221,7 @@ class CatCMA:
             if margin is not None
             else (1 - 0.73 ** (1 / self._n_ca)) / (self._K - 1)
         )
-        self._min_eigenvalue = min_eigenvalue if margin is not None else 1e-30
+        self._min_eigenvalue = min_eigenvalue if min_eigenvalue is not None else 1e-30
 
         # ASNG
         self._param_sum = np.sum(cat_num - 1)
