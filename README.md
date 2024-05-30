@@ -5,7 +5,7 @@
 :whale: [**Paper is now available on arXiv!**](https://arxiv.org/abs/2402.01373)
 
 *Simple* and *Practical* Python library for CMA-ES.
-Please refer to the paper [Nomura and Shibata 2024] for detailed information, including the design philosophy and advanced examples.
+Please refer to the [paper](https://arxiv.org/abs/2402.01373) [Nomura and Shibata 2024] for detailed information, including the design philosophy and advanced examples.
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
