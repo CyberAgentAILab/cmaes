@@ -181,7 +181,7 @@ This method can be applied to mixed spaces consisting of continuous (such as flo
 
 |CMA|CMAwM|
 |---|---|
-|![CMA-ES](https://raw.githubusercontent.com/EvoConJP/CMA-ES_with_Margin/main/fig/CMA-ES.gif)|![CMA-ESwM](https://raw.githubusercontent.com/EvoConJP/CMA-ES_with_Margin/main/fig/CMA-ESwM.gif)|
+|![CMA-ES](https://github.com/CyberAgentAILab/cmaes/assets/27720055/41d33c4b-b80b-42af-9f62-6d22f19dbae5)|![CMA-ESwM](https://github.com/CyberAgentAILab/cmaes/assets/27720055/9035deaa-6222-4720-a417-c31c765f3228)|
 
 The above figures are taken from [EvoConJP/CMA-ES_with_Margin](https://github.com/EvoConJP/CMA-ES_with_Margin).
 
@@ -239,6 +239,80 @@ if __name__ == "__main__":
 ```
 
 Source code is also available [here](./examples/cmaes_with_margin.py).
+
+</details>
+
+
+#### CatCMA [Hamano et al. 2024]
+CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
+
+![CatCMA](https://github.com/CyberAgentAILab/cmaes/assets/27720055/f91443b6-d71b-4849-bfc3-095864f7c58c)
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CatCMA
+
+
+def sphere_com(x, c):
+    dim_co = len(x)
+    dim_ca = len(c)
+    if dim_co < 2:
+        raise ValueError("dimension must be greater one")
+    sphere = sum(x * x)
+    com = dim_ca - sum(c[:, 0])
+    return sphere + com
+
+
+def rosenbrock_clo(x, c):
+    dim_co = len(x)
+    dim_ca = len(c)
+    if dim_co < 2:
+        raise ValueError("dimension must be greater one")
+    rosenbrock = sum(100 * (x[:-1] ** 2 - x[1:]) ** 2 + (x[:-1] - 1) ** 2)
+    clo = dim_ca - (c[:, 0].argmin() + c[:, 0].prod() * dim_ca)
+    return rosenbrock + clo
+
+
+def mc_proximity(x, c, cat_num):
+    dim_co = len(x)
+    dim_ca = len(c)
+    if dim_co < 2:
+        raise ValueError("dimension must be greater one")
+    if dim_co != dim_ca:
+        raise ValueError(
+            "number of dimensions of continuous and categorical variables "
+            "must be equal in mc_proximity"
+        )
+
+    c_index = np.argmax(c, axis=1) / cat_num
+    return sum((x - c_index) ** 2) + sum(c_index)
+
+
+if __name__ == "__main__":
+    cont_dim = 5
+    cat_dim = 5
+    cat_num = np.array([3, 4, 5, 5, 5])
+    # cat_num = 3 * np.ones(cat_dim, dtype=np.int64)
+    optimizer = CatCMA(mean=3.0 * np.ones(cont_dim), sigma=1.0, cat_num=cat_num)
+
+    for generation in range(200):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x, c = optimizer.ask()
+            value = mc_proximity(x, c, cat_num)
+            if generation % 10 == 0:
+                print(f"#{generation} {value}")
+            solutions.append(((x, c), value))
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/catcma.py).
 
 </details>
 
@@ -381,6 +455,7 @@ We have great respect for all libraries involved in CMA-ES.
 * [Akiba et al. 2019] [T. Akiba, S. Sano, T. Yanase, T. Ohta, M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
 * [Auger and Hansen 2005] [A. Auger, N. Hansen, A Restart CMA Evolution Strategy with Increasing Population Size, CEC, 2005.](http://www.cmap.polytechnique.fr/~nikolaus.hansen/cec2005ipopcmaes.pdf)
 * [Hamano et al. 2022] [R. Hamano, S. Saito, M. Nomura, S. Shirakawa, CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization, GECCO, 2022.](https://arxiv.org/abs/2205.13482)
+* [Hamano et al. 2024] [R. Hamano, S. Saito, M. Nomura, K. Uchida, S. Shirakawa, CatCMA : Stochastic Optimization for Mixed-Category Problems, GECCO, 2024.](https://arxiv.org/abs/2405.09962)
 * [Hansen 2016] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [Nomura et al. 2021] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi, Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
 * [Nomura et al. 2023] [M. Nomura, Y. Akimoto, I. Ono, CMA-ES with Learning
