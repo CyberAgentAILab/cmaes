@@ -181,7 +181,7 @@ This method can be applied to mixed spaces consisting of continuous (such as flo
 
 |CMA|CMAwM|
 |---|---|
-|![CMA-ES](https://raw.githubusercontent.com/EvoConJP/CMA-ES_with_Margin/main/fig/CMA-ES.gif)|![CMA-ESwM](https://raw.githubusercontent.com/EvoConJP/CMA-ES_with_Margin/main/fig/CMA-ESwM.gif)|
+|![CMA-ES](https://github.com/CyberAgentAILab/cmaes/assets/27720055/41d33c4b-b80b-42af-9f62-6d22f19dbae5)|![CMA-ESwM](https://github.com/CyberAgentAILab/cmaes/assets/27720055/9035deaa-6222-4720-a417-c31c765f3228)|
 
 The above figures are taken from [EvoConJP/CMA-ES_with_Margin](https://github.com/EvoConJP/CMA-ES_with_Margin).
 
@@ -239,6 +239,80 @@ if __name__ == "__main__":
 ```
 
 Source code is also available [here](./examples/cmaes_with_margin.py).
+
+</details>
+
+
+#### CatCMA [Hamano et al. 2024]
+CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
+
+![CatCMA](https://github.com/CyberAgentAILab/cmaes/assets/27720055/f91443b6-d71b-4849-bfc3-095864f7c58c)
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CatCMA
+
+
+def sphere_com(x, c):
+    dim_co = len(x)
+    dim_ca = len(c)
+    if dim_co < 2:
+        raise ValueError("dimension must be greater one")
+    sphere = sum(x * x)
+    com = dim_ca - sum(c[:, 0])
+    return sphere + com
+
+
+def rosenbrock_clo(x, c):
+    dim_co = len(x)
+    dim_ca = len(c)
+    if dim_co < 2:
+        raise ValueError("dimension must be greater one")
+    rosenbrock = sum(100 * (x[:-1] ** 2 - x[1:]) ** 2 + (x[:-1] - 1) ** 2)
+    clo = dim_ca - (c[:, 0].argmin() + c[:, 0].prod() * dim_ca)
+    return rosenbrock + clo
+
+
+def mc_proximity(x, c, cat_num):
+    dim_co = len(x)
+    dim_ca = len(c)
+    if dim_co < 2:
+        raise ValueError("dimension must be greater one")
+    if dim_co != dim_ca:
+        raise ValueError(
+            "number of dimensions of continuous and categorical variables "
+            "must be equal in mc_proximity"
+        )
+
+    c_index = np.argmax(c, axis=1) / cat_num
+    return sum((x - c_index) ** 2) + sum(c_index)
+
+
+if __name__ == "__main__":
+    cont_dim = 5
+    cat_dim = 5
+    cat_num = np.array([3, 4, 5, 5, 5])
+    # cat_num = 3 * np.ones(cat_dim, dtype=np.int64)
+    optimizer = CatCMA(mean=3.0 * np.ones(cont_dim), sigma=1.0, cat_num=cat_num)
+
+    for generation in range(200):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x, c = optimizer.ask()
+            value = mc_proximity(x, c, cat_num)
+            if generation % 10 == 0:
+                print(f"#{generation} {value}")
+            solutions.append(((x, c), value))
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/catcma.py).
 
 </details>
 
