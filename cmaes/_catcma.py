@@ -117,7 +117,7 @@ class CatCMA:
         # (CMA uses negative weights while CatCMA uses positive weights.)
         weights_prime = np.array(
             [
-                math.log((population_size + 1) / 2) - math.log(i + 1) if i <= mu else 0
+                math.log((population_size + 1) / 2) - math.log(i + 1) if i < mu else 0
                 for i in range(population_size)
             ]
         )
