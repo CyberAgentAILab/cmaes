@@ -6,4 +6,4 @@ from ._xnes import XNES  # NOQA
 from ._dxnesic import DXNESIC  # NOQA
 from ._catcma import CatCMA  # NOQA
 
-__version__ = "0.11.0"
+__version__ = "0.11.1"
