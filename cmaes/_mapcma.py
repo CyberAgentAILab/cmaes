@@ -317,6 +317,7 @@ class MAPCMA:
         y_w = np.sum(y_k.T * self._weights, axis=1)
 
         # Evolution paths
+        # MAP-CMA does not employ the Heaviside function h_sigma for simplifying the update rules.
         C_2 = cast(
             np.ndarray, cast(np.ndarray, B.dot(np.diag(1 / D))).dot(B.T)
         )  # C^(-1/2) = B D^(-1) B^T
