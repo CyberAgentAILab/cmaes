@@ -463,3 +463,4 @@ Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal
 and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
 * [Nomura and Shibata 2024] [M. Nomura, M. Shibata, cmaes : A Simple yet Practical Python Library for CMA-ES, arXiv:2402.01373, 2024.](https://arxiv.org/abs/2402.01373)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
+* [Uchida et al. 2024] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
