@@ -15,6 +15,7 @@ _SIGMA_MAX = 1e32
 
 class MAPCMA:
     """MAP-CMA stochastic optimizer class with ask-and-tell interface.
+    The only difference from the CMA-ES is the additional term in the mean vector update.
 
     Example:
 
