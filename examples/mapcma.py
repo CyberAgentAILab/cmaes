@@ -11,7 +11,7 @@ def rosenbrock(x):
 
 if __name__ == "__main__":
     dim = 20
-    optimizer = MAPCMA(mean=3 * np.ones(dim), sigma=2.0, momentum_r=dim)
+    optimizer = MAPCMA(mean=np.zeros(dim), sigma=0.5, momentum_r=dim)
     print(" evals    f(x)")
     print("======  ==========")
 
