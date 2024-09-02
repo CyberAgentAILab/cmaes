@@ -320,6 +320,7 @@ The full source code is available [here](./examples/catcma.py).
 #### Maximum a Posteriori CMA-ES [Hamano et al. 2024b]
 MAP-CMA is a method that is introduced to interpret the rank-one update in the CMA-ES from the perspective of the natural gradient.
 The rank-one update derived from the natural gradient perspective is extensible, and an additional term, called momentum update, appears in the update of the mean vector.
+The performance of MAP-CMA is not significantly different from that of CMA-ES, as the primary motivation for MAP-CMA comes from the theoretical understanding of CMA-ES.
 
 <details>
 
@@ -339,7 +340,7 @@ def rosenbrock(x):
 
 if __name__ == "__main__":
     dim = 20
-    optimizer = MAPCMA(mean=3 * np.ones(dim), sigma=2.0, momentum_r=dim)
+    optimizer = MAPCMA(mean=np.zeros(dim), sigma=0.5, momentum_r=dim)
     print(" evals    f(x)")
     print("======  ==========")
 
