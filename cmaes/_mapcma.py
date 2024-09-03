@@ -98,7 +98,7 @@ class MAPCMA:
 
         mu = population_size // 2
 
-        # MAPCMA uses positive weights
+        # MAPCMA uses positive weights, in accordance with the paper
         # (CMA uses negative weights)
         weights_prime = np.array(
             [
