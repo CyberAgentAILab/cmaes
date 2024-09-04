@@ -5,6 +5,10 @@ from ._cmawm import CMAwM  # NOQA
 from ._xnes import XNES  # NOQA
 from ._dxnesic import DXNESIC  # NOQA
 from ._catcma import CatCMA  # NOQA
-from ._safe_cma import SafeCMA  # NOQA
+
+try:
+    from ._safe_cma import SafeCMA  # NOQA
+except ImportError:
+    pass  # Implementation of Safe CMA-ES requires scipy, gpytorch, and torch
 
 __version__ = "0.11.1"
