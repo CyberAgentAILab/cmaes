@@ -56,6 +56,9 @@ jobs:
           python -m pip install --upgrade pip setuptools numpy hypothesis pytest pytest-freethreaded
           pip install --progress-bar off .
       - run: python -m unittest
+      # TODO: Using `unittest` style causes `pytest-freethreaded` to fail with `ConcurrencyError`.
+      #       Rewriting as top-level functions works,
+      #       so a follow-up is needed to refactor from `unittest` to `pytest`.
       - run: python -m pytest --threads 1 --iterations 1 --require-gil-disabled tests/test_free_threaded.py
   test-numpy2:
     runs-on: ubuntu-latest
