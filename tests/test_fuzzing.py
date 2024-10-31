@@ -10,7 +10,7 @@ class TestFuzzing(unittest.TestCase):
         data=st.data(),
     )
     def test_cma_tell(self, data):
-        dim = data.draw(st.integers(min_value=2, max_value=100))
+        dim = data.draw(st.integers(min_value=1, max_value=100))
         mean = data.draw(npst.arrays(dtype=float, shape=dim))
         sigma = data.draw(st.floats(min_value=1e-16))
         n_iterations = data.draw(st.integers(min_value=1))
