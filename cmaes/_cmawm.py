@@ -155,8 +155,8 @@ class CMAwM:
         )
         z_lim_low_index = np.clip(m_pos - 1, 0, self.z_lim.shape[1] - 1)
         z_lim_up_index = np.clip(m_pos, 0, self.z_lim.shape[1] - 1)
-        self.z_lim_low = self.z_lim[np.arange(len(self.z_lim)), z_lim_low_index]
-        self.z_lim_up = self.z_lim[np.arange(len(self.z_lim)), z_lim_up_index]
+        self.m_z_lim_low = self.z_lim[np.arange(len(self.z_lim)), z_lim_low_index]
+        self.m_z_lim_up = self.z_lim[np.arange(len(self.z_lim)), z_lim_up_index]
 
         self._A = np.full(n_dim, 1.0)
 
