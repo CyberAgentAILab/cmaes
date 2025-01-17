@@ -1,7 +1,7 @@
 # install_requires
 numpy>=1.20.0
-gpytorch
 torch
+gpytorch
 
 # visualization
 matplotlib

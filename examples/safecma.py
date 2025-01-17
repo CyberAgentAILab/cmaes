@@ -4,7 +4,7 @@ from cmaes import SafeCMA
 
 def example1():
     """
-    example with single safety function
+    example with a single safety function
     """
 
     # number of dimensions
@@ -24,7 +24,7 @@ def example1():
     safe_seeds = (np.random.rand(safe_seeds_num, dim) * 2 - 1) * 5
     safe_seeds[:, 0] = -np.abs(safe_seeds[:, 0])
 
-    # evaluation of safe seeds (with multiple safety functions)
+    # evaluation of safe seeds (with a single safety function)
     seeds_evals = np.array([quadratic(x) for x in safe_seeds])
     seeds_safe_evals = np.stack([[safe_function(x)] for x in safe_seeds])
     safety_threshold = np.array([0])
