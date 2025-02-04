@@ -5,6 +5,7 @@ from ._cmawm import CMAwM  # NOQA
 from ._xnes import XNES  # NOQA
 from ._dxnesic import DXNESIC  # NOQA
 from ._catcma import CatCMA  # NOQA
+from ._mapcma import MAPCMA  # NOQA
 
 try:
     from ._safe_cma import SafeCMA  # NOQA

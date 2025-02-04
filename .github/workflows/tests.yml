@@ -38,9 +38,28 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools numpy scipy hypothesis torch gpytorch
+          python -m pip install --upgrade pip setuptools numpy scipy hypothesis pytest torch gpytorch
           pip install --progress-bar off .
-      - run: python -m unittest
+      - run: python -m pytest tests --ignore=tests/test_free_threaded.py
+  test-free-threaded:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # TODO: Replace deadsnakes with setup-python when the support for Python 3.13t is added
+      - name: Setup Python 3.13t
+        uses: deadsnakes/action@v3.1.0
+        with:
+          python-version: "3.13-dev"
+          nogil: true
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools numpy hypothesis pytest pytest-freethreaded
+          pip install --progress-bar off .
+      - run: python -m pytest --threads 1 --iterations 1 tests --ignore=tests/test_free_threaded.py
+      # TODO: Using `unittest` style causes `pytest-freethreaded` to fail with `ConcurrencyError`.
+      #       Rewriting as top-level functions works,
+      #       so a follow-up is needed to refactor from `unittest` to `pytest`.
+      - run: python -m pytest --threads 1 --iterations 1 --require-gil-disabled tests/test_free_threaded.py
   test-numpy2:
     runs-on: ubuntu-latest
     steps:
@@ -51,7 +70,7 @@ jobs:
           architecture: x64
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip setuptools scipy hypothesis torch gpytorch
+          python -m pip install --upgrade pip setuptools scipy hypothesis pytest torch gpytorch
           python -m pip install --pre --upgrade numpy
           pip install --progress-bar off .
-      - run: python -m unittest
+      - run: python -m pytest tests --ignore=tests/test_free_threaded.py

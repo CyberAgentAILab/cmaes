@@ -243,7 +243,7 @@ Source code is also available [here](./examples/cmaes_with_margin.py).
 </details>
 
 
-#### CatCMA [Hamano et al. 2024]
+#### CatCMA [Hamano et al. 2024a]
 CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
 
 ![CatCMA](https://github.com/CyberAgentAILab/cmaes/assets/27720055/f91443b6-d71b-4849-bfc3-095864f7c58c)
@@ -392,6 +392,54 @@ The full source code is available [here](./examples/safecma.py).
 </details>
 
 
+#### Maximum a Posteriori CMA-ES [Hamano et al. 2024b]
+MAP-CMA is a method that is introduced to interpret the rank-one update in the CMA-ES from the perspective of the natural gradient.
+The rank-one update derived from the natural gradient perspective is extensible, and an additional term, called momentum update, appears in the update of the mean vector.
+The performance of MAP-CMA is not significantly different from that of CMA-ES, as the primary motivation for MAP-CMA comes from the theoretical understanding of CMA-ES.
+
+<details>
+
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import MAPCMA
+
+
+def rosenbrock(x):
+    dim = len(x)
+    if dim < 2:
+        raise ValueError("dimension must be greater one")
+    return sum(100 * (x[:-1] ** 2 - x[1:]) ** 2 + (x[:-1] - 1) ** 2)
+
+
+if __name__ == "__main__":
+    dim = 20
+    optimizer = MAPCMA(mean=np.zeros(dim), sigma=0.5, momentum_r=dim)
+    print(" evals    f(x)")
+    print("======  ==========")
+
+    evals = 0
+    while True:
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = rosenbrock(x)
+            evals += 1
+            solutions.append((x, value))
+            if evals % 1000 == 0:
+                print(f"{evals:5d}  {value:10.5f}")
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/mapcma.py).
+
+</details>
+
+
 #### Separable CMA-ES [Ros and Hansen 2008]
 
 Sep-CMA-ES is an algorithm that limits the covariance matrix to a diagonal form.
@@ -513,7 +561,7 @@ For any questions, feel free to raise an issue or contact me at nomura_masahiro@
 **Projects using cmaes:**
 
 * [Optuna](https://github.com/optuna/optuna) : A hyperparameter optimization framework that supports CMA-ES using this library under the hood.
-* [Kubeflow/Katib](https://www.kubeflow.org/docs/components/katib/katib-config/) : Kubernetes-based system for hyperparameter tuning and neural architecture search
+* [Kubeflow/Katib](https://www.kubeflow.org/docs/components/katib/user-guides/katib-config/) : Kubernetes-based system for hyperparameter tuning and neural architecture search
 * (If you are using `cmaes` in your project and would like it to be listed here, please submit a GitHub issue.)
 
 **Other libraries:**
@@ -530,7 +578,8 @@ We have great respect for all libraries involved in CMA-ES.
 * [Akiba et al. 2019] [T. Akiba, S. Sano, T. Yanase, T. Ohta, M. Koyama, Optuna: A Next-generation Hyperparameter Optimization Framework, KDD, 2019.](https://dl.acm.org/citation.cfm?id=3330701)
 * [Auger and Hansen 2005] [A. Auger, N. Hansen, A Restart CMA Evolution Strategy with Increasing Population Size, CEC, 2005.](http://www.cmap.polytechnique.fr/~nikolaus.hansen/cec2005ipopcmaes.pdf)
 * [Hamano et al. 2022] [R. Hamano, S. Saito, M. Nomura, S. Shirakawa, CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization, GECCO, 2022.](https://arxiv.org/abs/2205.13482)
-* [Hamano et al. 2024] [R. Hamano, S. Saito, M. Nomura, K. Uchida, S. Shirakawa, CatCMA : Stochastic Optimization for Mixed-Category Problems, GECCO, 2024.](https://arxiv.org/abs/2405.09962)
+* [Hamano et al. 2024a] [R. Hamano, S. Saito, M. Nomura, K. Uchida, S. Shirakawa, CatCMA : Stochastic Optimization for Mixed-Category Problems, GECCO, 2024.](https://arxiv.org/abs/2405.09962)
+* [Hamano et al. 2024b] [R. Hamano, S. Shirakawa, M. Nomura, Natural Gradient Interpretation of Rank-One Update in CMA-ES, PPSN, 2024.](https://arxiv.org/abs/2406.16506)
 * [Hansen 2016] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [Nomura et al. 2021] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi, Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
 * [Nomura et al. 2023] [M. Nomura, Y. Akimoto, I. Ono, CMA-ES with Learning
