@@ -158,7 +158,7 @@ class SafeCMA:
         self.kernel = gpytorch.kernels.RBFKernel()
         self.kernel.lengthscale = 8.0 * n_dim
 
-        self.lip_penalty_coef = 1
+        self.lip_penalty_coef = 1.0
         self.lip_penalty_inc_rate = 10  # alpha
         self.lip_penalty_dec_rate = self.lip_penalty_inc_rate ** (1.0 / n_dim)
 
@@ -510,7 +510,7 @@ class SafeCMA:
             exponent = 1 / len(self.sampled_safe_evals)  # (eq.22)
             self.lipschitz_constant *= self.init_L_base**exponent
 
-        inv_num = np.sum(safe_evals > self.safety_threshold, dtype=np.float32)
+        inv_num = float(np.sum(safe_evals > self.safety_threshold))
         if inv_num > 0:
             self.lip_penalty_coef *= self.lip_penalty_inc_rate ** (
                 inv_num / self._popsize
