@@ -1,5 +1,5 @@
 import numpy as np
-from cmaes import SafeCMA
+from cmaes.safe_cma import SafeCMA
 
 
 def example1():
