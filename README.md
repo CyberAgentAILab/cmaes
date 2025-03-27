@@ -316,6 +316,81 @@ The full source code is available [here](./examples/catcma.py).
 
 </details>
 
+#### Safe CMA [Uchida et al. 2024]
+Safe CMA-ES is a variant of CMA-ES for safe optimization. Safe optimization is formulated as a special type of constrained optimization problem aiming to solve the optimization problem with fewer evaluations of the solutions whose safety function values exceed the safety thresholds. The safe CMA-ES requires safe seeds that do not violate the safety constraints. Note that the safe CMA-ES is designed for noiseless safe optimization. This module needs `torch` and `gpytorch`.
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes.safe_cma import SafeCMA
+
+# objective function
+def quadratic(x):
+    coef = 1000 ** (np.arange(dim) / float(dim - 1)) 
+    return np.sum((x * coef) ** 2)
+
+# safety function
+def safe_function(x):
+    return x[0]
+
+"""
+    example with a single safety function
+"""
+if __name__ == "__main__":
+    # number of dimensions
+    dim = 5
+
+    # safe seeds
+    safe_seeds_num = 10
+    safe_seeds = (np.random.rand(safe_seeds_num, dim) * 2 - 1) * 5
+    safe_seeds[:,0] = - np.abs(safe_seeds[:,0])
+
+    # evaluation of safe seeds (with a single safety function)
+    seeds_evals = np.array([ quadratic(x) for x in safe_seeds ])
+    seeds_safe_evals = np.stack([ [safe_function(x)] for x in safe_seeds ])
+    safety_threshold = np.array([0])
+
+    # optimizer (safe CMA-ES)
+    optimizer = SafeCMA(
+        sigma=1., 
+        safety_threshold=safety_threshold, 
+        safe_seeds=safe_seeds,
+        seeds_evals=seeds_evals,
+        seeds_safe_evals=seeds_safe_evals,
+    )
+
+    unsafe_eval_counts = 0
+    best_eval = np.inf
+
+    for generation in range(400):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            # Ask a parameter
+            x = optimizer.ask()
+            value = quadratic(x)
+            safe_value = np.array([safe_function(x)])
+
+            # save best eval
+            best_eval = np.min((best_eval, value))
+            unsafe_eval_counts += (safe_value > safety_threshold)
+
+            solutions.append((x, value, safe_value))
+
+        # Tell evaluation values.
+        optimizer.tell(solutions)
+
+        print(f"#{generation} ({best_eval} {unsafe_eval_counts})")
+        
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/safecma.py).
+
+</details>
+
 
 #### Maximum a Posteriori CMA-ES [Hamano et al. 2024b]
 MAP-CMA is a method that is introduced to interpret the rank-one update in the CMA-ES from the perspective of the natural gradient.
@@ -512,3 +587,4 @@ Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal
 and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
 * [Nomura and Shibata 2024] [M. Nomura, M. Shibata, cmaes : A Simple yet Practical Python Library for CMA-ES, arXiv:2402.01373, 2024.](https://arxiv.org/abs/2402.01373)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
+* [Uchida et al. 2024] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
