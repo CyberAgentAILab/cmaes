@@ -35,6 +35,7 @@ jobs:
       - run: python examples/cma_with_margin_binary.py
       - run: python examples/cma_with_margin_integer.py
       - run: python examples/safecma.py
+      - run: python examples/cma_sop.py
   examples-cmawm-without-scipy:
     runs-on: ubuntu-latest
     steps:

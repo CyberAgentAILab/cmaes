@@ -1,107 +1,97 @@
 from __future__ import annotations
 
 import math
-import gpytorch.distributions
 import numpy as np
 
 from typing import Any
 from typing import cast
 from typing import Optional
 
-import scipy
-import gpytorch
-import torch
+from scipy.spatial import Voronoi
+from scipy.stats import chi2
+from scipy.stats import norm
 
 _EPS = 1e-8
 _MEAN_MAX = 1e32
 _SIGMA_MAX = 1e32
 
 
-class SafeCMA:
-    """Safe CMA-ES stochastic optimizer class with ask-and-tell interface.
+class CMASoP:
+    """CMA-ES-SoP stochastic optimizer class with ask-and-tell interface.
 
     Example:
 
         .. code::
-
             import numpy as np
-            from cmaes import SafeCMA
+            from cmaes.cma_sop import CMASoP
 
-            # number of dimensions
-            dim = 5
+            # numbers of dimensions in each subspace
+            subspace_dim_list = [2, 3, 5]
+            cont_dim = 10
+
+            # numbers of points in each subspace
+            point_num_list = [10, 20, 40]
+
+            # number of total dimensions
+            dim = int(np.sum(subspace_dim_list) + cont_dim)
 
             # objective function
             def quadratic(x):
                 coef = 1000 ** (np.arange(dim) / float(dim - 1))
-                return np.sum((x * coef) ** 2)
+                return np.sum(x ** 2)
 
-            # safety function
-            def safe_function(x):
-                return x[0]
+            # sets_of_points (on [-5, 5])
+            subspace_num = len(subspace_dim_list)
+            sets_of_points = [(
+                2 * np.random.rand(point_num_list[i], subspace_dim_list[i]) - 1) * 5
+            for i in range(subspace_num)]
 
-            # safe seeds
-            safe_seeds_num = 10
-            safe_seeds = (np.random.rand(safe_seeds_num, dim) * 2 - 1) * 5
-            safe_seeds[:, 0] = - np.abs(safe_seeds[:, 0])
+            # the optimal solution is contained
+            for i in range(subspace_num):
+                sets_of_points[i][-1] = np.zeros(subspace_dim_list[i])
+                np.random.shuffle(sets_of_points[i])
 
-            # evaluation of safe seeds (with a single safety function)
-            seeds_evals = np.array([quadratic(x) for x in safe_seeds])
-            seeds_safe_evals = np.stack([[safe_function(x)] for x in safe_seeds])
-            safety_threshold = np.array([0])
-
-            # optimizer (safe CMA-ES)
-            optimizer = SafeCMA(
-                sigma=1.,
-                safety_threshold=safety_threshold,
-                safe_seeds=safe_seeds,
-                seeds_evals=seeds_evals,
-                seeds_safe_evals=seeds_safe_evals,
+            # optimizer (CMA-ES-SoP)
+            optimizer = CMASoP(
+                sets_of_points=sets_of_points,
+                mean=np.random.rand(dim) * 4 + 1,
+                sigma=2.0,
             )
 
-            unsafe_eval_counts = 0
             best_eval = np.inf
+            eval_count = 0
 
             for generation in range(400):
                 solutions = []
                 for _ in range(optimizer.population_size):
                     # Ask a parameter
-                    x = optimizer.ask()
-                    value = quadratic(x)
-                    safe_value = np.array([safe_function(x)])
+                    x, enc_x = optimizer.ask()
+                    value = quadratic(enc_x)
 
                     # save best eval
                     best_eval = np.min((best_eval, value))
-                    unsafe_eval_counts += (safe_value > safety_threshold)
+                    eval_count += 1
 
-                    solutions.append((x, value, safe_value))
+                    solutions.append((x, value))
 
                 # Tell evaluation values.
                 optimizer.tell(solutions)
 
-                print(f"#{generation} ({best_eval} {unsafe_eval_counts})")
+                print(f"#{generation} ({best_eval} {eval_count})")
 
-                if optimizer.should_stop():
+                if best_eval < 1e-4 or optimizer.should_stop():
                     break
 
+
     Args:
+        sets_of_points:
+            List of points for each subspace.
 
-        safe_seeds:
-            Solutions whose safe function values are above the safety thresholds.
-            Safe CMA-ES uses the safe seed with the best evaluation value as
-            the initial mean vector of multi-variate Gaussian distributions.
-
-        seeds_evals:
-            Evaluation values of safe seeds on the objective function.
-
-        seeds_safe_evals:
-            Evaluation values of safe seeds on the safe functions.
-
-        safety_threshold:
-            Safety thresholds for each safe functions.
+        mean:
+            Initial mean vector of multi-variate gaussian distributions.
 
         sigma:
             Initial standard deviation of covariance matrix.
-            Safe CMA-ES modifies sigma when more than two safe seeds are given.
 
         bounds:
             Lower and upper domain boundaries for each parameter (optional).
@@ -119,34 +109,73 @@ class SafeCMA:
 
         cov:
             A covariance matrix (optional).
+
+        margin:
+            A margin parameter (optional).
+
     """
 
-    # Paper: https://arxiv.org/abs/2405.10534
+    # Paper: https://arxiv.org/abs/2408.13046
 
     def __init__(
         self,
-        safe_seeds: np.ndarray,
-        seeds_evals: np.ndarray,
-        seeds_safe_evals: np.ndarray,
-        safety_threshold: np.ndarray,
+        sets_of_points: np.ndarray,
+        mean: np.ndarray,
         sigma: float,
         bounds: Optional[np.ndarray] = None,
         n_max_resampling: int = 100,
         seed: Optional[int] = None,
         population_size: Optional[int] = None,
         cov: Optional[np.ndarray] = None,
+        margin: Optional[float] = None,
     ):
-        # safety threshold
-        self.safety_threshold = safety_threshold
-        self.safety_func_num = len(safety_threshold)
+        # same initialization procedure as for naive cma
+        self._naive_cma_init_(
+            mean,
+            sigma,
+            bounds,
+            n_max_resampling,
+            seed,
+            population_size,
+            cov,
+        )
 
-        # safe seeds
-        self.safe_seeds = safe_seeds
-        self.seeds_evals = seeds_evals
-        self.seeds_safe_evals = seeds_safe_evals
+        # preprocess of sets of points
+        if sets_of_points is not None:
+            self._sets_of_points = sets_of_points
+            self._zd = [ds.shape[1] for ds in sets_of_points]
+            self._point_num = [ds.shape[0] for ds in sets_of_points]
+            self._vor_list = [Voronoi(ds) for ds in sets_of_points]
+            self._subspace_mask = None
+            self._neighbor_matrices = self._get_neighbor_matrices()
+        else:
+            self._zd = []
 
-        n_dim = len(safe_seeds[0])
-        assert n_dim > 1, "The dimension of mean must be larger than 1"
+        # setting for margin correction and adaptation
+        self._margin_target = (
+            margin if margin is not None else 1 / (self._n_dim * self._popsize)
+        )
+        self._margin = self._margin_target * np.ones_like(self._zd)
+        self._margin_coeff = 1 + 1 / self._n_dim if self._margin_target > 0 else 0
+
+    def _naive_cma_init_(
+        self,
+        mean: np.ndarray,
+        sigma: float,
+        bounds: Optional[np.ndarray] = None,
+        n_max_resampling: int = 100,
+        seed: Optional[int] = None,
+        population_size: Optional[int] = None,
+        cov: Optional[np.ndarray] = None,
+    ) -> None:
+        assert sigma > 0, "sigma must be non-zero positive value"
+
+        assert np.all(
+            np.abs(mean) < _MEAN_MAX
+        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+
+        n_dim = len(mean)
+        assert n_dim > 0, "The dimension of mean must be positive"
 
         if population_size is None:
             population_size = 4 + math.floor(3 * math.log(n_dim))
@@ -154,37 +183,20 @@ class SafeCMA:
 
         mu = population_size // 2
 
-        # hyperparameters for safe CMAES
-        self.kernel = gpytorch.kernels.RBFKernel()
-        self.kernel.lengthscale = 8.0 * n_dim
-
-        self.lip_penalty_coef = 1.0
-        self.lip_penalty_inc_rate = 10  # alpha
-        self.lip_penalty_dec_rate = self.lip_penalty_inc_rate ** (1.0 / n_dim)
-
-        self.lip_ite = 5  # T_data
-        self.sample_num_lip = population_size * self.lip_ite
-        self.sample_log_num = population_size * self.lip_ite
-        self.init_L_base = 10  # zeta_init
-        self.init_L = 100
-        self.gamma = 0.9
-
-        # log for safe CMAES
-        self.sampled_points = safe_seeds.copy()
-        self.sampled_safe_evals = seeds_safe_evals.copy()
-
-        # safe CMA-ES do not use negative weights
         weights_prime = np.array(
-            np.log((population_size + 1) / 2) - np.log(np.arange(population_size) + 1)
+            [
+                math.log((population_size + 1) / 2) - math.log(i + 1)
+                for i in range(population_size)
+            ]
         )
         weights_prime[weights_prime < 0] = 0
-
-        mu_eff = (np.sum(weights_prime[:mu]) ** 2) / np.sum(weights_prime[:mu] ** 2)
         weights = weights_prime / weights_prime.sum()
+        mu_eff = (np.sum(weights_prime[:mu]) ** 2) / np.sum(weights_prime[:mu] ** 2)
 
         # learning rate for the rank-one update
         alpha_cov = 2
         c1 = alpha_cov / ((n_dim + 1.3) ** 2 + mu_eff)
+
         # learning rate for the rank-μ update
         cmu = min(
             1 - c1 - 1e-8,  # 1e-8 is for large popsize.
@@ -231,29 +243,17 @@ class SafeCMA:
         self._p_sigma = np.zeros(n_dim)
         self._pc = np.zeros(n_dim)
 
+        self._mean = mean.copy()
+
         if cov is None:
             self._C = np.eye(n_dim)
         else:
             assert cov.shape == (n_dim, n_dim), "Invalid shape of covariance matrix"
             self._C = cov
 
+        self._sigma = sigma
         self._D: Optional[np.ndarray] = None
         self._B: Optional[np.ndarray] = None
-
-        self._rng = np.random.RandomState(seed)
-
-        # initial distribution parameter
-        self._sigma = sigma
-        mean, sigma = self._init_distribution(sigma)
-
-        assert sigma > 0, "sigma must be non-zero positive value"
-
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
-
-        self._mean = mean.copy()
-        self._sigma = sigma
 
         # bounds contains low and high of each parameter.
         assert bounds is None or _is_valid_bounds(bounds, mean), "invalid bounds"
@@ -261,6 +261,7 @@ class SafeCMA:
         self._n_max_resampling = n_max_resampling
 
         self._g = 0
+        self._rng = np.random.RandomState(seed)
 
         # Termination criteria
         self._tolx = 1e-12 * sigma
@@ -271,84 +272,24 @@ class SafeCMA:
         self._funhist_term = 10 + math.ceil(30 * n_dim / population_size)
         self._funhist_values = np.empty(self._funhist_term * 2)
 
-    def _compute_lipschitz_constant(self) -> np.ndarray:
-        likelihood = gpytorch.likelihoods.GaussianLikelihood(
-            noise_constraint=gpytorch.constraints.GreaterThan(0)
-        )
-        likelihood.noise = 0
+    def _get_neighbor_matrices(self) -> list:
+        try:
+            # if already computed
+            return self._neighbor_matrices
+        except AttributeError:
 
-        B, D = self._eigen_decomposition()
-        invSqrtC = cast(np.ndarray, B.dot(np.diag(1 / D)).dot(B.T))
+            def neighbor_matrix(i: int) -> np.ndarray:
+                point_num = self._point_num[i]
+                ridge_points = self._vor_list[i].ridge_points
+                res = np.zeros((point_num, point_num), dtype=bool)
+                res[ridge_points[:, 0], ridge_points[:, 1]] = True
+                return res | res.T
 
-        num_data = int(np.min((len(self.sampled_safe_evals), self.sample_num_lip)))
-        prev_x = self.sampled_points[-num_data:]
-        z_points = (prev_x - self._mean).dot(invSqrtC) / self._sigma
-
-        target_safe_evals = self.sampled_safe_evals[-num_data:]
-        evals_mean = np.mean(target_safe_evals, axis=0)
-        evals_std = np.std(target_safe_evals, axis=0)
-        modified_evals = (target_safe_evals - evals_mean) / evals_std
-
-        # function that returns the negative norm of gradient
-        def df(x: np.ndarray, model: ExactGPModel) -> torch.Tensor:
-            out_scalar = x.ndim == 1
-            x = np.atleast_2d(x)
-
-            grad_norm = torch.zeros(len(x))
-
-            X = torch.autograd.Variable(
-                torch.Tensor(np.atleast_2d(x)), requires_grad=True
-            )
-            mean = likelihood(model(X)).mean
-            dxdmean = torch.autograd.grad(mean.sum(), X)[0]
-
-            grad_norm = torch.sqrt(torch.sum(dxdmean * dxdmean, dim=1))
-
-            if out_scalar:
-                grad_norm = grad_norm.mean().to(torch.float64)
-
-            return -grad_norm
-
-        def elementwise_df(i: int) -> float:
-            samples = self._rng.randn(self.sample_num_lip, self._n_dim)
-            samples = np.concatenate([samples, z_points], axis=0)
-            model = ExactGPModel(
-                z_points, modified_evals[:, i], likelihood, self.kernel
-            )
-
-            try:
-                pred_samples = df(samples, model) * evals_std[i]
-            except Exception:
-                # if fail to optimize
-                return self.lipschitz_constant[i]
-
-            if np.isnan(pred_samples).any():
-                return self.lipschitz_constant[i]
-
-            x0 = samples[np.argmin(pred_samples)]
-
-            try:
-                bounds = np.tile([-3, 3], (self._n_dim, 1))
-
-                res = scipy.optimize.minimize(
-                    df,
-                    x0,
-                    method="L-BFGS-B",
-                    bounds=bounds,
-                    args=(model),
-                    options={"maxiter": 200},
-                )
-                result_value = res.fun * evals_std[i]
-
-                if not np.isnan(result_value):
-                    return -float(result_value)
-                else:
-                    return -np.min(pred_samples)
-            except Exception:
-                # if fail to optimize
-                return -np.min(pred_samples)
-
-        return np.array([elementwise_df(i) for i in range(self.safety_func_num)])
+            # compute neighboring points
+            self._neighbor_matrices = [
+                neighbor_matrix(i) for i in range(len(self._sets_of_points))
+            ]
+            return self._neighbor_matrices
 
     def __getstate__(self) -> dict[str, Any]:
         attrs = {}
@@ -399,42 +340,18 @@ class SafeCMA:
         assert bounds is None or _is_valid_bounds(bounds, self._mean), "invalid bounds"
         self._bounds = bounds
 
-    def _init_distribution(self, sigma: float) -> tuple[np.ndarray, float]:
-        # set initial mean vector
-        best_seed_id = np.argmin(self.seeds_evals)
-        mean = self.safe_seeds[best_seed_id]
-        self._mean = mean.copy()  # (eq. 26)
-
-        # set initial step-size
-        if len(self.sampled_points) > 1:
-            lip = self._compute_lipschitz_constant()
-
-            if len(self.sampled_safe_evals) < self.sample_num_lip:
-                exponent = 1 / len(self.sampled_safe_evals)
-                lip = lip * (self.init_L_base**exponent)
-
-            lip = np.clip(lip, self.init_L, None)
-        else:
-            lip = np.ones(self.safety_func_num) * self.init_L
-
-        self.lipschitz_constant = lip
-
-        slack = self.safety_threshold - self.seeds_safe_evals[best_seed_id]
-        delta = np.min((slack) / self.lipschitz_constant)
-        gauss_tr = np.sqrt(scipy.stats.chi2.ppf(self.gamma, df=self._n_dim))
-        sigma = sigma * np.min((delta / gauss_tr, 1))  # (eq. 27)
-
-        return mean, sigma
-
-    def ask(self) -> np.ndarray:
+    def ask(self) -> tuple[np.ndarray, np.ndarray]:
         """Sample a parameter"""
         for i in range(self._n_max_resampling):
             x = self._sample_solution()
             if self._is_feasible(x):
-                return x
+                enc_x = self._encoding(x)  # eoncoded solution
+                return x, enc_x
+
         x = self._sample_solution()
         x = self._repair_infeasible_params(x)
-        return x
+        enc_x = self._encoding(x)  # eoncoded solution
+        return x, enc_x
 
     def _eigen_decomposition(self) -> tuple[np.ndarray, np.ndarray]:
         if self._B is not None and self._D is not None:
@@ -451,32 +368,7 @@ class SafeCMA:
     def _sample_solution(self) -> np.ndarray:
         B, D = self._eigen_decomposition()
         z = self._rng.randn(self._n_dim)  # ~ N(0, I)
-        invSqrtC = cast(np.ndarray, B.dot(np.diag(1 / D)).dot(B.T))
-
-        if self.sampled_safe_evals is not None:
-            log_num = np.min([self.sample_log_num, len(self.sampled_points)])
-            prev_x = self.sampled_points[-log_num:]
-            prev_safe_evals = self.sampled_safe_evals[-log_num:]
-            sampled_z_points = (prev_x - self._mean).dot(invSqrtC) / self._sigma
-
-            # radius: radius of trust region around evaluated points
-            slack = self.safety_threshold[:, None, None] - prev_safe_evals[None, :, :]
-            radius = np.min(
-                slack / self.lipschitz_constant[:, None, None], axis=(0, 2)
-            )  # (eq.13)
-
-            radius[radius < 0] = -np.inf
-            # dist: distance between current samples and evaluated points
-            dist = np.sqrt(((z[None, :] - sampled_z_points) ** 2).sum(axis=1))
-
-            invalid_dist = np.clip(np.min(dist[None, :] - radius), 0, np.inf)
-            argmin_sample_id = np.argmin(dist[None, :] - radius)
-            closest_z_sample = sampled_z_points[argmin_sample_id]
-
-            ratio = invalid_dist / dist[argmin_sample_id]
-            z = (1 - ratio) * z + ratio * closest_z_sample  # (eq.15)
-
-        y = cast(np.ndarray, B.dot(np.diag(D)).dot(B.T)).dot(z)  # ~ N(0, C)
+        y = cast(np.ndarray, B.dot(np.diag(D))).dot(z)  # ~ N(0, C)
         x = self._mean + self._sigma * y  # ~ N(m, σ^2 C)
         return x
 
@@ -497,38 +389,60 @@ class SafeCMA:
         param = np.where(param > self._bounds[:, 1], self._bounds[:, 1], param)
         return param
 
-    def tell(self, solutions: list[tuple[np.ndarray, float, float]]) -> None:
+    def _encoding(self, X: np.ndarray) -> np.ndarray:
+        X_ndim = X.ndim
+        X = np.atleast_2d(X)
+
+        num_cont = self._n_dim - np.sum(self._zd)  # = N_continuous
+        if num_cont == self._n_dim:
+            return X
+
+        # encoding
+        closest_idx = self._get_closest_point_index(X)
+        X_z_enc = np.hstack(
+            [self._sets_of_points[i][closest_idx[i]] for i in range(len(self._zd))]
+        )
+        if X_ndim == 1:
+            return np.hstack((X[:, :num_cont], X_z_enc))[0]
+        else:
+            return np.hstack((X[:, :num_cont], X_z_enc))
+
+    def _get_closest_point_index(self, X: np.ndarray) -> list[Any]:
+        X = np.atleast_2d(X)
+
+        # return the closest point in i-th subspace
+        def get_closest(i: int) -> np.ndarray:
+            X_z = X[:, self._get_subspace_mask()[i]]
+            vor = self._vor_list[i]
+            dist2 = ((X_z[:, None, :] - vor.points[None, :, :]) ** 2).sum(axis=2)
+            return np.argmin(dist2, axis=1)
+
+        return [get_closest(i) for i in range(len(self._zd))]
+
+    def _get_subspace_mask(self) -> np.ndarray:
+        if self._subspace_mask is not None:
+            return self._subspace_mask
+        else:
+            self._subspace_mask = np.zeros((len(self._zd), self._n_dim), dtype=bool)
+            cont_dim = self._n_dim - np.sum(self._zd)
+            subspace_range = np.concatenate(
+                [[cont_dim], cont_dim + np.cumsum(self._zd)]
+            )
+
+            for i in range(len(self._zd)):
+                self._subspace_mask[i, subspace_range[i] : subspace_range[i + 1]] = True
+
+            return self._subspace_mask
+
+    def tell(self, solutions: list[tuple[np.ndarray, float]]) -> None:
+        """Tell evaluation values"""
         self._naive_cma_update(solutions)
 
-        X = np.stack([s[0] for s in solutions])
-        safe_evals = np.array([s[2] for s in solutions])
+        # margin correction (if self.margin = 0, this behaves as CMA-ES)
+        if np.sum(self._zd) > 0 and self._margin_target > 0:
+            self._margin_correction()
 
-        self._add_evaluated_point(X, safe_evals)
-
-        self.lipschitz_constant = self._compute_lipschitz_constant()  # (eq.19)
-        if len(self.sampled_safe_evals) < self.sample_num_lip:
-            exponent = 1 / len(self.sampled_safe_evals)  # (eq.22)
-            self.lipschitz_constant *= self.init_L_base**exponent
-
-        inv_num = float(np.sum(safe_evals > self.safety_threshold))
-        if inv_num > 0:
-            self.lip_penalty_coef *= self.lip_penalty_inc_rate ** (
-                inv_num / self._popsize
-            )
-        else:
-            self.lip_penalty_coef /= self.lip_penalty_dec_rate
-            self.lip_penalty_coef = np.max((self.lip_penalty_coef, 1))
-        self.lipschitz_constant *= self.lip_penalty_coef  # (eq.24)
-
-    def _add_evaluated_point(self, X: np.ndarray, safe_evals: np.ndarray) -> None:
-        self.sampled_points = np.concatenate([self.sampled_points, X], axis=0)
-        self.sampled_safe_evals = np.vstack([self.sampled_safe_evals, safe_evals])
-
-    def _naive_cma_update(
-        self, solutions: list[tuple[np.ndarray, float, float]]
-    ) -> None:
-        """Tell evaluation values"""
-
+    def _naive_cma_update(self, solutions: list[tuple[np.ndarray, float]]) -> None:
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
             assert np.all(
@@ -553,7 +467,7 @@ class SafeCMA:
 
         # Selection and recombination
         y_w = np.sum(y_k[: self._mu].T * self._weights[: self._mu], axis=1)
-        self._mean += self._cm * self._sigma * y_w  # (eq.7)
+        self._mean += self._cm * self._sigma * y_w
 
         # Step-size control
         C_2 = cast(
@@ -566,7 +480,7 @@ class SafeCMA:
         norm_p_sigma = np.linalg.norm(self._p_sigma)
         self._sigma *= np.exp(
             (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )  # (eq.8)
+        )
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
@@ -580,14 +494,13 @@ class SafeCMA:
             self._cc * (2 - self._cc) * self._mu_eff
         ) * y_w
 
+        delta_h_sigma = (1 - h_sigma) * self._cc * (2 - self._cc)
+        assert delta_h_sigma <= 1
+
         rank_one = np.outer(self._pc, self._pc)
         rank_mu = np.sum(
             np.array([w * np.outer(y, y) for w, y in zip(self._weights, y_k)]), axis=0
         )
-
-        delta_h_sigma = (1 - h_sigma) * self._cc * (2 - self._cc)
-        assert delta_h_sigma <= 1
-
         self._C = (
             (
                 1
@@ -598,7 +511,66 @@ class SafeCMA:
             * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
-        )  # (eq.9)
+        )
+
+    def _get_neighbor_indexes(self, m: np.ndarray) -> list[Any]:
+        # get neiboring points to given point
+        closest_index = np.array(self._get_closest_point_index(m))[:, 0]
+        return [
+            self._get_neighbor_matrices()[i][closest_index[i]]
+            for i in range(len(self._zd))
+        ]
+
+    def _margin_correction(self) -> None:
+        nearest_indexes = self._get_neighbor_indexes(self._mean)
+
+        for i in range(len(self._zd)):
+            # margin correction (eq. (10)-(15))
+            CI = np.sqrt(chi2.ppf(q=1.0 - self._margin[i], df=1))
+            target_nearest_points = self._sets_of_points[i][nearest_indexes[i]]
+            m_z = self._mean[self._get_subspace_mask()[i]]
+
+            if len(target_nearest_points) == 0:
+                return
+
+            self._rng.shuffle(target_nearest_points)
+
+            for x_near_z in target_nearest_points:
+
+                y_near_z = (x_near_z - m_z) / self._sigma
+                y_near = np.zeros(self._n_dim)
+                y_near[self._get_subspace_mask()[i]] = y_near_z  # eq. (14)
+
+                B, D = self._eigen_decomposition()
+                invSqrtC = B @ np.diag(1 / D) @ B.T
+
+                z_near = np.dot(invSqrtC, y_near)
+                dist = np.linalg.norm(z_near) / 2  # midpoint (eq. (13))
+
+                if dist > CI:
+                    beta = (dist**2 - CI**2) / ((dist**2) * (CI**2))
+                    self._C = self._C + beta * np.outer(y_near, y_near)
+                    self._B, self._D = None, None
+
+            # margin adaptation (eq. (16))
+            Y_near_z = (target_nearest_points - m_z) / self._sigma
+            Y_near = np.zeros((len(Y_near_z), self._n_dim))
+            Y_near[:, self._get_subspace_mask()[i]] = Y_near_z
+
+            B, D = self._eigen_decomposition()
+            corrected_invSqrtC = B @ np.diag(1 / D) @ B.T
+            self._B, self._D = None, None
+
+            Z_near = np.dot(Y_near, corrected_invSqrtC)
+            dist = np.linalg.norm(Z_near, axis=1) / 2  # midpoint
+
+            current_margin = np.mean(1 - norm.cdf(dist))
+
+            # eq. (16)
+            if current_margin > self._margin_target:
+                self._margin[i] /= self._margin_coeff
+            else:
+                self._margin[i] *= self._margin_coeff
 
     def should_stop(self) -> bool:
         B, D = self._eigen_decomposition()
@@ -675,26 +647,3 @@ def _decompress_symmetric(sym1d: np.ndarray) -> np.ndarray:
     out[R, C] = sym1d
     out[C, R] = sym1d
     return out
-
-
-class ExactGPModel(gpytorch.models.ExactGP):
-    def __init__(
-        self,
-        train_x: np.ndarray,
-        train_y: np.ndarray,
-        likelihood: gpytorch.likelihoods.Likelihood,
-        kernel: gpytorch.kernels.Kernel,
-    ) -> None:
-        super(ExactGPModel, self).__init__(
-            torch.from_numpy(train_x), torch.from_numpy(train_y), likelihood
-        )
-        self.mean_module = gpytorch.means.ConstantMean()
-        self.covar_module = kernel
-
-        self.eval()
-        likelihood.eval()
-
-    def forward(self, x: torch.Tensor) -> gpytorch.distributions.Distribution:
-        mean_x = self.mean_module(x)
-        covar_x = self.covar_module(x)
-        return gpytorch.distributions.MultivariateNormal(mean_x, covar_x)
