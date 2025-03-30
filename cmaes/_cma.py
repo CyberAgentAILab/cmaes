@@ -477,7 +477,7 @@ class CMA:
         logeigsum = sum([np.log(e) for e in eigs])
         self._sigma = np.exp(logeigsum / 2.0 / self._n_dim)
         self._sigma = min(self._sigma, _SIGMA_MAX)
-        self._C = Sigma / (self._sigma**2)
+        self._C = (Sigma / (self._sigma**2)).astype(np.float64)
 
         # step-size correction
         self._sigma *= before_eta_mean / self._eta_mean
