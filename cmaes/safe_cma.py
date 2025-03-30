@@ -121,7 +121,7 @@ class SafeCMA:
             A covariance matrix (optional).
     """
 
-    # Paper: https://arxiv.org/abs/2405.10534v1
+    # Paper: https://arxiv.org/abs/2405.10534
 
     def __init__(
         self,
