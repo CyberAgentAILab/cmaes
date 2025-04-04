@@ -1,6 +1,10 @@
 # install_requires
 numpy>=1.20.0
 
+# for Safe CMA-ES
+torch
+gpytorch
+
 # visualization
 matplotlib
 scipy

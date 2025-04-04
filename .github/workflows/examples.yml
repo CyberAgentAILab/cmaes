@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -U pip setuptools
-          pip install --progress-bar off optuna numpy scipy
+          pip install --progress-bar off optuna numpy scipy gpytorch torch
           pip install --progress-bar off -U .
       - run: python examples/quadratic_2d_function.py
       - run: python examples/ipop_cma.py
@@ -34,6 +34,7 @@ jobs:
       - run: python examples/ws_cma.py
       - run: python examples/cma_with_margin_binary.py
       - run: python examples/cma_with_margin_integer.py
+      - run: python examples/safecma.py
   examples-cmawm-without-scipy:
     runs-on: ubuntu-latest
     steps:
