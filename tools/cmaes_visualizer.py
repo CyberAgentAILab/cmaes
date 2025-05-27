@@ -198,7 +198,7 @@ def init():
 
 
 def get_next_popsize_sigma():
-    global optimizer, n_restarts, poptype, small_n_eval, large_n_eval, sigma0
+    global n_restarts, poptype, small_n_eval, large_n_eval
     if args.restart_strategy == "ipop":
         n_restarts += 1
         popsize = optimizer.population_size * inc_popsize
