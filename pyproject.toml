@@ -10,7 +10,8 @@ authors = [
     { name = "Masashi Shibata", "email" = "m.shibata1020@gmail.com" }
 ]
 maintainers = [
-    { name = "Masahiro Nomura", "email" = "masahironomura5325@gmail.com" }
+    { name = "Masahiro Nomura", "email" = "masahironomura5325@gmail.com" },
+    { name = "Ryoki Hamano", "email" = "hamano_ryoki_xa@cyberagent.co.jp" }
 ]
 requires-python = ">=3.7"
 license = {file = "LICENSE"}
