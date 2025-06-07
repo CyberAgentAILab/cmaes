@@ -62,25 +62,25 @@ class CatCMAwM:
 
         x_space:
             The search space for continuous variables.
-            Should be a 2-dimensional NumPy array of shape (n_continuous, 2),
-            where each row represents [lower_bound, upper_bound] for a continuous variable.
-            If there are no continuous variables, set to None.
-            Example: np.array([[-3.0, 3.0], [0.0, 5.0], [-np.inf, np.inf]])
+            Provide as a 2-dimensional sequence (e.g., a list of lists),
+            where each row is [lower_bound, upper_bound] for a continuous variable.
+            If there are no continuous variables, this parameter can be omitted.
+            Example: [[-3.0, 3.0], [0.0, 5.0], [-np.inf, np.inf]]
 
         z_space:
             The set of possible values for each integer variable.
-            Should be a list of lists, where each inner list contains the feasible
-            (sorted) integer or discretized values for that dimension.
-            If there are no integer variables, set to None.
+            Provide as a list of lists, where each inner list contains the valid
+            (sorted) integer or discretized values for that variable.
+            If there are no integer variables, this parameter can be omitted.
             Example: [[-2, -1, 0, 1, 2], [0.01, 0.1, 1]]
 
         c_space:
             The shape of the categorical variables' domain.
-            Should be a 1-dimensional NumPy array of shape (n_categorical),
-            where each element indicates the number of categories (integer > 1)
+            Provide as a 1-dimensional sequence (e.g., a list)
+            where each element specifies the number of categories (integer > 1)
             for each categorical variable.
-            If there are no categorical variables, set to None.
-            Example: np.array([3, 3, 2, 10])
+            If there are no categorical variables, this parameter can be omitted.
+            Example: [3, 3, 2, 10]
 
         population_size:
             A population size (optional).
