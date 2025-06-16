@@ -241,8 +241,6 @@ def init():
 
 
 def update(frame):
-    global solutions
-
     for i in range(args.pop_per_frame):
         x1 = (x1_upper_bound - x1_lower_bound) * rng.random() + x1_lower_bound
         x2 = (x2_upper_bound - x2_lower_bound) * rng.random() + x2_lower_bound
