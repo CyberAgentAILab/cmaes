@@ -173,6 +173,120 @@ The full source code is available [here](./examples/ws_cma.py).
 
 </details>
 
+#### CatCMA with Margin [Hamano et al. 2025]
+CatCMA with Margin (CatCMAwM) is a method for mixed-variable optimization problems, simultaneously optimizing continuous, integer, and categorical variables. CatCMAwM extends CatCMA by introducing a novel integer handling mechanism, and supports arbitrary combinations of continuous, integer, and categorical variables in a unified framework.
+
+![CatCMAwM](https://github.com/user-attachments/assets/d0c866f5-1c12-4f44-a862-af47bcd7dfb1)
+
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CatCMAwM
+
+
+def SphereIntCOM(x, z, c):
+    return sum(x * x) + sum(z * z) + len(c) - sum(c[:, 0])
+
+
+def SphereInt(x, z):
+    return sum(x * x) + sum(z * z)
+
+
+def SphereCOM(x, c):
+    return sum(x * x) + len(c) - sum(c[:, 0])
+
+
+def f_cont_int_cat():
+    # [lower_bound, upper_bound] for each continuous variable
+    X = [[-5, 5], [-5, 5]]
+    # possible values for each integer variable
+    Z = [[-1, 0, 1], [-2, -1, 0, 1, 2]]
+    # number of categories for each categorical variable
+    C = [3, 3]
+
+    optimizer = CatCMAwM(x_space=X, z_space=Z, c_space=C)
+
+    for generation in range(50):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            sol = optimizer.ask()
+            value = SphereIntCOM(sol.x, sol.z, sol.c)
+            solutions.append((sol, value))
+            print(f"#{generation} {sol} evaluation: {value}")
+        optimizer.tell(solutions)
+
+
+def f_cont_int():
+    # [lower_bound, upper_bound] for each continuous variable
+    X = [[-np.inf, np.inf], [-np.inf, np.inf]]
+    # possible values for each integer variable
+    Z = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
+
+    # initial distribution parameters (Optional)
+    # If you know a promising solution for X and Z, set init_mean to that value.
+    init_mean = np.ones(len(X) + len(Z))
+    init_cov = np.diag(np.ones(len(X) + len(Z)))
+    init_sigma = 1.0
+
+    optimizer = CatCMAwM(
+        x_space=X, z_space=Z, mean=init_mean, cov=init_cov, sigma=init_sigma
+    )
+
+    for generation in range(50):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            sol = optimizer.ask()
+            value = SphereInt(sol.x, sol.z)
+            solutions.append((sol, value))
+            print(f"#{generation} {sol} evaluation: {value}")
+        optimizer.tell(solutions)
+
+
+def f_cont_cat():
+    # [lower_bound, upper_bound] for each continuous variable
+    X = [[-5, 5], [-5, 5]]
+    # number of categories for each categorical variable
+    C = [3, 5]
+
+    # initial distribution parameters (Optional)
+    init_cat_param = np.array(
+        [
+            [0.5, 0.3, 0.2, 0.0, 0.0],  # zero-padded at the end
+            [0.2, 0.2, 0.2, 0.2, 0.2],  # each row must sum to 1
+        ]
+    )
+
+    optimizer = CatCMAwM(x_space=X, c_space=C, cat_param=init_cat_param)
+
+    for generation in range(50):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            sol = optimizer.ask()
+            value = SphereCOM(sol.x, sol.c)
+            solutions.append((sol, value))
+            print(f"#{generation} {sol} evaluation: {value}")
+        optimizer.tell(solutions)
+
+
+if __name__ == "__main__":
+    f_cont_int_cat()
+    # f_cont_int()
+    # f_cont_cat()
+```
+
+The full source code is available [here](./examples/catcma_with_margin.py).
+
+</details>
+
+
+We recommend using CatCMAwM for continuous+integer and continuous+categorical settings. In particular, [Hamano et al. 2025] shows that CatCMAwM outperforms CMA-ES with Margin in mixed-integer scenarios. Therefore, we suggest CatCMAwM in place of CMA-ES with Margin or CatCMA.
+
+
+<details>
+<summary>Details of CMA-ES with Margin</summary>
 
 #### CMA-ES with Margin [Hamano et al. 2022]
 
@@ -242,6 +356,10 @@ Source code is also available [here](./examples/cmaes_with_margin.py).
 
 </details>
 
+</details>
+
+<details>
+<summary>Details of CatCMA</summary>
 
 #### CatCMA [Hamano et al. 2024a]
 CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
@@ -315,108 +433,6 @@ if __name__ == "__main__":
 The full source code is available [here](./examples/catcma.py).
 
 </details>
-
-#### CatCMA with Margin [Hamano et al. 2025]
-CatCMA with Margin (CatCMAwM) is a method for mixed-variable optimization problems, simultaneously optimizing continuous, integer, and categorical variables. CatCMAwM extends CatCMA by introducing a novel integer handling mechanism, and supports arbitrary combinations of continuous, integer, and categorical variables in a unified framework.
-
-<details>
-<summary>Source code</summary>
-
-```python
-import numpy as np
-from cmaes import CatCMAwM
-
-
-def SphereIntCOM(x, z, c):
-    return sum(x * x) + sum(z * z) + len(c) - sum(c[:, 0])
-
-
-def SphereInt(x, z):
-    return sum(x * x) + sum(z * z)
-
-
-def SphereCOM(x, c):
-    return sum(x * x) + len(c) - sum(c[:, 0])
-
-
-def f_cont_int_cat():
-    # [lower_bound, upper_bound] for each continuous variable
-    X = [[-5, 5], [-5, 5]]
-    # possible values for each integer variable
-    Z = [[-1, 0, 1], [-2, -1, 0, 1, 2]]
-    # number of categories for each categorical variable
-    C = [3, 3]
-
-    optimizer = CatCMAwM(x_space=X, z_space=Z, c_space=C)
-
-    for generation in range(50):
-        solutions = []
-        for _ in range(optimizer.population_size):
-            sol = optimizer.ask()
-            value = SphereIntCOM(sol.x, sol.z, sol.c)
-            solutions.append((sol, value))
-            print(f"#{generation} {sol} evaluation: {value}")
-        optimizer.tell(solutions)
-
-
-def f_cont_int():
-    # [lower_bound, upper_bound] for each continuous variable
-    X = [[-np.inf, np.inf], [-np.inf, np.inf]]
-    # possible values for each integer variable
-    Z = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
-
-    # initial distribution parameters (Optional)
-    init_mean = np.ones(len(X) + len(Z))
-    init_cov = np.diag(np.ones(len(X) + len(Z)))
-    init_sigma = 1.0
-
-    optimizer = CatCMAwM(
-        x_space=X, z_space=Z, mean=init_mean, cov=init_cov, sigma=init_sigma
-    )
-
-    for generation in range(50):
-        solutions = []
-        for _ in range(optimizer.population_size):
-            sol = optimizer.ask()
-            value = SphereInt(sol.x, sol.z)
-            solutions.append((sol, value))
-            print(f"#{generation} {sol} evaluation: {value}")
-        optimizer.tell(solutions)
-
-
-def f_cont_cat():
-    # [lower_bound, upper_bound] for each continuous variable
-    X = [[-5, 5], [-5, 5]]
-    # number of categories for each categorical variable
-    C = [3, 5]
-
-    # initial distribution parameters (Optional)
-    init_cat_param = np.array(
-        [
-            [0.5, 0.3, 0.2, 0.0, 0.0],  # zero-padded at the end
-            [0.2, 0.2, 0.2, 0.2, 0.2],  # each row must sum to 1
-        ]
-    )
-
-    optimizer = CatCMAwM(x_space=X, c_space=C, cat_param=init_cat_param)
-
-    for generation in range(50):
-        solutions = []
-        for _ in range(optimizer.population_size):
-            sol = optimizer.ask()
-            value = SphereCOM(sol.x, sol.c)
-            solutions.append((sol, value))
-            print(f"#{generation} {sol} evaluation: {value}")
-        optimizer.tell(solutions)
-
-
-if __name__ == "__main__":
-    f_cont_int_cat()
-    # f_cont_int()
-    # f_cont_cat()
-```
-
-The full source code is available [here](./examples/catcma_with_margin.py).
 
 </details>
 
