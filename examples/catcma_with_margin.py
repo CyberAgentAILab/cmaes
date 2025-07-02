@@ -41,6 +41,7 @@ def f_cont_int():
     Z = [[-2, -1, 0, 1, 2], [-2, -1, 0, 1, 2]]
 
     # initial distribution parameters (Optional)
+    # If you know a promising solution for X and Z, set init_mean to that value.
     init_mean = np.ones(len(X) + len(Z))
     init_cov = np.diag(np.ones(len(X) + len(Z)))
     init_sigma = 1.0
