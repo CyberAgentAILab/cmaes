@@ -8,7 +8,6 @@ from dataclasses import dataclass, field
 
 from typing import cast
 from typing import List, Sequence, Union, Tuple, Optional
-from numpy.typing import NDArray
 
 import warnings
 
@@ -73,6 +72,9 @@ class CatCMAwM:
             (sorted) integer or discretized values for that variable.
             If there are no integer variables, this parameter can be omitted.
             Example: [[-2, -1, 0, 1, 2], [0.01, 0.1, 1]]
+            Note: For binary variables (i.e., variables that can only take two distinct values),
+            it is generally recommended to use the categorical variable representation via
+            `c_space` rather than treating them as integer variables.
 
         c_space:
             The shape of the categorical variables' domain.
@@ -81,6 +83,8 @@ class CatCMAwM:
             for each categorical variable.
             If there are no categorical variables, this parameter can be omitted.
             Example: [3, 3, 2, 10]
+            Note: Binary variables (with only two possible values) should be represented as
+            categorical variables here, rather than as integer variables in `z_space`.
 
         population_size:
             A population size (optional).
@@ -146,11 +150,11 @@ class CatCMAwM:
         self._popsize = population_size
 
         # --- CMA-ES weight (active covariance matrix adaptation) ---
-        self._mu = population_size // 2
+        self._mu = self._popsize // 2
         weights_prime = np.array(
             [
-                math.log((population_size + 1) / 2) - math.log(i + 1)
-                for i in range(population_size)
+                math.log((self._popsize + 1) / 2) - math.log(i + 1)
+                for i in range(self._popsize)
             ]
         )
         self._mu_eff = (np.sum(weights_prime[: self._mu]) ** 2) / np.sum(
@@ -166,7 +170,7 @@ class CatCMAwM:
 
         # learning rate for the rank-μ update
         self._cmu = min(
-            1 - self._c1 - 1e-8,  # 1e-8 is for large popsize.
+            1 - self._c1 - _EPS,  # _EPS is for large popsize.
             alpha_cov
             * (self._mu_eff - 2 + 1 / self._mu_eff)
             / ((self._Nmi + 2) ** 2 + alpha_cov * self._mu_eff / 2),
@@ -205,7 +209,7 @@ class CatCMAwM:
             self._init_discretization(z_space)
 
         if self._use_gaussian:
-            self._init_gaussian(x_space, mean, sigma, cov, population_size)
+            self._init_gaussian(x_space, mean, sigma, cov)
 
         if self._use_categorical:
             self._init_categorical(c_space, cat_param)
@@ -250,7 +254,7 @@ class CatCMAwM:
         self._alpha = 1 - 0.73 ** (1 / (self._Nin + self._Nca))
 
         # mutation rates for integer variables
-        self._pmut = (0.5 - 1e-10) * np.ones(self._Nin)
+        self._pmut = (0.5 - _EPS) * np.ones(self._Nin)
 
         # successful integer mutation
         self._int_succ = np.zeros(self._Nin, dtype=bool)
@@ -261,7 +265,6 @@ class CatCMAwM:
         mean: Optional[np.ndarray],
         sigma: Optional[float],
         cov: Optional[np.ndarray],
-        population_size: int,
     ) -> None:
         if x_space is not None:
             self._x_space = np.asarray(x_space, dtype=float)
@@ -386,15 +389,15 @@ class CatCMAwM:
         self._min_eigenvalue = 1e-30
 
         # history of interquartile range of the unpenalized objective function values
-        self._iqhist_term = 20 + math.ceil(3 * self._Nmi / population_size)
+        self._iqhist_term = 20 + math.ceil(3 * self._Nmi / self._popsize)
         self._iqhist_values: List[float] = []
 
-        # Termination criteria based on CMA-ES
+        # termination criteria based on CMA-ES
         self._tolx = 1e-12 * self._sigma
         self._tolxup = 1e4
         self._tolfun = 1e-12
         self._tolconditioncov = 1e14
-        self._funhist_term = 10 + math.ceil(30 * self._Nmi / population_size)
+        self._funhist_term = 10 + math.ceil(30 * self._Nmi / self._popsize)
         self._funhist_values = np.empty(self._funhist_term * 2)
 
     def _init_categorical(
@@ -540,12 +543,12 @@ class CatCMAwM:
         return z
 
     def _calc_continuous_penalty(
-        self, v_raw: np.ndarray, sorted_evals: np.ndarray
+        self, v_raw: np.ndarray, sorted_fvals: np.ndarray
     ) -> np.ndarray:
         # penalty values for box constraint handling:
         # https://ieeexplore.ieee.org/document/4634579
         iq_range = (
-            sorted_evals[3 * self._popsize // 4] - sorted_evals[self._popsize // 4]
+            sorted_fvals[3 * self._popsize // 4] - sorted_fvals[self._popsize // 4]
         )
 
         # insert iq_range in history
@@ -733,7 +736,9 @@ class CatCMAwM:
             p_mut = np.maximum(p_mut, self._alpha)
             p_mut[nsuc_idx] = np.minimum(p_mut[nsuc_idx], self._pmut[nsuc_idx])
             indices_to_update = self._discrete_idx[edge_mask]
-            p_mut = np.clip(p_mut, 1e-10, 0.5 - 1e-10)
+
+            # avoid numerical errors
+            p_mut = np.clip(p_mut, _EPS, 0.5 - _EPS)
 
             # modify A
             m_int = self._discretization(updated_m_integer)
@@ -768,58 +773,36 @@ class CatCMAwM:
             self._pmut[edge_mask] = p_mut[edge_mask]
 
         if np.any(side_mask):
-            low_cdf = np.maximum(low_cdf, self._alpha / 2.0)
-            up_cdf = np.maximum(up_cdf, self._alpha / 2.0)
+            low_cdf = np.maximum(low_cdf, self._alpha / 2)
+            up_cdf = np.maximum(up_cdf, self._alpha / 2)
             mid_cdf[nsuc_idx] = np.maximum(mid_cdf[nsuc_idx], 1 - self._pmut[nsuc_idx])
 
-            low_cdf_tmp: NDArray[np.float64] = np.zeros(self._Nin)
-            up_cdf_tmp: NDArray[np.float64] = np.zeros(self._Nin)
+            Delta_cdf = 1 - low_cdf - up_cdf - mid_cdf
 
-            # for successed index
-            low_cdf_tmp[suc_idx] = low_cdf[suc_idx] + (
-                1.0 - low_cdf[suc_idx] - up_cdf[suc_idx] - mid_cdf[suc_idx]
-            ) * (low_cdf[suc_idx] - self._alpha / 2) / (
+            Delta_cdf[suc_idx] /= (
                 low_cdf[suc_idx]
-                + mid_cdf[suc_idx]
                 + up_cdf[suc_idx]
-                - 3.0 * self._alpha / 2
-            )
-            up_cdf_tmp[suc_idx] = up_cdf[suc_idx] + (
-                1.0 - low_cdf[suc_idx] - up_cdf[suc_idx] - mid_cdf[suc_idx]
-            ) * (up_cdf[suc_idx] - self._alpha / 2) / (
-                low_cdf[suc_idx]
                 + mid_cdf[suc_idx]
-                + up_cdf[suc_idx]
-                - 3.0 * self._alpha / 2
+                - 3 * self._alpha / 2
             )
-
-            # for unsuccessed index
-            low_cdf_tmp[nsuc_idx] = low_cdf[nsuc_idx] + (
-                1.0 - low_cdf[nsuc_idx] - up_cdf[nsuc_idx] - mid_cdf[nsuc_idx]
-            ) * (low_cdf[nsuc_idx] - self._alpha / 2) / (
+            Delta_cdf[nsuc_idx] /= (
                 low_cdf[nsuc_idx]
-                + mid_cdf[nsuc_idx]
                 + up_cdf[nsuc_idx]
+                + mid_cdf[nsuc_idx]
                 - self._alpha
                 - (1 - self._pmut[nsuc_idx])
             )
-            up_cdf_tmp[nsuc_idx] = up_cdf[nsuc_idx] + (
-                1.0 - low_cdf[nsuc_idx] - up_cdf[nsuc_idx] - mid_cdf[nsuc_idx]
-            ) * (up_cdf[nsuc_idx] - self._alpha / 2) / (
-                low_cdf[nsuc_idx]
-                + mid_cdf[nsuc_idx]
-                + up_cdf[nsuc_idx]
-                - self._alpha
-                - (1 - self._pmut[nsuc_idx])
-            )
+
+            low_cdf += Delta_cdf * (low_cdf - self._alpha / 2)
+            up_cdf += Delta_cdf * (up_cdf - self._alpha / 2)
 
             # avoid numerical errors
-            low_cdf_tmp = np.clip(low_cdf_tmp, 1e-10, 0.5 - 1e-10)
-            up_cdf_tmp = np.clip(up_cdf_tmp, 1e-10, 0.5 - 1e-10)
+            low_cdf = np.clip(low_cdf, _EPS, 0.5 - _EPS)
+            up_cdf = np.clip(up_cdf, _EPS, 0.5 - _EPS)
 
             # modify mean vector and A (with sigma and C fixed)
-            chi_low_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * low_cdf_tmp))
-            chi_up_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * up_cdf_tmp))
+            chi_low_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * low_cdf))
+            chi_up_sq = np.sqrt(chi2_ppf(q=1.0 - 2 * up_cdf))
             C_diag_sq = np.sqrt(np.diag(self._C))[self._discrete_idx]
 
             self._A[self._discrete_idx] = self._A[self._discrete_idx] + side_mask * (
@@ -836,7 +819,7 @@ class CatCMAwM:
             )
 
             # save mutation rates for the next generation
-            self._pmut[side_mask] = low_cdf_tmp[side_mask] + up_cdf_tmp[side_mask]
+            self._pmut[side_mask] = low_cdf[side_mask] + up_cdf[side_mask]
 
     def _update_categorical(self, sc: np.ndarray) -> None:
         # natural gradient
@@ -856,8 +839,8 @@ class CatCMAwM:
             sl += list(s_i)
         ngrad_sqF = np.array(sl)
 
-        pnorm = np.sqrt(np.dot(ngrad_sqF, ngrad_sqF)) + 1e-30
-        self._eps = self._delta / pnorm
+        pnorm = np.sqrt(np.dot(ngrad_sqF, ngrad_sqF))
+        self._eps = self._delta / (pnorm + _EPS)
         self._q += self._eps * ngrad
 
         # update of ASNG
@@ -911,13 +894,13 @@ class CatCMAwM:
             )
 
         solutions.sort(key=lambda s: s[1])
-        evals = np.stack([sol[1] for sol in solutions])
+        fvals = np.stack([sol[1] for sol in solutions])
 
         # calculate penalty values for infeasible continuous solutions
         penalties = np.zeros(self._popsize)
         if self._use_continuous:
             v_raw = np.stack([cast(np.ndarray, sol[0]._v_raw) for sol in solutions])
-            penalties = self._calc_continuous_penalty(v_raw, evals)
+            penalties = self._calc_continuous_penalty(v_raw, fvals)
 
         for i in range(self._popsize):
             solutions[i] = (solutions[i][0], solutions[i][1] + penalties[i])
@@ -940,8 +923,8 @@ class CatCMAwM:
         # last 'self._funhist_term' generations.
         if self._use_gaussian:
             funhist_idx = 2 * (self.generation % self._funhist_term)
-            self._funhist_values[funhist_idx] = evals[0]
-            self._funhist_values[funhist_idx + 1] = evals[-1]
+            self._funhist_values[funhist_idx] = fvals[0]
+            self._funhist_values[funhist_idx + 1] = fvals[-1]
 
         # integer centering
         if self._use_integer:
