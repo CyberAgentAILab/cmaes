@@ -434,9 +434,8 @@ The full source code is available [here](./examples/catcma.py).
 
 </details>
 
-</details>
 
-#### Safe CMA [Uchida et al. 2024]
+#### Safe CMA [Uchida et al. 2024a]
 Safe CMA-ES is a variant of CMA-ES for safe optimization. Safe optimization is formulated as a special type of constrained optimization problem aiming to solve the optimization problem with fewer evaluations of the solutions whose safety function values exceed the safety thresholds. The safe CMA-ES requires safe seeds that do not violate the safety constraints. Note that the safe CMA-ES is designed for noiseless safe optimization. This module needs `torch` and `gpytorch`.
 
 <details>
@@ -556,6 +555,79 @@ if __name__ == "__main__":
 ```
 
 The full source code is available [here](./examples/mapcma.py).
+
+</details>
+
+
+#### CMA-ES-SoP [Uchida et al. 2024b]
+CMA-ES on sets of points (CMA-ES-SoP) is a variant of CMA-ES for optimization on sets of points. In the optimization on sets of points, the search space consists of several disjoint subspaces containing multiple possible points where the objective function value can be computed. In the mixed-variable cases, some subspaces are continuous spaces. Note that the discrete subspaces with more than five dimensions require computational cost for the construction of the Voronoi diagrams.
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes.cma_sop import CMASoP
+
+# numbers of dimensions in each subspace
+subspace_dim_list = [2, 3, 5]
+cont_dim = 10
+
+# numbers of points in each subspace
+point_num_list = [10, 20, 40]
+
+# number of total dimensions
+dim = int(np.sum(subspace_dim_list) + cont_dim)
+
+# objective function
+def quadratic(x):
+    coef = 1000 ** (np.arange(dim) / float(dim - 1))
+    return np.sum((coef * x) ** 2)
+
+# sets_of_points (on [-5, 5])
+discrete_subspace_num = len(subspace_dim_list)
+sets_of_points = [(
+    2 * np.random.rand(point_num_list[i], subspace_dim_list[i]) - 1) * 5
+for i in range(discrete_subspace_num)]
+
+# add the optimal solution (for benchmark function)
+for i in range(discrete_subspace_num):
+    sets_of_points[i][-1] = np.zeros(subspace_dim_list[i])
+    np.random.shuffle(sets_of_points[i])
+
+# optimizer (CMA-ES-SoP)
+optimizer = CMASoP(
+    sets_of_points=sets_of_points,
+    mean=np.random.rand(dim) * 4 + 1,
+    sigma=2.0,
+)
+
+best_eval = np.inf
+eval_count = 0
+
+for generation in range(400):
+    solutions = []
+    for _ in range(optimizer.population_size):
+        # Ask a parameter
+        x, enc_x = optimizer.ask()
+        value = quadratic(enc_x)
+
+        # save best eval
+        best_eval = np.min((best_eval, value))
+        eval_count += 1
+
+        solutions.append((x, value))
+
+    # Tell evaluation values.
+    optimizer.tell(solutions)
+
+    print(f"#{generation} ({best_eval} {eval_count})")
+
+    if best_eval < 1e-4 or optimizer.should_stop():
+        break
+```
+
+The full source code is available [here](./examples/cma_sop.py).
 
 </details>
 
@@ -706,4 +778,5 @@ Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal
 and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
 * [Nomura and Shibata 2024] [M. Nomura, M. Shibata, cmaes : A Simple yet Practical Python Library for CMA-ES, arXiv:2402.01373, 2024.](https://arxiv.org/abs/2402.01373)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
-* [Uchida et al. 2024] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
+* [Uchida et al. 2024a] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
+* [Uchida et al. 2024b] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Discrete and Mixed-Variable Optimization on Sets of Points, PPSN, 2024.](https://arxiv.org/abs/2408.13046)
