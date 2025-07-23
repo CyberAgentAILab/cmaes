@@ -47,16 +47,14 @@ if __name__ == "__main__":
         optimizer.tell(solutions)
 ```
 
-And you can use this library via [Optuna](https://github.com/optuna/optuna) [Akiba et al. 2019], an automatic hyperparameter optimization framework.
-Optuna's built-in CMA-ES sampler which uses this library under the hood is available from [v1.3.0](https://github.com/optuna/optuna/releases/tag/v1.3.0) and stabled at [v2.0.0](https://github.com/optuna/optuna/releases/tag/v2.2.0).
-See [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.CmaEsSampler.html) or [v2.0 release blog](https://medium.com/optuna/optuna-v2-3165e3f1fc2) for more details.
+You can also use this library via [Optuna](https://github.com/optuna/optuna) [Akiba et al. 2019], an automatic hyperparameter optimization framework.
 
 ```python
 import optuna
 
 def objective(trial: optuna.Trial):
-    x1 = trial.suggest_uniform("x1", -4, 4)
-    x2 = trial.suggest_uniform("x2", -4, 4)
+    x1 = trial.suggest_float("x1", -4, 4)
+    x2 = trial.suggest_float("x2", -4, 4)
     return (x1 - 3) ** 2 + (10 * (x2 + 2)) ** 2
 
 if __name__ == "__main__":
@@ -65,6 +63,7 @@ if __name__ == "__main__":
     study.optimize(objective, n_trials=250)
 ```
 
+For more information, see [the documentation](https://optuna.readthedocs.io/en/stable/reference/samplers/generated/optuna.samplers.CmaEsSampler.html).
 
 ## CMA-ES variants
 
