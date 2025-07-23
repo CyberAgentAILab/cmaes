@@ -285,8 +285,6 @@ The full source code is available [here](./examples/catcma_with_margin.py).
 We recommend using CatCMAwM for continuous+integer and continuous+categorical settings. In particular, [Hamano et al. 2025] shows that CatCMAwM outperforms CMA-ES with Margin in mixed-integer scenarios. Therefore, we suggest CatCMAwM in place of CMA-ES with Margin or CatCMA.
 
 
-<details>
-<summary>Details of CMA-ES with Margin</summary>
 
 #### CMA-ES with Margin [Hamano et al. 2022]
 
@@ -355,11 +353,6 @@ if __name__ == "__main__":
 Source code is also available [here](./examples/cmaes_with_margin.py).
 
 </details>
-
-</details>
-
-<details>
-<summary>Details of CatCMA</summary>
 
 #### CatCMA [Hamano et al. 2024a]
 CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
@@ -680,8 +673,6 @@ Full source code is available [here](./examples/sep_cma.py).
 #### IPOP-CMA-ES [Auger and Hansen 2005]
 
 IPOP-CMA-ES is a method that involves restarting the CMA-ES with an incrementally increasing population size, as described below.
-
-![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88472274-f9e12480-cf4b-11ea-8aff-2a859eb51a15.gif)
 
 <details>
 <summary>Source code</summary>
