@@ -68,111 +68,6 @@ if __name__ == "__main__":
 
 ## CMA-ES variants
 
-#### Learning Rate Adaptation CMA-ES [Nomura et al. 2023]
-The performance of the CMA-ES can deteriorate when faced with *difficult* problems such as multimodal or noisy ones, if its hyperparameter values are not properly configured.
-The Learning Rate Adaptation CMA-ES (LRA-CMA) effectively addresses this issue by autonomously adjusting the learning rate.
-Consequently, LRA-CMA eliminates the need for expensive hyperparameter tuning.
-
-LRA-CMA can be used by simply adding `lr_adapt=True` to the initialization of `CMA()`.
-
-<details>
-
-<summary>Source code</summary>
-
-```python
-import numpy as np
-from cmaes import CMA
-
-
-def rastrigin(x):
-    dim = len(x)
-    return 10 * dim + sum(x**2 - 10 * np.cos(2 * np.pi * x))
-
-
-if __name__ == "__main__":
-    dim = 40
-    optimizer = CMA(mean=3*np.ones(dim), sigma=2.0, lr_adapt=True)
-
-    for generation in range(50000):
-        solutions = []
-        for _ in range(optimizer.population_size):
-            x = optimizer.ask()
-            value = rastrigin(x)
-            if generation % 500 == 0:
-                print(f"#{generation} {value}")
-            solutions.append((x, value))
-        optimizer.tell(solutions)
-
-        if optimizer.should_stop():
-            break
-```
-
-The full source code is available [here](./examples/lra_cma.py).
-
-</details>
-
-
-
-#### Warm Starting CMA-ES [Nomura et al. 2021]
-
-Warm Starting CMA-ES (WS-CMA) is a method that transfers prior knowledge from similar tasks through the initialization of the CMA-ES.
-This is useful especially when the evaluation budget is limited (e.g., hyperparameter optimization of machine learning algorithms).
-
-![benchmark-lightgbm-toxic](https://github.com/c-bata/benchmark-warm-starting-cmaes/raw/main/result.png)
-
-<details>
-<summary>Source code</summary>
-
-```python
-import numpy as np
-from cmaes import CMA, get_warm_start_mgd
-
-def source_task(x1: float, x2: float) -> float:
-    b = 0.4
-    return (x1 - b) ** 2 + (x2 - b) ** 2
-
-def target_task(x1: float, x2: float) -> float:
-    b = 0.6
-    return (x1 - b) ** 2 + (x2 - b) ** 2
-
-if __name__ == "__main__":
-    # Generate solutions from a source task
-    source_solutions = []
-    for _ in range(1000):
-        x = np.random.random(2)
-        value = source_task(x[0], x[1])
-        source_solutions.append((x, value))
-
-    # Estimate a promising distribution of the source task,
-    # then generate parameters of the multivariate gaussian distribution.
-    ws_mean, ws_sigma, ws_cov = get_warm_start_mgd(
-        source_solutions, gamma=0.1, alpha=0.1
-    )
-    optimizer = CMA(mean=ws_mean, sigma=ws_sigma, cov=ws_cov)
-
-    # Run WS-CMA-ES
-    print(" g    f(x1,x2)     x1      x2  ")
-    print("===  ==========  ======  ======")
-    while True:
-        solutions = []
-        for _ in range(optimizer.population_size):
-            x = optimizer.ask()
-            value = target_task(x[0], x[1])
-            solutions.append((x, value))
-            print(
-                f"{optimizer.generation:3d}  {value:10.5f}"
-                f"  {x[0]:6.2f}  {x[1]:6.2f}"
-            )
-        optimizer.tell(solutions)
-
-        if optimizer.should_stop():
-            break
-```
-
-The full source code is available [here](./examples/ws_cma.py).
-
-</details>
-
 #### CatCMA with Margin [Hamano et al. 2025]
 CatCMA with Margin (CatCMAwM) is a method for mixed-variable optimization problems, simultaneously optimizing continuous, integer, and categorical variables. CatCMAwM extends CatCMA by introducing a novel integer handling mechanism, and supports arbitrary combinations of continuous, integer, and categorical variables in a unified framework.
 
@@ -281,85 +176,7 @@ The full source code is available [here](./examples/catcma_with_margin.py).
 
 </details>
 
-
 We recommend using CatCMAwM for continuous+integer and continuous+categorical settings. In particular, [Hamano et al. 2025] shows that CatCMAwM outperforms CMA-ES with Margin in mixed-integer scenarios. Therefore, we suggest CatCMAwM in place of CMA-ES with Margin or CatCMA.
-
-
-<details>
-<summary>Details of CMA-ES with Margin</summary>
-
-#### CMA-ES with Margin [Hamano et al. 2022]
-
-CMA-ES with Margin (CMAwM) introduces a lower bound on the marginal probability for each discrete dimension, ensuring that samples avoid being fixed to a single point.
-This method can be applied to mixed spaces consisting of continuous (such as float) and discrete elements (including integer and binary types).
-
-|CMA|CMAwM|
-|---|---|
-|![CMA-ES](https://github.com/CyberAgentAILab/cmaes/assets/27720055/41d33c4b-b80b-42af-9f62-6d22f19dbae5)|![CMA-ESwM](https://github.com/CyberAgentAILab/cmaes/assets/27720055/9035deaa-6222-4720-a417-c31c765f3228)|
-
-The above figures are taken from [EvoConJP/CMA-ES_with_Margin](https://github.com/EvoConJP/CMA-ES_with_Margin).
-
-<details>
-<summary>Source code</summary>
-
-```python
-import numpy as np
-from cmaes import CMAwM
-
-
-def ellipsoid_onemax(x, n_zdim):
-    n = len(x)
-    n_rdim = n - n_zdim
-    r = 10
-    if len(x) < 2:
-        raise ValueError("dimension must be greater one")
-    ellipsoid = sum([(1000 ** (i / (n_rdim - 1)) * x[i]) ** 2 for i in range(n_rdim)])
-    onemax = n_zdim - (0.0 < x[(n - n_zdim) :]).sum()
-    return ellipsoid + r * onemax
-
-
-def main():
-    binary_dim, continuous_dim = 10, 10
-    dim = binary_dim + continuous_dim
-    bounds = np.concatenate(
-        [
-            np.tile([-np.inf, np.inf], (continuous_dim, 1)),
-            np.tile([0, 1], (binary_dim, 1)),
-        ]
-    )
-    steps = np.concatenate([np.zeros(continuous_dim), np.ones(binary_dim)])
-    optimizer = CMAwM(mean=np.zeros(dim), sigma=2.0, bounds=bounds, steps=steps)
-    print(" evals    f(x)")
-    print("======  ==========")
-
-    evals = 0
-    while True:
-        solutions = []
-        for _ in range(optimizer.population_size):
-            x_for_eval, x_for_tell = optimizer.ask()
-            value = ellipsoid_onemax(x_for_eval, binary_dim)
-            evals += 1
-            solutions.append((x_for_tell, value))
-            if evals % 300 == 0:
-                print(f"{evals:5d}  {value:10.5f}")
-        optimizer.tell(solutions)
-
-        if optimizer.should_stop():
-            break
-
-
-if __name__ == "__main__":
-    main()
-```
-
-Source code is also available [here](./examples/cmaes_with_margin.py).
-
-</details>
-
-</details>
-
-<details>
-<summary>Details of CatCMA</summary>
 
 #### CatCMA [Hamano et al. 2024a]
 CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
@@ -433,7 +250,6 @@ if __name__ == "__main__":
 The full source code is available [here](./examples/catcma.py).
 
 </details>
-
 
 #### Safe CMA [Uchida et al. 2024a]
 Safe CMA-ES is a variant of CMA-ES for safe optimization. Safe optimization is formulated as a special type of constrained optimization problem aiming to solve the optimization problem with fewer evaluations of the solutions whose safety function values exceed the safety thresholds. The safe CMA-ES requires safe seeds that do not violate the safety constraints. Note that the safe CMA-ES is designed for noiseless safe optimization. This module needs `torch` and `gpytorch`.
@@ -631,6 +447,177 @@ The full source code is available [here](./examples/cma_sop.py).
 
 </details>
 
+#### Learning Rate Adaptation CMA-ES [Nomura et al. 2023]
+The performance of the CMA-ES can deteriorate when faced with *difficult* problems such as multimodal or noisy ones, if its hyperparameter values are not properly configured.
+The Learning Rate Adaptation CMA-ES (LRA-CMA) effectively addresses this issue by autonomously adjusting the learning rate.
+Consequently, LRA-CMA eliminates the need for expensive hyperparameter tuning.
+
+LRA-CMA can be used by simply adding `lr_adapt=True` to the initialization of `CMA()`.
+
+<details>
+
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CMA
+
+
+def rastrigin(x):
+    dim = len(x)
+    return 10 * dim + sum(x**2 - 10 * np.cos(2 * np.pi * x))
+
+
+if __name__ == "__main__":
+    dim = 40
+    optimizer = CMA(mean=3*np.ones(dim), sigma=2.0, lr_adapt=True)
+
+    for generation in range(50000):
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = rastrigin(x)
+            if generation % 500 == 0:
+                print(f"#{generation} {value}")
+            solutions.append((x, value))
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/lra_cma.py).
+
+</details>
+
+
+#### CMA-ES with Margin [Hamano et al. 2022]
+
+CMA-ES with Margin (CMAwM) introduces a lower bound on the marginal probability for each discrete dimension, ensuring that samples avoid being fixed to a single point.
+This method can be applied to mixed spaces consisting of continuous (such as float) and discrete elements (including integer and binary types).
+
+|CMA|CMAwM|
+|---|---|
+|![CMA-ES](https://github.com/CyberAgentAILab/cmaes/assets/27720055/41d33c4b-b80b-42af-9f62-6d22f19dbae5)|![CMA-ESwM](https://github.com/CyberAgentAILab/cmaes/assets/27720055/9035deaa-6222-4720-a417-c31c765f3228)|
+
+The above figures are taken from [EvoConJP/CMA-ES_with_Margin](https://github.com/EvoConJP/CMA-ES_with_Margin).
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CMAwM
+
+
+def ellipsoid_onemax(x, n_zdim):
+    n = len(x)
+    n_rdim = n - n_zdim
+    r = 10
+    if len(x) < 2:
+        raise ValueError("dimension must be greater one")
+    ellipsoid = sum([(1000 ** (i / (n_rdim - 1)) * x[i]) ** 2 for i in range(n_rdim)])
+    onemax = n_zdim - (0.0 < x[(n - n_zdim) :]).sum()
+    return ellipsoid + r * onemax
+
+
+def main():
+    binary_dim, continuous_dim = 10, 10
+    dim = binary_dim + continuous_dim
+    bounds = np.concatenate(
+        [
+            np.tile([-np.inf, np.inf], (continuous_dim, 1)),
+            np.tile([0, 1], (binary_dim, 1)),
+        ]
+    )
+    steps = np.concatenate([np.zeros(continuous_dim), np.ones(binary_dim)])
+    optimizer = CMAwM(mean=np.zeros(dim), sigma=2.0, bounds=bounds, steps=steps)
+    print(" evals    f(x)")
+    print("======  ==========")
+
+    evals = 0
+    while True:
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x_for_eval, x_for_tell = optimizer.ask()
+            value = ellipsoid_onemax(x_for_eval, binary_dim)
+            evals += 1
+            solutions.append((x_for_tell, value))
+            if evals % 300 == 0:
+                print(f"{evals:5d}  {value:10.5f}")
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Source code is also available [here](./examples/cmaes_with_margin.py).
+
+</details>
+
+
+#### Warm Starting CMA-ES [Nomura et al. 2021]
+
+Warm Starting CMA-ES (WS-CMA) is a method that transfers prior knowledge from similar tasks through the initialization of the CMA-ES.
+This is useful especially when the evaluation budget is limited (e.g., hyperparameter optimization of machine learning algorithms).
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import CMA, get_warm_start_mgd
+
+def source_task(x1: float, x2: float) -> float:
+    b = 0.4
+    return (x1 - b) ** 2 + (x2 - b) ** 2
+
+def target_task(x1: float, x2: float) -> float:
+    b = 0.6
+    return (x1 - b) ** 2 + (x2 - b) ** 2
+
+if __name__ == "__main__":
+    # Generate solutions from a source task
+    source_solutions = []
+    for _ in range(1000):
+        x = np.random.random(2)
+        value = source_task(x[0], x[1])
+        source_solutions.append((x, value))
+
+    # Estimate a promising distribution of the source task,
+    # then generate parameters of the multivariate gaussian distribution.
+    ws_mean, ws_sigma, ws_cov = get_warm_start_mgd(
+        source_solutions, gamma=0.1, alpha=0.1
+    )
+    optimizer = CMA(mean=ws_mean, sigma=ws_sigma, cov=ws_cov)
+
+    # Run WS-CMA-ES
+    print(" g    f(x1,x2)     x1      x2  ")
+    print("===  ==========  ======  ======")
+    while True:
+        solutions = []
+        for _ in range(optimizer.population_size):
+            x = optimizer.ask()
+            value = target_task(x[0], x[1])
+            solutions.append((x, value))
+            print(
+                f"{optimizer.generation:3d}  {value:10.5f}"
+                f"  {x[0]:6.2f}  {x[1]:6.2f}"
+            )
+        optimizer.tell(solutions)
+
+        if optimizer.should_stop():
+            break
+```
+
+The full source code is available [here](./examples/ws_cma.py).
+
+</details>
+
 
 #### Separable CMA-ES [Ros and Hansen 2008]
 
@@ -680,8 +667,6 @@ Full source code is available [here](./examples/sep_cma.py).
 #### IPOP-CMA-ES [Auger and Hansen 2005]
 
 IPOP-CMA-ES is a method that involves restarting the CMA-ES with an incrementally increasing population size, as described below.
-
-![visualize-ipop-cmaes-himmelblau](https://user-images.githubusercontent.com/5564044/88472274-f9e12480-cf4b-11ea-8aff-2a859eb51a15.gif)
 
 <details>
 <summary>Source code</summary>
@@ -780,3 +765,4 @@ and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
 * [Uchida et al. 2024a] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
 * [Uchida et al. 2024b] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Discrete and Mixed-Variable Optimization on Sets of Points, PPSN, 2024.](https://arxiv.org/abs/2408.13046)
+
