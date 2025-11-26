@@ -13,3 +13,8 @@ benchmark/*.json
 *.stats
 *.sqlite3
 
+# Benchmark logs and local artifacts
+benchmark/logs/
+benchmarking_dashboard.pdf
+*.pdf
+

@@ -340,7 +340,7 @@ class SepCMA:
 
         # No effect coordinates: stop if adding 0.2-standard deviations
         # in any single coordinate does not change m.
-        if np.any(self._mean == self._mean + (0.2 * self._sigma * np.sqrt(self._C))):
+        if np.any(self._mean == self._mean + (0.2 * self._sigma * np.sqrt(np.maximum(self._C, 0.0)))):
             return True
 
         # No effect axis: stop if adding 0.1-standard deviation vector in
