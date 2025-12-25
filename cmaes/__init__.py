@@ -7,5 +7,6 @@ from ._dxnesic import DXNESIC  # NOQA
 from ._catcma import CatCMA  # NOQA
 from ._mapcma import MAPCMA  # NOQA
 from ._catcmawm import CatCMAwM  # NOQA
+from ._comocatcmawm import COMOCatCMAwM  # NOQA
 
 __version__ = "0.12.0"
