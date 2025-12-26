@@ -45,9 +45,9 @@ import numpy as np
 from math import sqrt
 from bisect import bisect_left
 
-from typing import List, Tuple, TypeAlias
+from typing import List, Tuple
 
-Point2D: TypeAlias = Tuple[float, float]
+Point2D = Tuple[float, float]
 
 
 class UHVIArchive2D:
