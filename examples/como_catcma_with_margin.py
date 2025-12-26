@@ -2,7 +2,7 @@ import numpy as np
 from cmaes import COMOCatCMAwM
 
 
-def SphereIntLFTK(x, z, c, cat_num):
+def DSIntLFTK(x, z, c, cat_num):
     Sphere1 = sum((x / 10) ** 2) / len(x)
     Sphere2 = sum((x / 10 - 1) ** 2) / len(x)
     SphereInt1 = sum((z / 10) ** 2) / len(z)
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     while evals < 7000:
         solutions = []
         for sol in optimizer.ask_iter():
-            value = SphereIntLFTK(sol.x, sol.z, sol.c, C)
+            value = DSIntLFTK(sol.x, sol.z, sol.c, C)
             evals += 1
             solutions.append((sol, value))
         optimizer.tell(solutions)
