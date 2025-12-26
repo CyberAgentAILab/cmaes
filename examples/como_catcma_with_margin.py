@@ -2,15 +2,15 @@ import numpy as np
 from cmaes import COMOCatCMAwM
 
 
-def SphereIntLOTK(x, z, c, cat_num):
+def SphereIntLFTK(x, z, c, cat_num):
     Sphere1 = sum((x / 10) ** 2) / len(x)
     Sphere2 = sum((x / 10 - 1) ** 2) / len(x)
     SphereInt1 = sum((z / 10) ** 2) / len(z)
     SphereInt2 = sum((z / 10 - 1) ** 2) / len(z)
     c_idx = c.argmax(axis=1)
-    LO = (len(c) - (c_idx == 0).cumprod().sum()) / len(c)
+    LF = (len(c) - (c_idx == 0).cumprod().sum()) / len(c)
     TK = (len(c) - (c_idx == np.asarray(cat_num) - 1)[::-1].cumprod().sum()) / len(c)
-    obj1 = Sphere1 + SphereInt1 + LO
+    obj1 = Sphere1 + SphereInt1 + LF
     obj2 = Sphere2 + SphereInt2 + TK
     return [obj1, obj2]
 
@@ -29,7 +29,7 @@ if __name__ == "__main__":
     while evals < 7000:
         solutions = []
         for sol in optimizer.ask_iter():
-            value = SphereIntLOTK(sol.x, sol.z, sol.c, C)
+            value = SphereIntLFTK(sol.x, sol.z, sol.c, C)
             evals += 1
             solutions.append((sol, value))
         optimizer.tell(solutions)
