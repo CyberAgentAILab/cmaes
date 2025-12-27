@@ -148,7 +148,7 @@ class COMOCatCMAwM:
         self._g: int = 0
 
         # Randomize kernel update sequence
-        self._kernel_pi = self._rng.permutation(self._kernel_size)
+        self._kernel_pi: List[int] = (self._rng.permutation(self._kernel_size)).tolist()
         self._kernel_index: int = 0
 
         # Set up incumbent solutions and evaluation status
@@ -413,7 +413,7 @@ class COMOCatCMAwM:
         if self._kernel_index == self._kernel_size:
             self._g += 1
             self._kernel_index = 0
-            self._kernel_pi = self._rng.permutation(self._kernel_size)
+            self._kernel_pi = (self._rng.permutation(self._kernel_size)).tolist()
 
     def _update_ideal_nadir(self, obj: np.ndarray) -> None:
         if self._ideal_point is None or self._nadir_point is None:
