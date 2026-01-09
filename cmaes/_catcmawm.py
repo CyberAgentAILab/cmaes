@@ -105,7 +105,7 @@ class CatCMAwM:
             A seed number (optional).
     """
 
-    # Paper: https://arxiv.org/abs/2504.07884
+    # Paper: https://arxiv.org/abs/2504.07884v5
 
     @dataclass(frozen=True)
     class Solution:
