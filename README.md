@@ -177,6 +177,55 @@ The full source code is available [here](./examples/catcma_with_margin.py).
 
 We recommend using CatCMAwM for continuous+integer and continuous+categorical settings. In particular, [Hamano et al. 2025] shows that CatCMAwM outperforms CMA-ES with Margin in mixed-integer scenarios. Therefore, we suggest CatCMAwM in place of CMA-ES with Margin or CatCMA.
 
+#### COMO-CatCMA with Margin [Hamano et al. 2026]
+COMO-CatCMA with Margin (COMO-CatCMAwM) performs multi-objective mixed-variable optimization by coordinating multiple CatCMAwM optimizers. It currently supports two-objective problems; support for three or more objectives is planned.
+
+<details>
+<summary>Source code</summary>
+
+```python
+import numpy as np
+from cmaes import COMOCatCMAwM
+
+
+def DSIntLFTL(x, z, c, cat_num):
+    Sphere1 = sum((x / 10) ** 2) / len(x)
+    Sphere2 = sum((x / 10 - 1) ** 2) / len(x)
+    SphereInt1 = sum((z / 10) ** 2) / len(z)
+    SphereInt2 = sum((z / 10 - 1) ** 2) / len(z)
+    c_idx = c.argmax(axis=1)
+    LF = (len(c) - (c_idx == 0).cumprod().sum()) / len(c)
+    TL = (len(c) - (c_idx == np.asarray(cat_num) - 1)[::-1].cumprod().sum()) / len(c)
+    obj1 = Sphere1 + SphereInt1 + LF
+    obj2 = Sphere2 + SphereInt2 + TL
+    return [obj1, obj2]
+
+
+if __name__ == "__main__":
+    # [lower_bound, upper_bound] for each continuous variable
+    X = [[-5, 15]] * 3
+    # possible values for each integer variable
+    Z = [range(-5, 16)] * 3
+    # number of categories for each categorical variable
+    C = [5] * 3
+
+    optimizer = COMOCatCMAwM(x_space=X, z_space=Z, c_space=C)
+
+    evals = 0
+    while evals < 7000:
+        solutions = []
+        for sol in optimizer.ask_iter():
+            value = DSIntLFTL(sol.x, sol.z, sol.c, C)
+            evals += 1
+            solutions.append((sol, value))
+        optimizer.tell(solutions)
+        print(evals, optimizer.incumbent_objectives)
+```
+
+The full source code is available [here](./examples/como_catcma_with_margin.py).
+
+</details>
+
 #### CatCMA [Hamano et al. 2024a]
 CatCMA is a method for mixed-category optimization problems, which is the problem of simultaneously optimizing continuous and categorical variables. CatCMA employs the joint probability distribution of multivariate Gaussian and categorical distributions as the search distribution.
 
@@ -753,7 +802,8 @@ We have great respect for all libraries involved in CMA-ES.
 * [Auger and Hansen 2005] [A. Auger, N. Hansen, A Restart CMA Evolution Strategy with Increasing Population Size, CEC, 2005.](http://www.cmap.polytechnique.fr/~nikolaus.hansen/cec2005ipopcmaes.pdf)
 * [Hamano et al. 2022] [R. Hamano, S. Saito, M. Nomura, S. Shirakawa, CMA-ES with Margin: Lower-Bounding Marginal Probability for Mixed-Integer Black-Box Optimization, GECCO, 2022.](https://arxiv.org/abs/2205.13482)
 * [Hamano et al. 2024a] [R. Hamano, S. Saito, M. Nomura, K. Uchida, S. Shirakawa, CatCMA : Stochastic Optimization for Mixed-Category Problems, GECCO, 2024.](https://arxiv.org/abs/2405.09962)
-* [Hamano et al. 2025] [R. Hamano, M. Nomura, S. Saito, K. Uchida, S. Shirakawa, CatCMA with Margin: Stochastic Optimization for Continuous, Integer, and Categorical Variables, GECCO, 2025.](https://arxiv.org/abs/2504.07884)
+* [Hamano et al. 2025] [R. Hamano, M. Nomura, S. Saito, K. Uchida, S. Shirakawa, CatCMA with Margin: Stochastic Optimization for Continuous, Integer, and Categorical Variables, GECCO, 2025.](https://arxiv.org/abs/2504.07884v5)
+* [Hamano et al. 2026] [R. Hamano, M. Nomura, S. Saito, K. Uchida, S. Shirakawa, CatCMA with Margin for Single- and Multi-Objective Mixed-Variable Black-Box Optimization, arXiv:2504.07884, 2026.](https://arxiv.org/abs/2504.07884)
 * [Hamano et al. 2024b] [R. Hamano, S. Shirakawa, M. Nomura, Natural Gradient Interpretation of Rank-One Update in CMA-ES, PPSN, 2024.](https://arxiv.org/abs/2406.16506)
 * [Hansen 2016] [N. Hansen, The CMA Evolution Strategy: A Tutorial. arXiv:1604.00772, 2016.](https://arxiv.org/abs/1604.00772)
 * [Nomura et al. 2021] [M. Nomura, S. Watanabe, Y. Akimoto, Y. Ozaki, M. Onishi, Warm Starting CMA-ES for Hyperparameter Optimization, AAAI, 2021.](https://arxiv.org/abs/2012.06932)
@@ -764,4 +814,3 @@ and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
 * [Uchida et al. 2024a] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
 * [Uchida et al. 2024b] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Discrete and Mixed-Variable Optimization on Sets of Points, PPSN, 2024.](https://arxiv.org/abs/2408.13046)
-
