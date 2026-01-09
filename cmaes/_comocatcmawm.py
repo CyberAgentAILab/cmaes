@@ -89,6 +89,8 @@ class COMOCatCMAwM:
             A seed number (optional).
     """
 
+    # Paper: https://arxiv.org/abs/2504.07884
+
     # Currently limited to 2 objectives due to 2D UHVI constraints; expansion is planned.
     _MAX_OBJECTIVES: int = 2
 
