@@ -5,7 +5,7 @@
 :whale: [**Paper is now available on arXiv!**](https://arxiv.org/abs/2402.01373)
 
 *Simple* and *Practical* Python library for CMA-ES.
-Please refer to the [paper](https://arxiv.org/abs/2402.01373) [Nomura and Shibata 2024] for detailed information, including the design philosophy and advanced examples.
+Please refer to the [paper](https://arxiv.org/abs/2402.01373) [Nomura et al. 2026] for detailed information, including the design philosophy and advanced examples.
 
 ![visualize-six-hump-camel](https://user-images.githubusercontent.com/5564044/73486622-db5cff00-43e8-11ea-98fb-8246dbacab6d.gif)
 
@@ -764,17 +764,17 @@ Full source code is available [here](./examples/ipop_cma.py).
 ## Citation
 If you use our library in your work, please cite our paper:
 
-Masahiro Nomura, Masashi Shibata.<br>
-**cmaes : A Simple yet Practical Python Library for CMA-ES**<br>
+Masahiro Nomura, Masashi Shibata, Ryoki Hamano.<br>
+**cmaes: A Simple yet Practical Python Library for CMA-ES**<br>
 [https://arxiv.org/abs/2402.01373](https://arxiv.org/abs/2402.01373)
 
 Bibtex:
 ```
-@article{nomura2024cmaes,
-  title={cmaes : A Simple yet Practical Python Library for CMA-ES},
-  author={Nomura, Masahiro and Shibata, Masashi},
+@article{nomura2026cmaes,
+  title={cmaes: A Simple yet Practical Python Library for CMA-ES},
+  author={Nomura, Masahiro and Shibata, Masashi and Hamano, Ryoki},
   journal={arXiv preprint arXiv:2402.01373},
-  year={2024}
+  year={2026}
 }
 ```
 
@@ -810,7 +810,7 @@ We have great respect for all libraries involved in CMA-ES.
 * [Nomura et al. 2023] [M. Nomura, Y. Akimoto, I. Ono, CMA-ES with Learning
 Rate Adaptation: Can CMA-ES with Default Population Size Solve Multimodal
 and Noisy Problems?, GECCO, 2023.](https://arxiv.org/abs/2304.03473)
-* [Nomura and Shibata 2024] [M. Nomura, M. Shibata, cmaes : A Simple yet Practical Python Library for CMA-ES, arXiv:2402.01373, 2024.](https://arxiv.org/abs/2402.01373)
+* [Nomura et al. 2026] [M. Nomura, M. Shibata, R. Hamano, cmaes: A Simple yet Practical Python Library for CMA-ES, arXiv:2402.01373, 2026.](https://arxiv.org/abs/2402.01373)
 * [Ros and Hansen 2008] [R. Ros, N. Hansen, A Simple Modification in CMA-ES Achieving Linear Time and Space Complexity, PPSN, 2008.](https://hal.inria.fr/inria-00287367/document)
 * [Uchida et al. 2024a] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Safe Optimization, GECCO, 2024.](https://arxiv.org/abs/2405.10534)
 * [Uchida et al. 2024b] [K. Uchida, R. Hamano, M. Nomura, S. Saito, S. Shirakawa, CMA-ES for Discrete and Mixed-Variable Optimization on Sets of Points, PPSN, 2024.](https://arxiv.org/abs/2408.13046)
