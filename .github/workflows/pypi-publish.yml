@@ -9,10 +9,12 @@ jobs:
   build-n-publish:
     name: Build and publish Python distributions to TestPyPI and PyPI
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Set up Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v6
       with:
         python-version: '3.x'
 
@@ -32,16 +34,9 @@ jobs:
 
     - name: Publish distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.TEST_PYPI_PASSWORD }}
-        repository_url: https://test.pypi.org/legacy/
 
     - name: Publish distribution to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_PASSWORD }}
 
     - name: Create GitHub release
       env:
