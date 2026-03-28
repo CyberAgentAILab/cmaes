@@ -75,3 +75,39 @@ ignore = [
     "E203",
 ]
 
+[tool.uv]
+exclude-newer = "1 week"
+exclude-newer-package = { torch = false }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [
+  { index = "pytorch-cpu" },
+]
+
+[dependency-groups]
+dev = [
+    # lint
+    "mypy",
+    "ruff",
+    # tests
+    "pytest",
+    # visualization
+    "matplotlib",
+]
+optional = [
+    # for Safe CMA-ES
+    "torch",
+    "gpytorch",
+    # for CMA with margin
+    "scipy",
+]
+benchmark = [
+    "kurobako",
+    "cma",
+    "optuna",
+]
