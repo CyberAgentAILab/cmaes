@@ -188,9 +188,7 @@ class SafeCMA:
         # learning rate for the rank-μ update
         cmu = min(
             1 - c1 - 1e-8,  # 1e-8 is for large popsize.
-            alpha_cov
-            * (mu_eff - 2 + 1 / mu_eff)
-            / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
+            alpha_cov * (mu_eff - 2 + 1 / mu_eff) / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
         )
         assert c1 <= 1 - cmu, "invalid learning rate for the rank-one update"
         assert cmu <= 1 - c1, "invalid learning rate for the rank-μ update"
@@ -200,9 +198,7 @@ class SafeCMA:
         # learning rate for the cumulation for the step-size control
         c_sigma = (mu_eff + 2) / (n_dim + mu_eff + 5)
         d_sigma = 1 + 2 * max(0, math.sqrt((mu_eff - 1) / (n_dim + 1)) - 1) + c_sigma
-        assert (
-            c_sigma < 1
-        ), "invalid learning rate for cumulation for the step-size control"
+        assert c_sigma < 1, "invalid learning rate for cumulation for the step-size control"
 
         # learning rate for cumulation for the rank-one update
         cc = (4 + mu_eff / n_dim) / (n_dim + 4 + 2 * mu_eff / n_dim)
@@ -248,9 +244,9 @@ class SafeCMA:
 
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         self._mean = mean.copy()
         self._sigma = sigma
@@ -296,9 +292,7 @@ class SafeCMA:
 
             grad_norm = torch.zeros(len(x))
 
-            X = torch.autograd.Variable(
-                torch.Tensor(np.atleast_2d(x)), requires_grad=True
-            )
+            X = torch.autograd.Variable(torch.Tensor(np.atleast_2d(x)), requires_grad=True)
             mean = likelihood(model(X)).mean
             dxdmean = torch.autograd.grad(mean.sum(), X)[0]
 
@@ -312,9 +306,7 @@ class SafeCMA:
         def elementwise_df(i: int) -> float:
             samples = self._rng.randn(self.sample_num_lip, self._n_dim)
             samples = np.concatenate([samples, z_points], axis=0)
-            model = ExactGPModel(
-                z_points, modified_evals[:, i], likelihood, self.kernel
-            )
+            model = ExactGPModel(z_points, modified_evals[:, i], likelihood, self.kernel)
 
             try:
                 pred_samples = df(samples, model) * evals_std[i]
@@ -461,9 +453,7 @@ class SafeCMA:
 
             # radius: radius of trust region around evaluated points
             slack = self.safety_threshold[:, None, None] - prev_safe_evals[None, :, :]
-            radius = np.min(
-                slack / self.lipschitz_constant[:, None, None], axis=(0, 2)
-            )  # (eq.13)
+            radius = np.min(slack / self.lipschitz_constant[:, None, None], axis=(0, 2))  # (eq.13)
 
             radius[radius < 0] = -np.inf
             # dist: distance between current samples and evaluated points
@@ -512,9 +502,7 @@ class SafeCMA:
 
         inv_num = float(np.sum(safe_evals > self.safety_threshold))
         if inv_num > 0:
-            self.lip_penalty_coef *= self.lip_penalty_inc_rate ** (
-                inv_num / self._popsize
-            )
+            self.lip_penalty_coef *= self.lip_penalty_inc_rate ** (inv_num / self._popsize)
         else:
             self.lip_penalty_coef /= self.lip_penalty_dec_rate
             self.lip_penalty_coef = np.max((self.lip_penalty_coef, 1))
@@ -524,16 +512,14 @@ class SafeCMA:
         self.sampled_points = np.concatenate([self.sampled_points, X], axis=0)
         self.sampled_safe_evals = np.vstack([self.sampled_safe_evals, safe_evals])
 
-    def _naive_cma_update(
-        self, solutions: list[tuple[np.ndarray, float, float]]
-    ) -> None:
+    def _naive_cma_update(self, solutions: list[tuple[np.ndarray, float, float]]) -> None:
         """Tell evaluation values"""
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
@@ -589,13 +575,7 @@ class SafeCMA:
         assert delta_h_sigma <= 1
 
         self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * np.sum(self._weights)
-            )
-            * self._C
+            (1 + self._c1 * delta_h_sigma - self._c1 - self._cmu * np.sum(self._weights)) * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )  # (eq.9)
@@ -607,16 +587,13 @@ class SafeCMA:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 
         # Stop if the std of the normal distribution is smaller than tolx
         # in all coordinates and pc is smaller than tolx in all components.
-        if np.all(self._sigma * dC < self._tolx) and np.all(
-            self._sigma * self._pc < self._tolx
-        ):
+        if np.all(self._sigma * dC < self._tolx) and np.all(self._sigma * self._pc < self._tolx):
             return True
 
         # Stop if detecting divergent behavior.

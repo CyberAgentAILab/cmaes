@@ -110,9 +110,7 @@ class CMAwM:
         margin: Optional[float] = None,
     ):
         # initialize `CMA`
-        self._cma = CMA(
-            mean, sigma, bounds, n_max_resampling, seed, population_size, cov
-        )
+        self._cma = CMA(mean, sigma, bounds, n_max_resampling, seed, population_size, cov)
         n_dim = self._cma.dim
         population_size = self._cma.population_size
         self._n_max_resampling = n_max_resampling
@@ -133,9 +131,9 @@ class CMAwM:
         # continuous_space contains low and high of each parameter.
         self._continuous_idx = np.where(steps <= 0)[0]
         self._continuous_space = bounds[self._continuous_idx]
-        assert _is_valid_bounds(
-            self._continuous_space, mean[self._continuous_idx]
-        ), "invalid bounds"
+        assert _is_valid_bounds(self._continuous_space, mean[self._continuous_idx]), (
+            "invalid bounds"
+        )
 
         # discrete_space
         self._n_zdim = len(discrete_space)
@@ -150,9 +148,7 @@ class CMAwM:
             self.z_lim[i][np.isnan(self.z_lim[i])] = np.nanmax(self.z_lim[i])
         m_z = self._cma._mean[self._discrete_idx]
         # m_z_lim_low ->|  mean vector    |<- m_z_lim_up
-        m_pos = np.array(
-            [np.searchsorted(self.z_lim[i], m_z[i]) for i in range(len(m_z))]
-        )
+        m_pos = np.array([np.searchsorted(self.z_lim[i], m_z[i]) for i in range(len(m_z))])
         z_lim_low_index = np.clip(m_pos - 1, 0, self.z_lim.shape[1] - 1)
         z_lim_up_index = np.clip(m_pos, 0, self.z_lim.shape[1] - 1)
         self.m_z_lim_low = self.z_lim[np.arange(len(self.z_lim)), z_lim_low_index]
@@ -202,14 +198,10 @@ class CMAwM:
                     )
                 return x_encoded, x
         x = self._cma._sample_solution()
-        x[self._continuous_idx] = self._repair_continuous_params(
-            x[self._continuous_idx]
-        )
+        x[self._continuous_idx] = self._repair_continuous_params(x[self._continuous_idx])
         x_encoded = x.copy()
         if self._n_zdim > 0:
-            x_encoded[self._discrete_idx] = self._encode_discrete_params(
-                x[self._discrete_idx]
-            )
+            x_encoded[self._discrete_idx] = self._encode_discrete_params(x[self._discrete_idx])
         return x_encoded, x
 
     def _is_continuous_feasible(self, continuous_param: np.ndarray) -> bool:
@@ -231,18 +223,16 @@ class CMAwM:
             self._continuous_space[:, 0],
             continuous_param,
         )
-        param = np.where(
-            param > self._continuous_space[:, 1], self._continuous_space[:, 1], param
-        )
+        param = np.where(param > self._continuous_space[:, 1], self._continuous_space[:, 1], param)
         return param
 
     def _encode_discrete_params(self, discrete_param: np.ndarray) -> np.ndarray:
         """Encode the values into discrete domain."""
         mean = self._cma._mean
 
-        x = (discrete_param - mean[self._discrete_idx]) * self._A[
+        x = (discrete_param - mean[self._discrete_idx]) * self._A[self._discrete_idx] + mean[
             self._discrete_idx
-        ] + mean[self._discrete_idx]
+        ]
         x_pos = np.array([np.searchsorted(self.z_lim[i], x[i]) for i in range(len(x))])
         x_enc = self.z_space[np.arange(len(self.z_space)), x_pos]
         return x_enc
@@ -271,11 +261,7 @@ class CMAwM:
 
         # calculate probability low_cdf := Pr(X <= m_z_lim_low) and up_cdf := Pr(m_z_lim_up < X)
         # sig_z_sq_Cdiag = self.model.sigma * self.model.A * np.sqrt(np.diag(self.model.C))
-        z_scale = (
-            sigma
-            * self._A[self._discrete_idx]
-            * np.sqrt(np.diag(C)[self._discrete_idx])
-        )
+        z_scale = sigma * self._A[self._discrete_idx] * np.sqrt(np.diag(C)[self._discrete_idx])
         low_cdf = norm_cdf(self.m_z_lim_low, loc=updated_m_integer, scale=z_scale)
         up_cdf = 1.0 - norm_cdf(self.m_z_lim_up, loc=updated_m_integer, scale=z_scale)
         mid_cdf = 1.0 - (low_cdf + up_cdf)
@@ -293,14 +279,10 @@ class CMAwM:
             dist = (
                 sigma
                 * self._A[self._discrete_idx]
-                * np.sqrt(
-                    chi2_ppf(q=1.0 - 2.0 * self.margin) * np.diag(C)[self._discrete_idx]
-                )
+                * np.sqrt(chi2_ppf(q=1.0 - 2.0 * self.margin) * np.diag(C)[self._discrete_idx])
             )
             # modify mean vector
-            mean[self._discrete_idx] = mean[
-                self._discrete_idx
-            ] + modify_mask * edge_mask * (
+            mean[self._discrete_idx] = mean[self._discrete_idx] + modify_mask * edge_mask * (
                 self.m_z_lim_up + modify_sign * dist - mean[self._discrete_idx]
             )
 
@@ -323,8 +305,7 @@ class CMAwM:
 
         # simultaneous equations
         self._A[self._discrete_idx] = self._A[self._discrete_idx] + side_mask * (
-            (self.m_z_lim_up - self.m_z_lim_low)
-            / ((chi_low_sq + chi_up_sq) * sigma * C_diag_sq)
+            (self.m_z_lim_up - self.m_z_lim_low) / ((chi_low_sq + chi_up_sq) * sigma * C_diag_sq)
             - self._A[self._discrete_idx]
         )
         mean[self._discrete_idx] = mean[self._discrete_idx] + side_mask * (

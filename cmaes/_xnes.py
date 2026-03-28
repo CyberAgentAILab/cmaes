@@ -77,9 +77,9 @@ class XNES:
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
@@ -88,9 +88,7 @@ class XNES:
             population_size = 4 + math.floor(3 * math.log(n_dim))
         assert population_size > 0, "popsize must be non-zero positive value."
 
-        w_hat = np.log(population_size / 2 + 1) - np.log(
-            np.arange(1, population_size + 1)
-        )
+        w_hat = np.log(population_size / 2 + 1) - np.log(np.arange(1, population_size + 1))
         w_hat[np.where(w_hat < 0)] = 0
         weights = w_hat / sum(w_hat) - (1.0 / population_size)
 
@@ -188,9 +186,9 @@ class XNES:
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
@@ -202,10 +200,7 @@ class XNES:
         self._funhist_values[funhist_idx + 1] = solutions[-1][1]
 
         z_k = np.array(
-            [
-                np.linalg.inv(self._sigma * self._B).dot(s[0] - self._mean)
-                for s in solutions
-            ]
+            [np.linalg.inv(self._sigma * self._B).dot(s[0] - self._mean) for s in solutions]
         )
 
         # natural gradient estimation in local coordinate
@@ -214,8 +209,7 @@ class XNES:
         )
         G_M = np.sum(
             [
-                self._weights[i]
-                * (np.outer(z_k[i, :], z_k[i, :]) - np.eye(self._n_dim))
+                self._weights[i] * (np.outer(z_k[i, :], z_k[i, :]) - np.eye(self._n_dim))
                 for i in range(self.population_size)
             ],
             axis=0,
@@ -238,8 +232,7 @@ class XNES:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 

@@ -152,10 +152,7 @@ class CatCMAwM:
         # --- CMA-ES weight (active covariance matrix adaptation) ---
         self._mu = self._popsize // 2
         weights_prime = np.array(
-            [
-                math.log((self._popsize + 1) / 2) - math.log(i + 1)
-                for i in range(self._popsize)
-            ]
+            [math.log((self._popsize + 1) / 2) - math.log(i + 1) for i in range(self._popsize)]
         )
         self._mu_eff = (np.sum(weights_prime[: self._mu]) ** 2) / np.sum(
             weights_prime[: self._mu] ** 2
@@ -175,9 +172,7 @@ class CatCMAwM:
             * (self._mu_eff - 2 + 1 / self._mu_eff)
             / ((self._Nmi + 2) ** 2 + alpha_cov * self._mu_eff / 2),
         )
-        assert (
-            self._c1 <= 1 - self._cmu
-        ), "Invalid learning rate for the rank-one update."
+        assert self._c1 <= 1 - self._cmu, "Invalid learning rate for the rank-one update."
         assert self._cmu <= 1 - self._c1, "Invalid learning rate for the rank-μ update."
 
         min_alpha = (
@@ -316,14 +311,13 @@ class CatCMAwM:
         else:
             if len(mean) != self._Nmi:
                 raise ValueError(
-                    f"Invalid shape of mean: expected length {self._Nmi}, "
-                    f"but got {len(mean)}."
+                    f"Invalid shape of mean: expected length {self._Nmi}, but got {len(mean)}."
                 )
             self._mean = mean
 
-        assert np.all(
-            np.abs(self._mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}."
+        assert np.all(np.abs(self._mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}."
+        )
 
         if sigma is None:
             self._sigma = 1.0
@@ -357,21 +351,13 @@ class CatCMAwM:
         # learning rate for the cumulation for the step-size control
         self._c_sigma = (self._mu_eff + 2) / (self._Nmi + self._mu_eff + 5)
         self._d_sigma = (
-            1
-            + 2 * max(0, math.sqrt((self._mu_eff - 1) / (self._Nmi + 1)) - 1)
-            + self._c_sigma
+            1 + 2 * max(0, math.sqrt((self._mu_eff - 1) / (self._Nmi + 1)) - 1) + self._c_sigma
         )
-        assert (
-            self._c_sigma < 1
-        ), "Invalid learning rate for cumulation for the step-size control."
+        assert self._c_sigma < 1, "Invalid learning rate for cumulation for the step-size control."
 
         # learning rate for cumulation for the rank-one update
-        self._cc = (4 + self._mu_eff / self._Nmi) / (
-            self._Nmi + 4 + 2 * self._mu_eff / self._Nmi
-        )
-        assert (
-            self._cc <= 1
-        ), "Invalid learning rate for cumulation for the rank-one update."
+        self._cc = (4 + self._mu_eff / self._Nmi) / (self._Nmi + 4 + 2 * self._mu_eff / self._Nmi)
+        assert self._cc <= 1, "Invalid learning rate for cumulation for the rank-one update."
 
         # E||N(0, I_Nmi)||
         self._chi_n = math.sqrt(self._Nmi) * (
@@ -405,9 +391,7 @@ class CatCMAwM:
         c_space: Optional[Sequence[int]],
         cat_param: Optional[np.ndarray],
     ) -> None:
-        assert (
-            c_space is not None
-        ), "c_space must not be None for categorical variables."
+        assert c_space is not None, "c_space must not be None for categorical variables."
 
         self._K = np.asarray(c_space, dtype=int)
         if not np.all(self._K >= 2):
@@ -437,13 +421,10 @@ class CatCMAwM:
                     )
             if not np.all((cat_param >= 0) & (cat_param <= 1)):
                 raise ValueError(
-                    "All elements in categorical distribution parameter "
-                    "must be between 0 and 1."
+                    "All elements in categorical distribution parameter must be between 0 and 1."
                 )
             if not np.allclose(np.sum(cat_param, axis=1), 1):
-                raise ValueError(
-                    "Each row in categorical distribution parameter must sum to 1."
-                )
+                raise ValueError("Each row in categorical distribution parameter must sum to 1.")
             self._q = cat_param
 
         # margin value for categorical variables
@@ -534,22 +515,15 @@ class CatCMAwM:
 
     def _discretization(self, v_discrete: np.ndarray) -> np.ndarray:
         z_pos = np.array(
-            [
-                np.searchsorted(self._z_lim[i], v_discrete[i])
-                for i in range(len(v_discrete))
-            ]
+            [np.searchsorted(self._z_lim[i], v_discrete[i]) for i in range(len(v_discrete))]
         )
         z = self._z_space[np.arange(len(self._z_space)), z_pos]
         return z
 
-    def _calc_continuous_penalty(
-        self, v_raw: np.ndarray, sorted_fvals: np.ndarray
-    ) -> np.ndarray:
+    def _calc_continuous_penalty(self, v_raw: np.ndarray, sorted_fvals: np.ndarray) -> np.ndarray:
         # penalty values for box constraint handling:
         # https://ieeexplore.ieee.org/document/4634579
-        iq_range = (
-            sorted_fvals[3 * self._popsize // 4] - sorted_fvals[self._popsize // 4]
-        )
+        iq_range = sorted_fvals[3 * self._popsize // 4] - sorted_fvals[self._popsize // 4]
 
         # insert iq_range in history
         if np.isfinite(iq_range) and iq_range > 0:
@@ -571,17 +545,11 @@ class CatCMAwM:
 
         gamma_inc_low = (self._mean < bound_low) * (
             np.abs(self._mean - bound_low)
-            > 3
-            * self._sigma
-            * np.sqrt(diag_CA)
-            * max(1, np.sqrt(self._Nmi) / self._mu_eff)
+            > 3 * self._sigma * np.sqrt(diag_CA) * max(1, np.sqrt(self._Nmi) / self._mu_eff)
         )
         gamma_inc_up = (bound_up < self._mean) * (
             np.abs(bound_up - self._mean)
-            > 3
-            * self._sigma
-            * np.sqrt(diag_CA)
-            * max(1, np.sqrt(self._Nmi) / self._mu_eff)
+            > 3 * self._sigma * np.sqrt(diag_CA) * max(1, np.sqrt(self._Nmi) / self._mu_eff)
         )
         gamma_inc = np.logical_or(gamma_inc_low, gamma_inc_up)
         gamma[gamma_inc] *= 1.1 ** (max(1, self._mu_eff / (10 * self._Nmi)))
@@ -646,9 +614,7 @@ class CatCMAwM:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
+        self._sigma *= np.exp((self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1))
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
@@ -672,17 +638,9 @@ class CatCMAwM:
         assert delta_h_sigma <= 1
 
         rank_one = np.outer(self._pc, self._pc)
-        rank_mu = np.sum(
-            np.array([w * np.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0
-        )
+        rank_mu = np.sum(np.array([w * np.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0)
         self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * np.sum(self._weights)
-            )
-            * self._C
+            (1 + self._c1 * delta_h_sigma - self._c1 - self._cmu * np.sum(self._weights)) * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
@@ -745,27 +703,20 @@ class CatCMAwM:
             A_lower = np.abs(m_int - m_z_lim_up) / (
                 self._sigma
                 * np.sqrt(
-                    chi2_ppf(q=1.0 - 2.0 * self._alpha)
-                    * np.diag(self._C)[self._discrete_idx]
+                    chi2_ppf(q=1.0 - 2.0 * self._alpha) * np.diag(self._C)[self._discrete_idx]
                 )
             )
-            self._A[indices_to_update] = np.maximum(
-                self._A[indices_to_update], A_lower[edge_mask]
-            )
+            self._A[indices_to_update] = np.maximum(self._A[indices_to_update], A_lower[edge_mask])
 
             # distance from m_z_lim_up
             dist = (
                 self._sigma
                 * self._A[self._discrete_idx]
-                * np.sqrt(
-                    chi2_ppf(q=1.0 - 2.0 * p_mut) * np.diag(self._C)[self._discrete_idx]
-                )
+                * np.sqrt(chi2_ppf(q=1.0 - 2.0 * p_mut) * np.diag(self._C)[self._discrete_idx])
             )
 
             # modify mean vector
-            self._mean[self._discrete_idx] = self._mean[
-                self._discrete_idx
-            ] + edge_mask * (
+            self._mean[self._discrete_idx] = self._mean[self._discrete_idx] + edge_mask * (
                 m_z_lim_up + modify_sign * dist - self._mean[self._discrete_idx]
             )
 
@@ -780,10 +731,7 @@ class CatCMAwM:
             Delta_cdf = 1 - low_cdf - up_cdf - mid_cdf
 
             Delta_cdf[suc_idx] /= (
-                low_cdf[suc_idx]
-                + up_cdf[suc_idx]
-                + mid_cdf[suc_idx]
-                - 3 * self._alpha / 2
+                low_cdf[suc_idx] + up_cdf[suc_idx] + mid_cdf[suc_idx] - 3 * self._alpha / 2
             )
             Delta_cdf[nsuc_idx] /= (
                 low_cdf[nsuc_idx]
@@ -806,15 +754,11 @@ class CatCMAwM:
             C_diag_sq = np.sqrt(np.diag(self._C))[self._discrete_idx]
 
             self._A[self._discrete_idx] = self._A[self._discrete_idx] + side_mask * (
-                (m_z_lim_up - m_z_lim_low)
-                / ((chi_low_sq + chi_up_sq) * self._sigma * C_diag_sq)
+                (m_z_lim_up - m_z_lim_low) / ((chi_low_sq + chi_up_sq) * self._sigma * C_diag_sq)
                 - self._A[self._discrete_idx]
             )
-            self._mean[self._discrete_idx] = self._mean[
-                self._discrete_idx
-            ] + side_mask * (
-                (m_z_lim_low * chi_up_sq + m_z_lim_up * chi_low_sq)
-                / (chi_low_sq + chi_up_sq)
+            self._mean[self._discrete_idx] = self._mean[self._discrete_idx] + side_mask * (
+                (m_z_lim_low * chi_up_sq + m_z_lim_up * chi_low_sq) / (chi_low_sq + chi_up_sq)
                 - self._mean[self._discrete_idx]
             )
 
@@ -824,8 +768,7 @@ class CatCMAwM:
     def _update_categorical(self, sc: np.ndarray) -> None:
         # natural gradient
         ngrad = (
-            self._weights[: self._mu, np.newaxis, np.newaxis]
-            * (sc[: self._mu, :, :] - self._q)
+            self._weights[: self._mu, np.newaxis, np.newaxis] * (sc[: self._mu, :, :] - self._q)
         ).sum(axis=0)
 
         # approximation of the square root of the fisher information matrix:
@@ -848,9 +791,7 @@ class CatCMAwM:
         beta = self._delta / (self._param_sum**0.5)
         self._s = (1 - beta) * self._s + np.sqrt(beta * (2 - beta)) * ngrad_sqF / pnorm
         self._gamma = (1 - beta) ** 2 * self._gamma + beta * (2 - beta)
-        self._Delta *= np.exp(
-            beta * (self._gamma - np.dot(self._s, self._s) / self._alpha_snr)
-        )
+        self._Delta *= np.exp(beta * (self._gamma - np.dot(self._s, self._s) / self._alpha_snr))
         self._Delta = min(self._Delta, self._Delta_max)
 
         # margin correction for categorical distribution
@@ -911,9 +852,9 @@ class CatCMAwM:
         sc = None
         if self._use_gaussian:
             sv = np.stack([cast(np.ndarray, sol[0]._v_raw) for sol in solutions])
-            assert np.all(
-                np.abs(sv) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors."
+            assert np.all(np.abs(sv) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors."
+            )
         if self._use_categorical:
             sc = np.stack([cast(np.ndarray, sol[0].c) for sol in solutions])
 
@@ -948,9 +889,7 @@ class CatCMAwM:
         cases are not yet implemented. Currently, only standard CMA-ES conditions for
         Gaussian distributions are used."""
         if not self._use_gaussian:
-            warnings.warn(
-                "Termination conditions are only applicable for Gaussian distribution."
-            )
+            warnings.warn("Termination conditions are only applicable for Gaussian distribution.")
             return False
 
         B, D = self._eigen_decomposition()
@@ -959,16 +898,13 @@ class CatCMAwM:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 
         # Stop if the std of the normal distribution is smaller than tolx
         # in all coordinates and pc is smaller than tolx in all components.
-        if np.all(self._sigma * dC < self._tolx) and np.all(
-            self._sigma * self._pc < self._tolx
-        ):
+        if np.all(self._sigma * dC < self._tolx) and np.all(self._sigma * self._pc < self._tolx):
             return True
 
         # Stop if detecting divergent behavior.
