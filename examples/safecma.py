@@ -92,9 +92,7 @@ def example2():
 
     # evaluation of safe seeds (with multiple safety functions)
     seeds_evals = np.array([quadratic(x) for x in safe_seeds])
-    seeds_safe_evals = np.stack(
-        [[safe_function1(x), safe_function2(x)] for x in safe_seeds]
-    )
+    seeds_safe_evals = np.stack([[safe_function1(x), safe_function2(x)] for x in safe_seeds])
     safety_threshold = np.array([0, 0])
 
     # optimizer (safe CMA-ES)
