@@ -110,11 +110,7 @@ def rosenbrock_contour(x1, x2):
 
 
 def six_hump_camel(x1, x2):
-    return (
-        (4 - 2.1 * (x1**2) + (x1**4) / 3) * (x1**2)
-        + x1 * x2
-        + (-4 + 4 * x2**2) * (x2**2)
-    )
+    return (4 - 2.1 * (x1**2) + (x1**4) / 3) * (x1**2) + x1 * x2 + (-4 + 4 * x2**2) * (x2**2)
 
 
 def six_hump_camel_contour(x1, x2):
@@ -262,14 +258,10 @@ def update(frame):
     )
 
     # Plot multivariate gaussian distribution of CMA-ES
-    x, y = np.mgrid[
-        x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01
-    ]
+    x, y = np.mgrid[x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01]
 
     if math.floor(len(solutions) * args.alpha) > 1:
-        mean, sigma, cov = get_warm_start_mgd(
-            solutions, alpha=args.alpha, gamma=args.gamma
-        )
+        mean, sigma, cov = get_warm_start_mgd(solutions, alpha=args.alpha, gamma=args.gamma)
         rv = stats.multivariate_normal(mean, cov)
         pos = np.dstack((x, y))
         ax2.contourf(x, y, rv.pdf(pos))

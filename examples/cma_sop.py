@@ -23,9 +23,7 @@ def example1():
 
     # sets_of_points (on [-5, 5])
     discrete_subspace_num = dim // subspace_dim
-    sets_of_points = (
-        2 * np.random.rand(discrete_subspace_num, point_num, subspace_dim) - 1
-    ) * 5
+    sets_of_points = (2 * np.random.rand(discrete_subspace_num, point_num, subspace_dim) - 1) * 5
 
     # add the optimal solution (for benchmark function)
     sets_of_points[:, -1] = np.zeros(subspace_dim)
@@ -85,9 +83,7 @@ def example2():
     # sets_of_points (on [-5, 5])
     # almost half of the subspaces are continuous spaces
     discrete_subspace_num = (dim // 2) // subspace_dim
-    sets_of_points = (
-        2 * np.random.rand(discrete_subspace_num, point_num, subspace_dim) - 1
-    ) * 5
+    sets_of_points = (2 * np.random.rand(discrete_subspace_num, point_num, subspace_dim) - 1) * 5
 
     # add the optimal solution (for benchmark function)
     sets_of_points[:, -1] = np.zeros(subspace_dim)

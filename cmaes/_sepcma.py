@@ -74,9 +74,9 @@ class SepCMA:
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
@@ -88,9 +88,7 @@ class SepCMA:
         mu = population_size // 2
 
         # (eq.49)
-        weights_prime = np.array(
-            [math.log(mu + 1) - math.log(i + 1) for i in range(mu)]
-        )
+        weights_prime = np.array([math.log(mu + 1) - math.log(i + 1) for i in range(mu)])
         weights = weights_prime / sum(weights_prime)
         mu_eff = 1 / sum(weights**2)
 
@@ -108,9 +106,7 @@ class SepCMA:
         # learning rate for the cumulation for the step-size control
         c_sigma = (mu_eff + 2) / (n_dim + mu_eff + 3)
         d_sigma = 1 + 2 * max(0, math.sqrt((mu_eff - 1) / (n_dim + 1)) - 1) + c_sigma
-        assert (
-            c_sigma < 1
-        ), "invalid learning rate for cumulation for the step-size control"
+        assert c_sigma < 1, "invalid learning rate for cumulation for the step-size control"
 
         # learning rate for cumulation for the rank-one update
         cc = 4 / (n_dim + 4)
@@ -249,9 +245,9 @@ class SepCMA:
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
@@ -279,9 +275,7 @@ class SepCMA:
         ) * (y_w / D)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
+        self._sigma *= np.exp((self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1))
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
@@ -301,17 +295,9 @@ class SepCMA:
 
         # (eq.47)
         rank_one = self._pc**2
-        rank_mu = np.sum(
-            np.array([w * (y**2) for w, y in zip(self._weights, y_k)]), axis=0
-        )
+        rank_mu = np.sum(np.array([w * (y**2) for w, y in zip(self._weights, y_k)]), axis=0)
         self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * np.sum(self._weights)
-            )
-            * self._C
+            (1 + self._c1 * delta_h_sigma - self._c1 - self._cmu * np.sum(self._weights)) * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
@@ -322,8 +308,7 @@ class SepCMA:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 
@@ -347,9 +332,7 @@ class SepCMA:
         # any principal axis direction of C does not change m. "pycma" check
         # axis one by one at each generation.
         i = self.generation % self.dim
-        if np.all(
-            self._mean == self._mean + (0.1 * self._sigma * D[i] * np.ones(self._n_dim))
-        ):
+        if np.all(self._mean == self._mean + (0.1 * self._sigma * D[i] * np.ones(self._n_dim))):
             return True
 
         # Stop if the condition number of the covariance matrix exceeds 1e14.

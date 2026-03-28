@@ -46,9 +46,7 @@ def f_cont_int():
     init_cov = np.diag(np.ones(len(X) + len(Z)))
     init_sigma = 1.0
 
-    optimizer = CatCMAwM(
-        x_space=X, z_space=Z, mean=init_mean, cov=init_cov, sigma=init_sigma
-    )
+    optimizer = CatCMAwM(x_space=X, z_space=Z, mean=init_mean, cov=init_cov, sigma=init_sigma)
 
     for generation in range(50):
         solutions = []

@@ -80,9 +80,9 @@ class DXNESIC:
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         n_dim = len(mean)
         assert n_dim > 1, "The dimension of mean must be larger than 1"
@@ -91,18 +91,14 @@ class DXNESIC:
             population_size = 4 + math.floor(3 * math.log(n_dim))
         assert population_size > 0, "popsize must be non-zero positive value."
 
-        w_rank_hat = np.log(population_size / 2 + 1) - np.log(
-            np.arange(1, population_size + 1)
-        )
+        w_rank_hat = np.log(population_size / 2 + 1) - np.log(np.arange(1, population_size + 1))
         w_rank_hat[np.where(w_rank_hat < 0)] = 0
         w_rank = w_rank_hat / sum(w_rank_hat) - (1.0 / population_size)
         mu_eff = 1 / sum((w_rank + (1.0 / population_size)) ** 2)
 
         # learning rate for the cumulation for the step-size control
         c_sigma = (mu_eff + 2) / (n_dim + mu_eff + 5)
-        assert (
-            c_sigma < 1
-        ), "invalid learning rate for cumulation for the step-size control"
+        assert c_sigma < 1, "invalid learning rate for cumulation for the step-size control"
 
         # distance weight parameter
         h_inv = _get_h_inv(n_dim)
@@ -185,9 +181,7 @@ class DXNESIC:
         return math.exp(self._alpha_dist(num_feasible) * np.linalg.norm(z))
 
     def _eta_stag_sigma(self, num_feasible: int) -> float:
-        return math.tanh(
-            (0.024 * num_feasible + 0.7 * self._n_dim + 20.0) / (self._n_dim + 12.0)
-        )
+        return math.tanh((0.024 * num_feasible + 0.7 * self._n_dim + 20.0) / (self._n_dim + 12.0))
 
     def _eta_conv_sigma(self, num_feasible: int) -> float:
         return 2.0 * math.tanh(
@@ -195,28 +189,13 @@ class DXNESIC:
         )
 
     def _eta_move_B(self, num_feasible: int) -> float:
-        return (
-            180
-            * self._n_dim
-            * math.tanh(0.02 * num_feasible)
-            / (47 * (self._n_dim**2) + 6400)
-        )
+        return 180 * self._n_dim * math.tanh(0.02 * num_feasible) / (47 * (self._n_dim**2) + 6400)
 
     def _eta_stag_B(self, num_feasible: int) -> float:
-        return (
-            168
-            * self._n_dim
-            * math.tanh(0.02 * num_feasible)
-            / (47 * (self._n_dim**2) + 6400)
-        )
+        return 168 * self._n_dim * math.tanh(0.02 * num_feasible) / (47 * (self._n_dim**2) + 6400)
 
     def _eta_conv_B(self, num_feasible: int) -> float:
-        return (
-            12
-            * self._n_dim
-            * math.tanh(0.02 * num_feasible)
-            / (47 * (self._n_dim**2) + 6400)
-        )
+        return 12 * self._n_dim * math.tanh(0.02 * num_feasible) / (47 * (self._n_dim**2) + 6400)
 
     def reseed_rng(self, seed: int) -> None:
         self._rng.seed(seed)
@@ -269,9 +248,9 @@ class DXNESIC:
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         # counting # feasible solutions
         lamb_feas = len([s[1] for s in solutions if s[1] < sys.maxsize])
@@ -286,10 +265,7 @@ class DXNESIC:
         self._funhist_values[funhist_idx + 1] = solutions[-1][1]
 
         z_k = np.array(
-            [
-                np.linalg.inv(self._sigma * self._B).dot(s[0] - self._mean)
-                for s in solutions
-            ]
+            [np.linalg.inv(self._sigma * self._B).dot(s[0] - self._mean) for s in solutions]
         )
 
         # Evolution path
@@ -334,9 +310,7 @@ class DXNESIC:
         )
 
         # natural gradient estimation in local coordinate
-        G_delta = np.sum(
-            [w[i] * z_k[i, :] for i in range(self.population_size)], axis=0
-        )
+        G_delta = np.sum([w[i] * z_k[i, :] for i in range(self.population_size)], axis=0)
         G_M = np.sum(
             [
                 w[i] * (np.outer(z_k[i, :], z_k[i, :]) - np.eye(self._n_dim))
@@ -359,11 +333,7 @@ class DXNESIC:
         e, v = np.linalg.eigh(bBBT)
         tau_vec = [
             (v[:, i].reshape(self._n_dim, 1).T @ aBBT @ v[:, i].reshape(self._n_dim, 1))
-            / (
-                v[:, i].reshape(self._n_dim, 1).T
-                @ bBBT
-                @ v[:, i].reshape(self._n_dim, 1)
-            )
+            / (v[:, i].reshape(self._n_dim, 1).T @ bBBT @ v[:, i].reshape(self._n_dim, 1))
             - 1
             for i in range(self._n_dim)
         ]
@@ -393,8 +363,7 @@ class DXNESIC:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 

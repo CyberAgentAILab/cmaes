@@ -25,9 +25,7 @@ class SphereEvaluator(problem.Evaluator):
 
 
 class SphereProblem(problem.Problem):
-    def create_evaluator(
-        self, params: list[Optional[float]]
-    ) -> Optional[problem.Evaluator]:
+    def create_evaluator(self, params: list[Optional[float]]) -> Optional[problem.Evaluator]:
         return SphereEvaluator(params)
 
 
@@ -40,8 +38,7 @@ class SphereProblemFactory(problem.ProblemFactory):
 
     def specification(self) -> problem.ProblemSpec:
         params = [
-            problem.Var(f"x{i + 1}", problem.ContinuousRange(-5.12, 5.12))
-            for i in range(self.dim)
+            problem.Var(f"x{i + 1}", problem.ContinuousRange(-5.12, 5.12)) for i in range(self.dim)
         ]
         return problem.ProblemSpec(
             name=f"Sphere (dim={self.dim})",

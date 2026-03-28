@@ -17,9 +17,7 @@ class TestCMAwM(TestCase):
         cma_optimizer = CMA(mean=mean, sigma=sigma, bounds=bounds, seed=seed)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", category=UserWarning)
-            cmawm_optimizer = CMAwM(
-                mean=mean, sigma=sigma, bounds=bounds, steps=steps, seed=seed
-            )
+            cmawm_optimizer = CMAwM(mean=mean, sigma=sigma, bounds=bounds, steps=steps, seed=seed)
 
         for i in range(100):
             solutions = []

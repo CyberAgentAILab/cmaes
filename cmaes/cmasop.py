@@ -152,9 +152,7 @@ class CMASoP:
             self._zd = []
 
         # setting for margin correction and adaptation
-        self._margin_target = (
-            margin if margin is not None else 1 / (self._n_dim * self._popsize)
-        )
+        self._margin_target = margin if margin is not None else 1 / (self._n_dim * self._popsize)
         self._margin = self._margin_target * np.ones_like(self._zd)
         self._margin_coeff = 1 + 1 / self._n_dim if self._margin_target > 0 else 0
 
@@ -170,9 +168,9 @@ class CMASoP:
     ) -> None:
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         n_dim = len(mean)
         assert n_dim > 0, "The dimension of mean must be positive"
@@ -184,10 +182,7 @@ class CMASoP:
         mu = population_size // 2
 
         weights_prime = np.array(
-            [
-                math.log((population_size + 1) / 2) - math.log(i + 1)
-                for i in range(population_size)
-            ]
+            [math.log((population_size + 1) / 2) - math.log(i + 1) for i in range(population_size)]
         )
         weights_prime[weights_prime < 0] = 0
         weights = weights_prime / weights_prime.sum()
@@ -200,9 +195,7 @@ class CMASoP:
         # learning rate for the rank-μ update
         cmu = min(
             1 - c1 - 1e-8,  # 1e-8 is for large popsize.
-            alpha_cov
-            * (mu_eff - 2 + 1 / mu_eff)
-            / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
+            alpha_cov * (mu_eff - 2 + 1 / mu_eff) / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
         )
         assert c1 <= 1 - cmu, "invalid learning rate for the rank-one update"
         assert cmu <= 1 - c1, "invalid learning rate for the rank-μ update"
@@ -212,9 +205,7 @@ class CMASoP:
         # learning rate for the cumulation for the step-size control
         c_sigma = (mu_eff + 2) / (n_dim + mu_eff + 5)
         d_sigma = 1 + 2 * max(0, math.sqrt((mu_eff - 1) / (n_dim + 1)) - 1) + c_sigma
-        assert (
-            c_sigma < 1
-        ), "invalid learning rate for cumulation for the step-size control"
+        assert c_sigma < 1, "invalid learning rate for cumulation for the step-size control"
 
         # learning rate for cumulation for the rank-one update
         cc = (4 + mu_eff / n_dim) / (n_dim + 4 + 2 * mu_eff / n_dim)
@@ -425,9 +416,7 @@ class CMASoP:
         else:
             self._subspace_mask = np.zeros((len(self._zd), self._n_dim), dtype=bool)
             cont_dim = self._n_dim - np.sum(self._zd)
-            subspace_range = np.concatenate(
-                [[cont_dim], cont_dim + np.cumsum(self._zd)]
-            )
+            subspace_range = np.concatenate([[cont_dim], cont_dim + np.cumsum(self._zd)])
 
             for i in range(len(self._zd)):
                 self._subspace_mask[i, subspace_range[i] : subspace_range[i + 1]] = True
@@ -445,9 +434,9 @@ class CMASoP:
     def _naive_cma_update(self, solutions: list[tuple[np.ndarray, float]]) -> None:
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
@@ -478,9 +467,7 @@ class CMASoP:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
+        self._sigma *= np.exp((self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1))
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
@@ -502,13 +489,7 @@ class CMASoP:
             np.array([w * np.outer(y, y) for w, y in zip(self._weights, y_k)]), axis=0
         )
         self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * np.sum(self._weights)
-            )
-            * self._C
+            (1 + self._c1 * delta_h_sigma - self._c1 - self._cmu * np.sum(self._weights)) * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
@@ -516,10 +497,7 @@ class CMASoP:
     def _get_neighbor_indexes(self, m: np.ndarray) -> list[Any]:
         # get neiboring points to given point
         closest_index = np.array(self._get_closest_point_index(m))[:, 0]
-        return [
-            self._get_neighbor_matrices()[i][closest_index[i]]
-            for i in range(len(self._zd))
-        ]
+        return [self._get_neighbor_matrices()[i][closest_index[i]] for i in range(len(self._zd))]
 
     def _margin_correction(self) -> None:
         nearest_indexes = self._get_neighbor_indexes(self._mean)
@@ -536,7 +514,6 @@ class CMASoP:
             self._rng.shuffle(target_nearest_points)
 
             for x_near_z in target_nearest_points:
-
                 y_near_z = (x_near_z - m_z) / self._sigma
                 y_near = np.zeros(self._n_dim)
                 y_near[self._get_subspace_mask()[i]] = y_near_z  # eq. (14)
@@ -579,16 +556,13 @@ class CMASoP:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 
         # Stop if the std of the normal distribution is smaller than tolx
         # in all coordinates and pc is smaller than tolx in all components.
-        if np.all(self._sigma * dC < self._tolx) and np.all(
-            self._sigma * self._pc < self._tolx
-        ):
+        if np.all(self._sigma * dC < self._tolx) and np.all(self._sigma * self._pc < self._tolx):
             return True
 
         # Stop if detecting divergent behavior.

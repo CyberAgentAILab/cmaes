@@ -24,9 +24,7 @@ class RosenbrockEvaluator(problem.Evaluator):
 
 
 class RosenbrockProblem(problem.Problem):
-    def create_evaluator(
-        self, params: List[Optional[float]]
-    ) -> Optional[problem.Evaluator]:
+    def create_evaluator(self, params: List[Optional[float]]) -> Optional[problem.Evaluator]:
         return RosenbrockEvaluator(params)
 
 

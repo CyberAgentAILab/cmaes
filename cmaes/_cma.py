@@ -82,9 +82,9 @@ class CMA:
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         n_dim = len(mean)
         assert n_dim > 0, "The dimension of mean must be positive"
@@ -97,15 +97,10 @@ class CMA:
 
         # (eq.49)
         weights_prime = np.array(
-            [
-                math.log((population_size + 1) / 2) - math.log(i + 1)
-                for i in range(population_size)
-            ]
+            [math.log((population_size + 1) / 2) - math.log(i + 1) for i in range(population_size)]
         )
         mu_eff = (np.sum(weights_prime[:mu]) ** 2) / np.sum(weights_prime[:mu] ** 2)
-        mu_eff_minus = (np.sum(weights_prime[mu:]) ** 2) / np.sum(
-            weights_prime[mu:] ** 2
-        )
+        mu_eff_minus = (np.sum(weights_prime[mu:]) ** 2) / np.sum(weights_prime[mu:] ** 2)
 
         # learning rate for the rank-one update
         alpha_cov = 2
@@ -113,9 +108,7 @@ class CMA:
         # learning rate for the rank-μ update
         cmu = min(
             1 - c1 - 1e-8,  # 1e-8 is for large popsize.
-            alpha_cov
-            * (mu_eff - 2 + 1 / mu_eff)
-            / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
+            alpha_cov * (mu_eff - 2 + 1 / mu_eff) / ((n_dim + 2) ** 2 + alpha_cov * mu_eff / 2),
         )
         assert c1 <= 1 - cmu, "invalid learning rate for the rank-one update"
         assert cmu <= 1 - c1, "invalid learning rate for the rank-μ update"
@@ -139,9 +132,7 @@ class CMA:
         # learning rate for the cumulation for the step-size control (eq.55)
         c_sigma = (mu_eff + 2) / (n_dim + mu_eff + 5)
         d_sigma = 1 + 2 * max(0, math.sqrt((mu_eff - 1) / (n_dim + 1)) - 1) + c_sigma
-        assert (
-            c_sigma < 1
-        ), "invalid learning rate for cumulation for the step-size control"
+        assert c_sigma < 1, "invalid learning rate for cumulation for the step-size control"
 
         # learning rate for cumulation for the rank-one update (eq.56)
         cc = (4 + mu_eff / n_dim) / (n_dim + 4 + 2 * mu_eff / n_dim)
@@ -312,9 +303,9 @@ class CMA:
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
@@ -354,9 +345,7 @@ class CMA:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
+        self._sigma *= np.exp((self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1))
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
@@ -384,20 +373,12 @@ class CMA:
         # (eq.47)
         rank_one = np.outer(self._pc, self._pc)
 
-        rank_mu = np.sum(
-            w_io.reshape(-1, 1, 1) * np.einsum("...i,...j->...ij", y_k, y_k), axis=0
-        )
+        rank_mu = np.sum(w_io.reshape(-1, 1, 1) * np.einsum("...i,...j->...ij", y_k, y_k), axis=0)
         # The above line is equivalent to:
         # rank_mu = np.sum(np.array([w * np.outer(y, y) for w, y in zip(w_io, y_k)]), axis=0)
 
         self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * np.sum(self._weights)
-            )
-            * self._C
+            (1 + self._c1 * delta_h_sigma - self._c1 - self._cmu * np.sum(self._weights)) * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
@@ -426,17 +407,13 @@ class CMA:
         # local coordinate
         old_inv_sqrtSigma = old_invsqrtC / old_sigma
         locDeltamean = old_inv_sqrtSigma.dot(Deltamean)
-        locDeltaSigma = (
-            old_inv_sqrtSigma.dot(DeltaSigma.dot(old_inv_sqrtSigma))
-        ).reshape(self.dim * self.dim, 1) / np.sqrt(2)
+        locDeltaSigma = (old_inv_sqrtSigma.dot(DeltaSigma.dot(old_inv_sqrtSigma))).reshape(
+            self.dim * self.dim, 1
+        ) / np.sqrt(2)
 
         # moving average E and V
-        self._Emean = (
-            1 - self._beta_mean
-        ) * self._Emean + self._beta_mean * locDeltamean
-        self._ESigma = (
-            1 - self._beta_Sigma
-        ) * self._ESigma + self._beta_Sigma * locDeltaSigma
+        self._Emean = (1 - self._beta_mean) * self._Emean + self._beta_mean * locDeltamean
+        self._ESigma = (1 - self._beta_Sigma) * self._ESigma + self._beta_Sigma * locDeltaSigma
         self._Vmean = (1 - self._beta_mean) * self._Vmean + self._beta_mean * (
             float(np.linalg.norm(locDeltamean)) ** 2
         )
@@ -446,9 +423,9 @@ class CMA:
 
         # estimate SNR
         sqnormEmean = np.linalg.norm(self._Emean) ** 2
-        hatSNRmean = (
-            sqnormEmean - (self._beta_mean / (2 - self._beta_mean)) * self._Vmean
-        ) / (self._Vmean - sqnormEmean)
+        hatSNRmean = (sqnormEmean - (self._beta_mean / (2 - self._beta_mean)) * self._Vmean) / (
+            self._Vmean - sqnormEmean
+        )
         sqnormESigma = np.linalg.norm(self._ESigma) ** 2
         hatSNRSigma = (
             sqnormESigma - (self._beta_Sigma / (2 - self._beta_Sigma)) * self._VSigma
@@ -456,15 +433,11 @@ class CMA:
 
         # update learning rate
         before_eta_mean = self._eta_mean
-        relativeSNRmean = np.clip(
-            (hatSNRmean / self._alpha / self._eta_mean) - 1, -1, 1
-        )
+        relativeSNRmean = np.clip((hatSNRmean / self._alpha / self._eta_mean) - 1, -1, 1)
         self._eta_mean = self._eta_mean * np.exp(
             min(self._gamma * self._eta_mean, self._beta_mean) * relativeSNRmean
         )
-        relativeSNRSigma = np.clip(
-            (hatSNRSigma / self._alpha / self._eta_Sigma) - 1, -1, 1
-        )
+        relativeSNRSigma = np.clip((hatSNRSigma / self._alpha / self._eta_Sigma) - 1, -1, 1)
         self._eta_Sigma = self._eta_Sigma * np.exp(
             min(self._gamma * self._eta_Sigma, self._beta_Sigma) * relativeSNRSigma
         )
@@ -493,16 +466,13 @@ class CMA:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 
         # Stop if the std of the normal distribution is smaller than tolx
         # in all coordinates and pc is smaller than tolx in all components.
-        if np.all(self._sigma * dC < self._tolx) and np.all(
-            self._sigma * self._pc < self._tolx
-        ):
+        if np.all(self._sigma * dC < self._tolx) and np.all(self._sigma * self._pc < self._tolx):
             return True
 
         # Stop if detecting divergent behavior.

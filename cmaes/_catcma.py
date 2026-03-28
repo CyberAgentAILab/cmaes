@@ -96,9 +96,9 @@ class CatCMA:
     ):
         assert sigma > 0, "sigma must be non-zero positive value"
 
-        assert np.all(
-            np.abs(mean) < _MEAN_MAX
-        ), f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        assert np.all(np.abs(mean) < _MEAN_MAX), (
+            f"Abs of all elements of mean vector must be less than {_MEAN_MAX}"
+        )
 
         self._n_co = len(mean)
         self._n_ca = len(cat_num)
@@ -141,12 +141,8 @@ class CatCMA:
 
         # learning rate for the cumulation for the step-size control
         c_sigma = (mu_eff + 2) / (self._n_co + mu_eff + 5)
-        d_sigma = (
-            1 + 2 * max(0, math.sqrt((mu_eff - 1) / (self._n_co + 1)) - 1) + c_sigma
-        )
-        assert (
-            c_sigma < 1
-        ), "invalid learning rate for cumulation for the step-size control"
+        d_sigma = 1 + 2 * max(0, math.sqrt((mu_eff - 1) / (self._n_co + 1)) - 1) + c_sigma
+        assert c_sigma < 1, "invalid learning rate for cumulation for the step-size control"
 
         # learning rate for cumulation for the rank-one update
         cc = (4 + mu_eff / self._n_co) / (self._n_co + 4 + 2 * mu_eff / self._n_co)
@@ -208,18 +204,16 @@ class CatCMA:
                     "Parameters in categorical distribution with fewer categories "
                     "must be zero-padded at the end"
                 )
-            assert np.all(
-                (cat_param >= 0) & (cat_param <= 1)
-            ), "All elements in categorical distribution parameter must be between 0 and 1"
-            assert np.allclose(
-                np.sum(cat_param, axis=1), 1
-            ), "Each row in categorical distribution parameter must sum to 1"
+            assert np.all((cat_param >= 0) & (cat_param <= 1)), (
+                "All elements in categorical distribution parameter must be between 0 and 1"
+            )
+            assert np.allclose(np.sum(cat_param, axis=1), 1), (
+                "Each row in categorical distribution parameter must sum to 1"
+            )
             self._q = cat_param
 
         self._q_min = (
-            margin
-            if margin is not None
-            else (1 - 0.73 ** (1 / self._n_ca)) / (self._K - 1)
+            margin if margin is not None else (1 - 0.73 ** (1 / self._n_ca)) / (self._K - 1)
         )
         self._min_eigenvalue = min_eigenvalue if min_eigenvalue is not None else 1e-30
 
@@ -367,16 +361,14 @@ class CatCMA:
         param = np.where(param > self._bounds[:, 1], self._bounds[:, 1], param)
         return param
 
-    def tell(
-        self, solutions: list[tuple[tuple[np.ndarray, np.ndarray], float]]
-    ) -> None:
+    def tell(self, solutions: list[tuple[tuple[np.ndarray, np.ndarray], float]]) -> None:
         """Tell evaluation values"""
 
         assert len(solutions) == self._popsize, "Must tell popsize-length solutions."
         for s in solutions:
-            assert np.all(
-                np.abs(s[0][0]) < _MEAN_MAX
-            ), f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            assert np.all(np.abs(s[0][0]) < _MEAN_MAX), (
+                f"Abs of all param values must be less than {_MEAN_MAX} to avoid overflow errors"
+            )
 
         self._g += 1
         solutions.sort(key=lambda s: s[1])
@@ -406,9 +398,7 @@ class CatCMA:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp(
-            (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
-        )
+        self._sigma *= np.exp((self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1))
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
@@ -430,13 +420,7 @@ class CatCMA:
             np.array([w * np.outer(y, y) for w, y in zip(self._weights, y_k)]), axis=0
         )
         self._C = (
-            (
-                1
-                + self._c1 * delta_h_sigma
-                - self._c1
-                - self._cmu * np.sum(self._weights)
-            )
-            * self._C
+            (1 + self._c1 * delta_h_sigma - self._c1 - self._cmu * np.sum(self._weights)) * self._C
             + self._c1 * rank_one
             + self._cmu * rank_mu
         )
@@ -470,9 +454,7 @@ class CatCMA:
         beta = self._delta / (self._param_sum**0.5)
         self._s = (1 - beta) * self._s + np.sqrt(beta * (2 - beta)) * ngrad_sqF / pnorm
         self._gamma = (1 - beta) ** 2 * self._gamma + beta * (2 - beta)
-        self._Delta *= np.exp(
-            beta * (self._gamma - np.dot(self._s, self._s) / self._alpha)
-        )
+        self._Delta *= np.exp(beta * (self._gamma - np.dot(self._s, self._s) / self._alpha))
         self._Delta = min(self._Delta, self._Delta_max)
 
         # Margin Correction
@@ -490,8 +472,7 @@ class CatCMA:
         # Stop if the range of function values of the recent generation is below tolfun.
         if (
             self.generation > self._funhist_term
-            and np.max(self._funhist_values) - np.min(self._funhist_values)
-            < self._tolfun
+            and np.max(self._funhist_values) - np.min(self._funhist_values) < self._tolfun
         ):
             return True
 

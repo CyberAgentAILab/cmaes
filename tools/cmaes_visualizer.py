@@ -100,11 +100,7 @@ def rosenbrock_contour(x1, x2):
 
 
 def six_hump_camel(x1, x2):
-    return (
-        (4 - 2.1 * (x1**2) + (x1**4) / 3) * (x1**2)
-        + x1 * x2
-        + (-4 + 4 * x2**2) * (x2**2)
-    )
+    return (4 - 2.1 * (x1**2) + (x1**4) / 3) * (x1**2) + x1 * x2 + (-4 + 4 * x2**2) * (x2**2)
 
 
 def six_hump_camel_contour(x1, x2):
@@ -221,9 +217,7 @@ def get_next_popsize_sigma():
             n_restarts += 1
             popsize = popsize0 * (inc_popsize**n_restarts)
             sigma = sigma0
-        print(
-            f"Restart CMA-ES with popsize={popsize} ({poptype}) at trial={trial_number}"
-        )
+        print(f"Restart CMA-ES with popsize={popsize} ({poptype}) at trial={trial_number}")
         return popsize, sigma
     raise Exception("must not reach here")
 
@@ -264,8 +258,7 @@ def update(frame):
     # Update title
     if args.restart_strategy == "ipop":
         fig.suptitle(
-            f"IPOP-CMA-ES {function_name} trial={trial_number} "
-            f"popsize={optimizer.population_size}"
+            f"IPOP-CMA-ES {function_name} trial={trial_number} popsize={optimizer.population_size}"
         )
     elif args.restart_strategy == "bipop":
         fig.suptitle(
@@ -276,9 +269,7 @@ def update(frame):
         fig.suptitle(f"CMA-ES {function_name} trial={trial_number}")
 
     # Plot multivariate gaussian distribution of CMA-ES
-    x, y = np.mgrid[
-        x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01
-    ]
+    x, y = np.mgrid[x1_lower_bound:x1_upper_bound:0.01, x2_lower_bound:x2_upper_bound:0.01]
     rv = stats.multivariate_normal(optimizer._mean, optimizer._C)
     pos = np.dstack((x, y))
     ax2.contourf(x, y, rv.pdf(pos))

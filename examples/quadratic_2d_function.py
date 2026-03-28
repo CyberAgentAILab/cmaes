@@ -17,10 +17,7 @@ def main():
             x = optimizer.ask()
             value = quadratic(x[0], x[1])
             solutions.append((x, value))
-            print(
-                f"{optimizer.generation:3d}  {value:10.5f}"
-                f"  {x[0]:6.2f}  {x[1]:6.2f}"
-            )
+            print(f"{optimizer.generation:3d}  {value:10.5f}  {x[0]:6.2f}  {x[1]:6.2f}")
         optimizer.tell(solutions)
 
         if optimizer.should_stop():

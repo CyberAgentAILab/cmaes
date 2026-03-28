@@ -343,9 +343,7 @@ class COMOCatCMAwM:
     def calc_incumbent_solution(self, kernel_id: int) -> CatCMAwM.Solution:
         """Compute a kernel's incumbent solution."""
         if not (0 <= kernel_id < self._kernel_size):
-            raise IndexError(
-                f"kernel_id must be in [0, {self._kernel_size}), got {kernel_id}."
-            )
+            raise IndexError(f"kernel_id must be in [0, {self._kernel_size}), got {kernel_id}.")
 
         ker = self._kernels[kernel_id]
         x = None
@@ -361,9 +359,9 @@ class COMOCatCMAwM:
         if ker._use_categorical:
             row_max = ker._q.max(axis=1, keepdims=True)
             tie_mask = ker._q == row_max
-            argmax_index = np.where(
-                tie_mask, ker._rng.random(ker._q.shape), -np.inf
-            ).argmax(axis=1)
+            argmax_index = np.where(tie_mask, ker._rng.random(ker._q.shape), -np.inf).argmax(
+                axis=1
+            )
             c = np.zeros_like(ker._q, dtype=bool)
             c[np.arange(ker._q.shape[0]), argmax_index] = True
         return CatCMAwM.Solution(x, z, c, v_raw)
@@ -387,9 +385,7 @@ class COMOCatCMAwM:
         if self._n_obj is None:
             self._n_obj = p_n_obj
             # Initialize objective tracking array once the dimension is known
-            self._incumbents_obj = np.full(
-                (self._kernel_size, self._n_obj), np.nan, dtype=float
-            )
+            self._incumbents_obj = np.full((self._kernel_size, self._n_obj), np.nan, dtype=float)
         else:
             if self._n_obj != p_n_obj:
                 raise ValueError(
@@ -453,9 +449,7 @@ class COMOCatCMAwM:
 
     def _UHVI(self, objective: np.ndarray, kernel_id_to_omit: int) -> float:
         if self._incumbents_obj is None:
-            raise ValueError(
-                "UHVI unavailable: no incumbent objectives have been recorded yet."
-            )
+            raise ValueError("UHVI unavailable: no incumbent objectives have been recorded yet.")
         ref_point = self._get_reference_point()
         # Build incumbents_obj excluding kernel_id_to_omit
         mask = np.ones(self._kernel_size, dtype=bool)
@@ -510,21 +504,17 @@ class COMOCatCMAwM:
         return True
 
     def _kernel_tell(self, kernel_id: int) -> None:
-        assert (
-            len(self._tell_lists[kernel_id]) == self._kernels[kernel_id].population_size
-        ), "Tell list size does not match the corresponding kernel's population size."
+        assert len(self._tell_lists[kernel_id]) == self._kernels[kernel_id].population_size, (
+            "Tell list size does not match the corresponding kernel's population size."
+        )
         expected_mask = (1 << self._kernel_size) - 1
-        assert (
-            self._incumbents_mask | (1 << kernel_id)
-        ) == expected_mask, (
+        assert (self._incumbents_mask | (1 << kernel_id)) == expected_mask, (
             "All incumbents other than kernel_id must already be evaluated."
         )
 
         solutions = []
         for sol in self._tell_lists[kernel_id]:
-            catcmawm_sol = CatCMAwM.Solution(
-                sol[0].x, sol[0].z, sol[0].c, sol[0]._v_raw
-            )
+            catcmawm_sol = CatCMAwM.Solution(sol[0].x, sol[0].z, sol[0].c, sol[0]._v_raw)
             obj = self._coerce_objective_space_point(sol[1])
             uhvi = self._UHVI(obj, kernel_id)
             # UHVI is maximized; negate for CatCMAwM's minimization
@@ -542,8 +532,7 @@ class COMOCatCMAwM:
         """
         if not self._ask_queue:
             raise AskQueueEmpty(
-                "No solutions available to ask. Check ask_queue_size "
-                "or iterate with ask_iter()."
+                "No solutions available to ask. Check ask_queue_size or iterate with ask_iter()."
             )
 
         sol = self._ask_queue.popleft()
@@ -587,8 +576,7 @@ class COMOCatCMAwM:
             solutions = [observation]
         else:
             raise TypeError(
-                "tell expects either a (Solution, Sequence[float]) or "
-                "a list of such tuples."
+                "tell expects either a (Solution, Sequence[float]) or a list of such tuples."
             )
 
         for sol in solutions:
@@ -603,9 +591,7 @@ class COMOCatCMAwM:
                     sol[0].x, sol[0].z, sol[0].c, sol[0]._v_raw
                 )
                 if self._incumbents_obj is None:
-                    raise RuntimeError(
-                        "Incumbent objectives buffer is not initialized."
-                    )
+                    raise RuntimeError("Incumbent objectives buffer is not initialized.")
                 self._incumbents_obj[incumbent_id] = sol[1]
                 # Set evaluated flag for this incumbent
                 self._incumbents_mask |= 1 << incumbent_id

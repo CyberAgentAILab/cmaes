@@ -28,9 +28,7 @@ def main():
     study = optuna.create_study(sampler=sampler, storage=storage)
 
     profiler = cProfile.Profile()
-    profiler.runcall(
-        study.optimize, objective, n_trials=args.trials, gc_after_trial=False
-    )
+    profiler.runcall(study.optimize, objective, n_trials=args.trials, gc_after_trial=False)
     profiler.dump_stats("profile.stats")
 
     stats = pstats.Stats("profile.stats")

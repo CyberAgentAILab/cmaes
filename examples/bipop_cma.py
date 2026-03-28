@@ -55,9 +55,7 @@ def main():
             if small_n_eval < large_n_eval:
                 poptype = "small"
                 popsize_multiplier = inc_popsize**n_restarts
-                popsize = math.floor(
-                    popsize0 * popsize_multiplier ** (rng.uniform() ** 2)
-                )
+                popsize = math.floor(popsize0 * popsize_multiplier ** (rng.uniform() ** 2))
                 sigma = sigma0 * 10 ** (-2 * rng.uniform())
             else:
                 poptype = "large"
