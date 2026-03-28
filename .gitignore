@@ -13,3 +13,5 @@ benchmark/*.json
 *.stats
 *.sqlite3
 
+uv.lock
+
