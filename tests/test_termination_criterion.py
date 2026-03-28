@@ -24,3 +24,15 @@ class TestTerminationCriterion(TestCase):
         solutions = [(100 * nd_rng.randn(2), 0.01) for _ in range(popsize)]
         optimizer.tell(solutions)
         self.assertTrue(optimizer.should_stop())
+
+    def test_sigma_update_avoids_exp_overflow(self):
+        optimizer = CMA(mean=np.zeros(2), sigma=1e-4)
+        popsize = optimizer.population_size
+        nd_rng = np.random.RandomState(1)
+
+        solutions = [(100 * nd_rng.randn(2), 0.01) for _ in range(popsize)]
+        with np.errstate(over="raise"):
+            optimizer.tell(solutions)
+
+        self.assertTrue(np.isfinite(optimizer._sigma))
+        self.assertLessEqual(optimizer._sigma, 1e32)

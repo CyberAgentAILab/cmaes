@@ -345,7 +345,11 @@ class CMA:
         ) * C_2.dot(y_w)
 
         norm_p_sigma = np.linalg.norm(self._p_sigma)
-        self._sigma *= np.exp((self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1))
+        sigma_log_step = (self._c_sigma / self._d_sigma) * (norm_p_sigma / self._chi_n - 1)
+        if sigma_log_step > 0:
+            # Prevent overflow in exp before the explicit sigma cap below.
+            sigma_log_step = min(sigma_log_step, math.log(_SIGMA_MAX / self._sigma))
+        self._sigma *= math.exp(sigma_log_step)
         self._sigma = min(self._sigma, _SIGMA_MAX)
 
         # Covariance matrix adaption
