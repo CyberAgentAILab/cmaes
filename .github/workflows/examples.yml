@@ -15,40 +15,30 @@ jobs:
         python-version: ["3.9", "3.14"]
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
       - name: Install dependencies
-        run: |
-          pip install -U pip setuptools
-          pip install --progress-bar off optuna numpy scipy gpytorch torch
-          pip install --progress-bar off -U .
-      - run: python examples/quadratic_2d_function.py
-      - run: python examples/ipop_cma.py
-      - run: python examples/bipop_cma.py
-      - run: python examples/ellipsoid_function.py
-      - run: python examples/optuna_sampler.py
-      - run: python examples/lra_cma.py
-      - run: python examples/ws_cma.py
-      - run: python examples/cma_with_margin_binary.py
-      - run: python examples/cma_with_margin_integer.py
-      - run: python examples/safecma.py
-      - run: python examples/cma_sop.py
+        run: uv sync --group optional --group benchmark
+      - run: uv run python examples/quadratic_2d_function.py
+      - run: uv run python examples/ipop_cma.py
+      - run: uv run python examples/bipop_cma.py
+      - run: uv run python examples/ellipsoid_function.py
+      - run: uv run python examples/optuna_sampler.py
+      - run: uv run python examples/lra_cma.py
+      - run: uv run python examples/ws_cma.py
+      - run: uv run python examples/cma_with_margin_binary.py
+      - run: uv run python examples/cma_with_margin_integer.py
+      - run: uv run python examples/safecma.py
+      - run: uv run python examples/cma_sop.py
   examples-cmawm-without-scipy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: '3.x'
-          architecture: x64
-          check-latest: true
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@v7
       - name: Install dependencies
-        run: |
-          pip install -U pip setuptools
-          pip install --progress-bar off -U .
-      - run: python examples/cma_with_margin_binary.py
-      - run: python examples/cma_with_margin_integer.py
+        run: uv sync
+      - run: uv run python examples/cma_with_margin_binary.py
+      - run: uv run python examples/cma_with_margin_integer.py
