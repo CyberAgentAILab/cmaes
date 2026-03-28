@@ -10,9 +10,7 @@ class TestCMABoundary(TestCase):
     def test_valid_dimension(self):
         for CmaClass in CMA_CLASSES:
             with self.subTest(f"Class: {CmaClass.__name__}"):
-                CmaClass(
-                    mean=np.zeros(2), sigma=1.3, bounds=np.array([[-10, 10], [-10, 10]])
-                )
+                CmaClass(mean=np.zeros(2), sigma=1.3, bounds=np.array([[-10, 10], [-10, 10]]))
 
     def test_invalid_dimension(self):
         for CmaClass in CMA_CLASSES:

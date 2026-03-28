@@ -26,9 +26,7 @@ class TestNormCDF(TestCase):
 class TestChi2PPF(TestCase):
     def test(self):
         self.assertAlmostEqual(_stats.chi2_ppf(0.0), 0.0)
-        self.assertAlmostEqual(
-            _stats.chi2_ppf(0.00000001), 1.5707963267948962e-16, places=25
-        )
+        self.assertAlmostEqual(_stats.chi2_ppf(0.00000001), 1.5707963267948962e-16, places=25)
         self.assertAlmostEqual(_stats.chi2_ppf(0.5), 0.454936423119572)
         self.assertAlmostEqual(_stats.chi2_ppf(0.99999999), 32.84125335146885)
         self.assertAlmostEqual(
