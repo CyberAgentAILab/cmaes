@@ -9,4 +9,4 @@ from ._mapcma import MAPCMA  # NOQA
 from ._catcmawm import CatCMAwM  # NOQA
 from ._comocatcmawm import COMOCatCMAwM  # NOQA
 
-__version__ = "0.12.0"
+__version__ = "0.13.0"
