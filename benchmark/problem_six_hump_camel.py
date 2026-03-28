@@ -28,9 +28,7 @@ class SixHumpCamelEvaluator(problem.Evaluator):
 
 
 class SixHumpCamelProblem(problem.Problem):
-    def create_evaluator(
-        self, params: List[Optional[float]]
-    ) -> Optional[problem.Evaluator]:
+    def create_evaluator(self, params: List[Optional[float]]) -> Optional[problem.Evaluator]:
         return SixHumpCamelEvaluator(params)
 
 

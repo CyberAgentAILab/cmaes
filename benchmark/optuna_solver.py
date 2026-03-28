@@ -16,9 +16,7 @@ parser.add_argument(
     "sampler",
     choices=["cmaes", "sep-cmaes", "ipop-cmaes", "ipop-sep-cmaes", "pycma", "ws-cmaes"],
 )
-parser.add_argument(
-    "--loglevel", choices=["debug", "info", "warning", "error"], default="warning"
-)
+parser.add_argument("--loglevel", choices=["debug", "info", "warning", "error"], default="warning")
 parser.add_argument("--warm-starting-trials", type=int, default=0)
 args = parser.parse_args()
 
@@ -93,9 +91,7 @@ class WarmStartingCmaEsSampler(optuna.samplers.BaseSampler):
         return self._sampler.sample_relative(study, trial, search_space)
 
     def sample_independent(self, study, trial, param_name, param_distribution):
-        return self._sampler.sample_independent(
-            study, trial, param_name, param_distribution
-        )
+        return self._sampler.sample_independent(study, trial, param_name, param_distribution)
 
     def after_trial(
         self,

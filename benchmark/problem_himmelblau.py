@@ -12,9 +12,7 @@ class HimmelblauEvaluator(problem.Evaluator):
 
     def evaluate(self, next_step: int) -> List[float]:
         self._current_step = 1
-        value = (self._x1**2 + self._x2 - 11.0) ** 2 + (
-            self._x1 + self._x2**2 - 7.0
-        ) ** 2
+        value = (self._x1**2 + self._x2 - 11.0) ** 2 + (self._x1 + self._x2**2 - 7.0) ** 2
         return [value]
 
     def current_step(self) -> int:
@@ -22,9 +20,7 @@ class HimmelblauEvaluator(problem.Evaluator):
 
 
 class HimmelblauProblem(problem.Problem):
-    def create_evaluator(
-        self, params: List[Optional[float]]
-    ) -> Optional[problem.Evaluator]:
+    def create_evaluator(self, params: List[Optional[float]]) -> Optional[problem.Evaluator]:
         return HimmelblauEvaluator(params)
 
 
