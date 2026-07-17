@@ -119,14 +119,21 @@ class CMAwM:
         assert len(bounds) == len(steps), "bounds and steps must be the same length"
         assert not np.isnan(steps).any(), "steps should not include NaN"
         self._discrete_idx = np.where(steps > 0)[0]
-        discrete_list = [
-            np.arange(bounds[i][0], bounds[i][1] + steps[i] / 2, steps[i])
-            for i in self._discrete_idx
-        ]
-        max_discrete = max([len(discrete) for discrete in discrete_list], default=0)
-        discrete_space = np.full((len(self._discrete_idx), max_discrete), np.nan)
-        for i, discrete in enumerate(discrete_list):
-            discrete_space[i, : len(discrete)] = discrete
+        self._discrete_space_low = bounds[self._discrete_idx, 0]
+        requested_steps = steps[self._discrete_idx]
+        self._discrete_space_size = np.ceil(
+            (
+                bounds[self._discrete_idx, 1]
+                + requested_steps / 2
+                - self._discrete_space_low
+            )
+            / requested_steps
+        ).astype(int)
+        # np.arange uses dtype(start + step) - dtype(start) as its actual step.
+        # Retain that behavior without materializing every value in the range.
+        self._discrete_space_step = (
+            self._discrete_space_low + requested_steps - self._discrete_space_low
+        )
 
         # continuous_space contains low and high of each parameter.
         self._continuous_idx = np.where(steps <= 0)[0]
@@ -136,23 +143,17 @@ class CMAwM:
         )
 
         # discrete_space
-        self._n_zdim = len(discrete_space)
+        self._n_zdim = len(self._discrete_idx)
         if self._n_zdim == 0:
             return
+        assert np.all(self._discrete_space_size >= 2), (
+            "each discrete parameter must have at least two choices"
+        )
         self.margin = margin if margin is not None else 1 / (n_dim * population_size)
         assert self.margin > 0, "margin must be non-zero positive value."
-        self.z_space = discrete_space
-        self.z_lim = (self.z_space[:, 1:] + self.z_space[:, :-1]) / 2
-        for i in range(self._n_zdim):
-            self.z_space[i][np.isnan(self.z_space[i])] = np.nanmax(self.z_space[i])
-            self.z_lim[i][np.isnan(self.z_lim[i])] = np.nanmax(self.z_lim[i])
         m_z = self._cma._mean[self._discrete_idx]
         # m_z_lim_low ->|  mean vector    |<- m_z_lim_up
-        m_pos = np.array([np.searchsorted(self.z_lim[i], m_z[i]) for i in range(len(m_z))])
-        z_lim_low_index = np.clip(m_pos - 1, 0, self.z_lim.shape[1] - 1)
-        z_lim_up_index = np.clip(m_pos, 0, self.z_lim.shape[1] - 1)
-        self.m_z_lim_low = self.z_lim[np.arange(len(self.z_lim)), z_lim_low_index]
-        self.m_z_lim_up = self.z_lim[np.arange(len(self.z_lim)), z_lim_up_index]
+        self.m_z_lim_low, self.m_z_lim_up = self._get_discrete_param_limits(m_z)
 
         self._A = np.full(n_dim, 1.0)
 
@@ -233,9 +234,50 @@ class CMAwM:
         x = (discrete_param - mean[self._discrete_idx]) * self._A[self._discrete_idx] + mean[
             self._discrete_idx
         ]
-        x_pos = np.array([np.searchsorted(self.z_lim[i], x[i]) for i in range(len(x))])
-        x_enc = self.z_space[np.arange(len(self.z_space)), x_pos]
-        return x_enc
+        x_pos = self._get_discrete_param_indices(x)
+        return self._get_discrete_param_values(x_pos)
+
+    def _get_discrete_param_indices(self, values: np.ndarray) -> np.ndarray:
+        """Return indices of the closest discrete values, preferring the lower value on ties."""
+        indices = np.floor(
+            (values - self._discrete_space_low) / self._discrete_space_step + 0.5
+        ).astype(int)
+        indices = np.clip(indices, 0, self._discrete_space_size - 1)
+
+        # ``floor(x + 0.5)`` selects the upper value at an exact midpoint, while
+        # ``np.searchsorted`` used by the previous implementation selected the lower one.
+        has_lower_limit = indices > 0
+        lower_limits = self._get_discrete_param_limit_values(
+            np.maximum(indices - 1, 0)
+        )
+        indices -= has_lower_limit & (values <= lower_limits)
+
+        # Correct a possible one-position error caused by floating-point division.
+        has_upper_limit = indices < self._discrete_space_size - 1
+        upper_limits = self._get_discrete_param_limit_values(
+            np.minimum(indices, self._discrete_space_size - 2)
+        )
+        indices += has_upper_limit & (values > upper_limits)
+        return indices
+
+    def _get_discrete_param_values(self, indices: np.ndarray) -> np.ndarray:
+        return self._discrete_space_low + indices * self._discrete_space_step
+
+    def _get_discrete_param_limit_values(self, indices: np.ndarray) -> np.ndarray:
+        lower_values = self._get_discrete_param_values(indices)
+        upper_values = self._get_discrete_param_values(indices + 1)
+        return (lower_values + upper_values) / 2
+
+    def _get_discrete_param_limits(
+        self, values: np.ndarray
+    ) -> tuple[np.ndarray, np.ndarray]:
+        positions = self._get_discrete_param_indices(values)
+        lower_indices = np.clip(positions - 1, 0, self._discrete_space_size - 2)
+        upper_indices = np.clip(positions, 0, self._discrete_space_size - 2)
+        return (
+            self._get_discrete_param_limit_values(lower_indices),
+            self._get_discrete_param_limit_values(upper_indices),
+        )
 
     def tell(self, solutions: list[tuple[np.ndarray, float]]) -> None:
         """Tell evaluation values"""
@@ -248,16 +290,9 @@ class CMAwM:
             return
         # margin correction
         updated_m_integer = mean[self._discrete_idx]
-        m_pos = np.array(
-            [
-                np.searchsorted(self.z_lim[i], updated_m_integer[i])
-                for i in range(len(updated_m_integer))
-            ]
+        self.m_z_lim_low, self.m_z_lim_up = self._get_discrete_param_limits(
+            updated_m_integer
         )
-        z_lim_low_index = np.clip(m_pos - 1, 0, self.z_lim.shape[1] - 1)
-        z_lim_up_index = np.clip(m_pos, 0, self.z_lim.shape[1] - 1)
-        self.m_z_lim_low = self.z_lim[np.arange(len(self.z_lim)), z_lim_low_index]
-        self.m_z_lim_up = self.z_lim[np.arange(len(self.z_lim)), z_lim_up_index]
 
         # calculate probability low_cdf := Pr(X <= m_z_lim_low) and up_cdf := Pr(m_z_lim_up < X)
         # sig_z_sq_Cdiag = self.model.sigma * self.model.A * np.sqrt(np.diag(self.model.C))
