@@ -122,11 +122,7 @@ class CMAwM:
         self._discrete_space_low = bounds[self._discrete_idx, 0]
         requested_steps = steps[self._discrete_idx]
         self._discrete_space_size = np.ceil(
-            (
-                bounds[self._discrete_idx, 1]
-                + requested_steps / 2
-                - self._discrete_space_low
-            )
+            (bounds[self._discrete_idx, 1] + requested_steps / 2 - self._discrete_space_low)
             / requested_steps
         ).astype(int)
         # np.arange uses dtype(start + step) - dtype(start) as its actual step.
@@ -247,9 +243,7 @@ class CMAwM:
         # ``floor(x + 0.5)`` selects the upper value at an exact midpoint, while
         # ``np.searchsorted`` used by the previous implementation selected the lower one.
         has_lower_limit = indices > 0
-        lower_limits = self._get_discrete_param_limit_values(
-            np.maximum(indices - 1, 0)
-        )
+        lower_limits = self._get_discrete_param_limit_values(np.maximum(indices - 1, 0))
         indices -= has_lower_limit & (values <= lower_limits)
 
         # Correct a possible one-position error caused by floating-point division.
@@ -268,9 +262,7 @@ class CMAwM:
         upper_values = self._get_discrete_param_values(indices + 1)
         return (lower_values + upper_values) / 2
 
-    def _get_discrete_param_limits(
-        self, values: np.ndarray
-    ) -> tuple[np.ndarray, np.ndarray]:
+    def _get_discrete_param_limits(self, values: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         positions = self._get_discrete_param_indices(values)
         lower_indices = np.clip(positions - 1, 0, self._discrete_space_size - 2)
         upper_indices = np.clip(positions, 0, self._discrete_space_size - 2)
@@ -290,9 +282,7 @@ class CMAwM:
             return
         # margin correction
         updated_m_integer = mean[self._discrete_idx]
-        self.m_z_lim_low, self.m_z_lim_up = self._get_discrete_param_limits(
-            updated_m_integer
-        )
+        self.m_z_lim_low, self.m_z_lim_up = self._get_discrete_param_limits(updated_m_integer)
 
         # calculate probability low_cdf := Pr(X <= m_z_lim_low) and up_cdf := Pr(m_z_lim_up < X)
         # sig_z_sq_Cdiag = self.model.sigma * self.model.A * np.sqrt(np.diag(self.model.C))
