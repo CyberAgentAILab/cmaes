@@ -286,7 +286,7 @@ class SafeCMA:
         modified_evals = (target_safe_evals - evals_mean) / evals_std
 
         # function that returns the negative norm of gradient
-        def df(x: np.ndarray, model: ExactGPModel) -> torch.Tensor:
+        def df(x: np.ndarray, model: ExactGPModel) -> float | np.ndarray:
             out_scalar = x.ndim == 1
             x = np.atleast_2d(x)
 
@@ -300,8 +300,9 @@ class SafeCMA:
 
             if out_scalar:
                 grad_norm = grad_norm.mean().to(torch.float64)
+                return -grad_norm.item()
 
-            return -grad_norm
+            return -grad_norm.detach().numpy()
 
         def elementwise_df(i: int) -> float:
             samples = self._rng.randn(self.sample_num_lip, self._n_dim)
