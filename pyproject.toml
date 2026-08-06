@@ -53,6 +53,7 @@ disallow_untyped_defs = true
 
 [tool.ruff]
 line-length = 99
+extend-exclude = ["*.md"]
 exclude = [
     ".eggs",
     ".git",
