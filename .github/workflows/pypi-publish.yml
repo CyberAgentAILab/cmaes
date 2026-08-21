@@ -3,40 +3,98 @@ name: Publish distributions to TestPyPI and PyPI
 on:
   push:
     tags:
-    - v*.*.*
+      - v*.*.*
+  workflow_dispatch:
 
 jobs:
   build-n-publish:
+    if: github.event_name == 'push'
     name: Build and publish Python distributions to TestPyPI and PyPI
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+
     steps:
-    - uses: actions/checkout@v6
-    - name: Install the latest version of uv and set the python version
-      uses: astral-sh/setup-uv@v7
+      - uses: actions/checkout@v6
 
-    - name: Build distribution packages
-      run: uv build --sdist --wheel --no-sources
-    - name: Verify the distributions
-      run: uvx twine check dist/*
+      - name: Install the latest version of uv and set the python version
+        uses: astral-sh/setup-uv@v7
 
-    - uses: actions/upload-artifact@v7
-      with:
-        name: distribution
-        path: dist/
+      - name: Build distribution packages
+        run: uv build --sdist --wheel --no-sources
 
-    - name: Publish distribution to Test PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: https://test.pypi.org/legacy/
+      - name: Verify the distributions
+        run: uvx twine check dist/*
 
-    - name: Publish distribution to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: distribution
+          path: dist/
 
-    - name: Create GitHub release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        export TAGNAME=$(jq --raw-output .ref "$GITHUB_EVENT_PATH" | sed -e "s/refs\/tags\///")
-        gh release create ${TAGNAME} --draft dist/*
+      - name: Publish distribution to Test PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          attestations: false
+
+      - name: Publish distribution to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Create GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          export TAGNAME=$(jq --raw-output .ref "$GITHUB_EVENT_PATH" | sed -e "s/refs\/tags\///")
+          gh release create ${TAGNAME} --draft dist/*
+
+  recover-pypi-v0-13-1:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    name: Recover PyPI release for v0.13.1
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    concurrency:
+      group: recover-pypi-v0-13-1
+      cancel-in-progress: false
+
+    permissions:
+      actions: read
+      id-token: write
+
+    steps:
+      - name: Download the original v0.13.1 distributions
+        # actions/download-artifact v8.0.1
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c
+        with:
+          artifact-ids: 9435291867
+          path: dist/
+          github-token: ${{ github.token }}
+          repository: CyberAgentAILab/cmaes
+          run-id: 32449871529
+
+      - name: Verify the original v0.13.1 distributions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          actual_count="$(find dist -mindepth 1 -maxdepth 1 | wc -l)"
+          if [ "${actual_count}" -ne 2 ]; then
+            echo "Expected exactly 2 files in dist/, but found ${actual_count}."
+            find dist -mindepth 1 -maxdepth 1 -print
+            exit 1
+          fi
+
+          printf '%s\n' \
+            '659881b1d574adf0b378448821e3da24a4f7b7a1989640cd902000c567897db5  dist/cmaes-0.13.1-py3-none-any.whl' \
+            '5f56a9e8dd769ffd23ac2ad651979bdb6ca8846de60d97d03fe5ad8456c56c79  dist/cmaes-0.13.1.tar.gz' \
+            | sha256sum --check --strict
+
+      - name: Publish v0.13.1 to PyPI
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33
+        with:
+          repository-url: https://upload.pypi.org/legacy/
+          packages-dir: dist/
+          verify-metadata: true
+          attestations: true
+          skip-existing: false
+          print-hash: true
