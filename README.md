@@ -11,7 +11,7 @@ Please refer to the [paper](https://arxiv.org/abs/2402.01373) [Nomura et al. 202
 
 ## Installation
 
-Supported Python versions are 3.8 or later.
+Supported Python versions are 3.9 or later.
 
 ```
 $ pip install cmaes
