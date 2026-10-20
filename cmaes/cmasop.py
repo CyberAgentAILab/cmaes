@@ -146,7 +146,7 @@ class CMASoP:
             self._zd = [ds.shape[1] for ds in sets_of_points]
             self._point_num = [ds.shape[0] for ds in sets_of_points]
             self._vor_list = [Voronoi(ds) for ds in sets_of_points]
-            self._subspace_mask = None
+            self._subspace_mask: np.ndarray | None = None
             self._neighbor_matrices = self._get_neighbor_matrices()
         else:
             self._zd = []
