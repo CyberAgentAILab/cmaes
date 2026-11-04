@@ -50,14 +50,6 @@ def get_warm_start_mgd(
 
     # Estimation of a Promising Distribution of a Source Task.
     first_term = alpha**2 * np.eye(dim)
-    cov_term = np.zeros(shape=(dim, dim), dtype=float)
-    for i in range(gamma_n):
-        cov_term += np.dot(
-            top_gamma_solutions[i, :].reshape(dim, 1),
-            top_gamma_solutions[i, :].reshape(dim, 1).T,
-        )
-
-    second_term = cov_term / gamma_n
     mean_term = np.zeros(
         shape=(
             dim,
@@ -69,10 +61,14 @@ def get_warm_start_mgd(
         mean_term += top_gamma_solutions[i, :].reshape(dim, 1)
     mean_term /= gamma_n
 
-    third_term = np.dot(mean_term, mean_term.T)
     mu = mean_term
     mean = mu[:, 0]
-    Sigma = first_term + second_term - third_term
+    # Center before multiplying to preserve variance and the alpha prior.
+    cov_term = np.zeros(shape=(dim, dim), dtype=float)
+    for i in range(gamma_n):
+        centered = top_gamma_solutions[i, :] - mean
+        cov_term += np.outer(centered, centered)
+    Sigma = first_term + cov_term / gamma_n
     det_sigma = np.linalg.det(Sigma)
     sigma = math.pow(det_sigma, 1.0 / 2.0 / dim)
     cov = Sigma / math.pow(det_sigma, 1.0 / dim)
