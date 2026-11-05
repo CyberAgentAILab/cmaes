@@ -44,3 +44,9 @@ def test_warm_start_scale_with_subnormal_determinant():
     _, sigma, cov = get_warm_start_mgd(solutions, alpha=alpha)
     np.testing.assert_allclose(sigma, alpha, rtol=1e-12, atol=0)
     np.testing.assert_allclose(cov, np.eye(2), rtol=1e-12, atol=0)
+
+
+def test_warm_start_rejects_singular_covariance():
+    solutions = [(np.zeros(2), 0.0) for _ in range(10)]
+    with pytest.raises(ValueError, match="Sigma must have a positive determinant"):
+        get_warm_start_mgd(solutions, alpha=0.0)
