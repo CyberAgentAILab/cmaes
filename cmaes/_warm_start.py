@@ -69,7 +69,9 @@ def get_warm_start_mgd(
         centered = top_gamma_solutions[i, :] - mean
         cov_term += np.outer(centered, centered)
     Sigma = first_term + cov_term / gamma_n
-    det_sigma = np.linalg.det(Sigma)
-    sigma = math.pow(det_sigma, 1.0 / 2.0 / dim)
-    cov = Sigma / math.pow(det_sigma, 1.0 / dim)
+    sign, logdet_sigma = np.linalg.slogdet(Sigma)
+    if sign <= 0:
+        raise ValueError("Sigma must have a positive determinant")
+    sigma = math.exp(logdet_sigma / 2.0 / dim)
+    cov = Sigma / sigma**2
     return mean, sigma, cov

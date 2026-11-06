@@ -25,3 +25,28 @@ def test_warm_start_covariance_after_translation(gamma, offset):
     np.testing.assert_allclose(sigma**2 * cov, expected, rtol=1e-14, atol=0)
     optimizer = CMA(mean=mean, sigma=sigma, cov=cov, seed=0)
     assert np.isfinite(optimizer.ask()).all()
+
+
+@pytest.mark.parametrize("dim", [2, 10, 200, 256])
+@pytest.mark.parametrize("alpha", [0.1, 10.0])
+def test_warm_start_scale_in_high_dimensions(dim, alpha):
+    solutions = [(np.zeros(dim), 0.0) for _ in range(10)]
+    mean, sigma, cov = get_warm_start_mgd(solutions, alpha=alpha)
+    np.testing.assert_allclose(sigma, alpha, rtol=1e-12)
+    np.testing.assert_allclose(cov, np.eye(dim), rtol=1e-12, atol=0)
+    optimizer = CMA(mean=mean, sigma=sigma, cov=cov, seed=0)
+    assert np.isfinite(optimizer.ask()).all()
+
+
+def test_warm_start_scale_with_subnormal_determinant():
+    alpha = 1e-80
+    solutions = [(np.zeros(2), 0.0) for _ in range(10)]
+    _, sigma, cov = get_warm_start_mgd(solutions, alpha=alpha)
+    np.testing.assert_allclose(sigma, alpha, rtol=1e-12, atol=0)
+    np.testing.assert_allclose(cov, np.eye(2), rtol=1e-12, atol=0)
+
+
+def test_warm_start_rejects_singular_covariance():
+    solutions = [(np.zeros(2), 0.0) for _ in range(10)]
+    with pytest.raises(ValueError, match="Sigma must have a positive determinant"):
+        get_warm_start_mgd(solutions, alpha=0.0)
