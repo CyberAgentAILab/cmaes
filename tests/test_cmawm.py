@@ -31,3 +31,19 @@ class TestCMAwM(TestCase):
                 solutions.append((cma_x, objective))
             cma_optimizer.tell(solutions)
             cmawm_optimizer.tell(solutions)
+
+    def test_discrete_encoding_with_large_normalized_samples(self):
+        step = 2.0**-68
+        optimizer = CMAwM(
+            mean=np.zeros(2),
+            sigma=1.0,
+            bounds=np.array([[-step, step], [-np.inf, np.inf]]),
+            steps=np.array([step, 0.0]),
+            seed=1,
+        )
+
+        with np.errstate(invalid="raise"):
+            for _ in range(2):
+                encoded, raw = optimizer.ask()
+                expected = step if raw[0] > step / 2 else -step if raw[0] <= -step / 2 else 0.0
+                self.assertEqual(encoded[0], expected)

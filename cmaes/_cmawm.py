@@ -235,10 +235,18 @@ class CMAwM:
 
     def _get_discrete_param_indices(self, values: np.ndarray) -> np.ndarray:
         """Return indices of the closest discrete values, preferring the lower value on ties."""
-        indices = np.floor(
-            (values - self._discrete_space_low) / self._discrete_space_step + 0.5
-        ).astype(int)
-        indices = np.clip(indices, 0, self._discrete_space_size - 1)
+        # Out-of-range samples can produce offsets too large for an integer or a float.
+        with np.errstate(over="ignore"):
+            offsets = np.floor(
+                (values - self._discrete_space_low) / self._discrete_space_step + 0.5
+            )
+        last_indices = self._discrete_space_size - 1
+        at_upper_end = offsets >= last_indices
+        indices = np.maximum(np.where(at_upper_end, 0.0, offsets), 0.0).astype(int)
+        # Use the integer endpoint directly to avoid rounding large grid sizes to floats.
+        indices = np.where(at_upper_end, last_indices, indices)
+        # A NaN cast can return a negative sentinel when invalid errors do not raise.
+        np.clip(indices, 0, last_indices, out=indices)
 
         # ``floor(x + 0.5)`` selects the upper value at an exact midpoint, while
         # ``np.searchsorted`` used by the previous implementation selected the lower one.
@@ -247,7 +255,7 @@ class CMAwM:
         indices -= has_lower_limit & (values <= lower_limits)
 
         # Correct a possible one-position error caused by floating-point division.
-        has_upper_limit = indices < self._discrete_space_size - 1
+        has_upper_limit = indices < last_indices
         upper_limits = self._get_discrete_param_limit_values(
             np.minimum(indices, self._discrete_space_size - 2)
         )
