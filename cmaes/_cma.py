@@ -161,7 +161,7 @@ class CMA:
         self._p_sigma = np.zeros(n_dim)
         self._pc = np.zeros(n_dim)
 
-        self._mean = mean.copy()
+        self._mean = mean.astype(float)
 
         if cov is None:
             self._C = np.eye(n_dim)
