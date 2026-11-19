@@ -135,7 +135,7 @@ class SepCMA:
         self._p_sigma = np.zeros(n_dim)
         self._pc = np.zeros(n_dim)
 
-        self._mean = mean.copy()
+        self._mean = mean.astype(float)
         self._sigma = sigma
         self._D: Optional[np.ndarray] = None
         self._C: np.ndarray = np.ones(n_dim)
