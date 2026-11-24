@@ -550,7 +550,9 @@ class CatCMAwM:
             if not self._iqhist_values:
                 raise ValueError("Cannot set boundary penalty weights without a valid IQR.")
             delta_fit = np.median(self._iqhist_values)
-            self._boundary_penalty_gamma[:] = 2 * delta_fit / (self._sigma**2 * np.sum(diag_ACA))
+            self._boundary_penalty_gamma[:] = 2 * delta_fit / (
+                self._sigma**2 * np.sum(diag_ACA) / self._Nmi
+            )
             self._boundary_weights_set = True
 
         gamma_inc_low = (self._mean < bound_low) * (
@@ -568,7 +570,10 @@ class CatCMAwM:
         v_feas = np.where(
             v_raw < bound_low, bound_low, np.where(v_raw > bound_up, bound_up, v_raw)
         )
-        penalties = np.sum(self._boundary_penalty_gamma * ((v_feas - v_raw) ** 2) / xis, axis=1)
+        penalties = (
+            np.sum(self._boundary_penalty_gamma * ((v_feas - v_raw) ** 2) / xis, axis=1)
+            / self._Nmi
+        )
         return penalties
 
     def _integer_centering(self, v_raw: np.ndarray) -> np.ndarray:
