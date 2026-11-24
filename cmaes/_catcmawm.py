@@ -550,8 +550,8 @@ class CatCMAwM:
             if not self._iqhist_values:
                 raise ValueError("Cannot set boundary penalty weights without a valid IQR.")
             delta_fit = np.median(self._iqhist_values)
-            self._boundary_penalty_gamma[:] = 2 * delta_fit / (
-                self._sigma**2 * np.sum(diag_ACA) / self._Nmi
+            self._boundary_penalty_gamma[:] = (
+                2 * delta_fit / (self._sigma**2 * np.sum(diag_ACA) / self._Nmi)
             )
             self._boundary_weights_set = True
 
