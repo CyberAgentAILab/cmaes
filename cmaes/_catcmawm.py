@@ -378,6 +378,10 @@ class CatCMAwM:
         self._iqhist_term = 20 + math.ceil(3 * self._Nmi / self._popsize)
         self._iqhist_values: List[float] = []
 
+        # boundary penalty weights
+        self._boundary_penalty_gamma = np.zeros(self._Nmi)
+        self._boundary_weights_set = False
+
         # termination criteria based on CMA-ES
         self._tolx = 1e-12 * self._sigma
         self._tolxup = 1e4
@@ -538,27 +542,38 @@ class CatCMAwM:
 
         bound_low = np.concatenate((self._x_space[:, 0], np.full(self._Nin, -np.inf)))
         bound_up = np.concatenate((self._x_space[:, 1], np.full(self._Nin, np.inf)))
-        diag_CA = np.diag(self._C) * self._A
+        diag_ACA = np.diag(self._C) * self._A**2
 
-        delta_fit = np.median(self._iqhist_values)
-        gamma = np.ones(self._Nmi) * 2 * delta_fit / (self._sigma**2 * np.sum(diag_CA))
+        if np.any((self._mean < bound_low) | (bound_up < self._mean)) and (
+            not self._boundary_weights_set or self._g == 1
+        ):
+            if not self._iqhist_values:
+                raise ValueError("Cannot set boundary penalty weights without a valid IQR.")
+            delta_fit = np.median(self._iqhist_values)
+            self._boundary_penalty_gamma[:] = (
+                2 * delta_fit / (self._sigma**2 * np.sum(diag_ACA) / self._Nmi)
+            )
+            self._boundary_weights_set = True
 
         gamma_inc_low = (self._mean < bound_low) * (
             np.abs(self._mean - bound_low)
-            > 3 * self._sigma * np.sqrt(diag_CA) * max(1, np.sqrt(self._Nmi) / self._mu_eff)
+            > 3 * self._sigma * np.sqrt(diag_ACA) * max(1, np.sqrt(self._Nmi) / self._mu_eff)
         )
         gamma_inc_up = (bound_up < self._mean) * (
             np.abs(bound_up - self._mean)
-            > 3 * self._sigma * np.sqrt(diag_CA) * max(1, np.sqrt(self._Nmi) / self._mu_eff)
+            > 3 * self._sigma * np.sqrt(diag_ACA) * max(1, np.sqrt(self._Nmi) / self._mu_eff)
         )
         gamma_inc = np.logical_or(gamma_inc_low, gamma_inc_up)
-        gamma[gamma_inc] *= 1.1 ** (max(1, self._mu_eff / (10 * self._Nmi)))
+        self._boundary_penalty_gamma[gamma_inc] *= 1.1 ** min(1, self._mu_eff / (10 * self._Nmi))
 
-        xis = np.exp(0.9 * (np.log(diag_CA) - np.sum(np.log(diag_CA)) / self._Nmi))
+        xis = np.exp(0.9 * (np.log(diag_ACA) - np.sum(np.log(diag_ACA)) / self._Nmi))
         v_feas = np.where(
             v_raw < bound_low, bound_low, np.where(v_raw > bound_up, bound_up, v_raw)
         )
-        penalties = np.sum(gamma * ((v_feas - v_raw) ** 2) / xis, axis=1)
+        penalties = (
+            np.sum(self._boundary_penalty_gamma * ((v_feas - v_raw) ** 2) / xis, axis=1)
+            / self._Nmi
+        )
         return penalties
 
     def _integer_centering(self, v_raw: np.ndarray) -> np.ndarray:
